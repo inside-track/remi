@@ -1,13 +1,14 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "Remi/version"
+require "remi/version"
 
 Gem::Specification.new do |s|
   s.name        = "remi"
-  s.version     = "0.01"
+  s.version     = "0.0.1"
   s.authors     = ["Sterling Paramore"]
   s.email       = ["gnilrets@gmail.com"]
-  s.homepage    = ""
+  s.homepage    = "https://github.com/gnilrets"
+  s.license     = "Apache-2.0"
   s.summary     = "Remi (Ruby Extract Modify and Integrate)"
   s.description = "Data manipulation in Ruby"
 
