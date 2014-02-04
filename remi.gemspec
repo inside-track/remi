@@ -4,7 +4,7 @@ require "remi/version"
 
 Gem::Specification.new do |s|
   s.name        = "remi"
-  s.version     = "0.0.1"
+  s.version     = Remi::VERSION
   s.authors     = ["Sterling Paramore"]
   s.email       = ["gnilrets@gmail.com"]
   s.homepage    = "https://github.com/gnilrets"

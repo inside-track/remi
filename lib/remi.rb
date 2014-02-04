@@ -1,12 +1,6 @@
-#!/usr/bin/ruby
+$LOAD_PATH << File.dirname(__FILE__)
 
-class Hola
-  def self.hi
-    puts "Hello world!"
-  end
-  def self.bye
-    puts "Goodbye, cruel world!"
-  end
-end
+require 'remi/version'
+require 'remi/dataset'
 
-
+include Remi
