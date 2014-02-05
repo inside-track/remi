@@ -17,20 +17,26 @@
 
 =end
 
-puts "Hello"
+# Load the Remi library
+load "#{File.dirname(__FILE__)}/../lib/remi.rb"
 
-def x
-mydata = Dataset.new()
+# Re-load my dev library
+load "#{File.dirname(__FILE__)}/../lib/remi/dataset.rb"
 
-mydata.add_variable(:n, { :type => "num" })
-mydata.add_variable(:retailer_id, { :type => "string", :length => 40 })
 
-for num in 1..3
-  mydata[:n] = num
-  mydata[:retailer_id] = "R#{mydata[:n]}"
-  mydata.output
+def test_build_dataset
+  mydata = Dataset.new()
+
+  mydata.add_variable(:n, { :type => "num" })
+  mydata.add_variable(:retailer_id, { :type => "string", :length => 40 })
+
+  for num in 1..3
+    mydata[:n] = num
+    mydata[:retailer_id] = "R#{mydata[:n]}"
+    mydata.output
+  end
 end
-end
+
 
 # want to do someting like this
 # the datastep is what opens and closes the files
