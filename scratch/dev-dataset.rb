@@ -27,6 +27,8 @@ load "#{File.dirname(__FILE__)}/../lib/remi/dataset.rb"
 def test_build_dataset
   mydata = Dataset.new()
 
+  mydata.open("/Users/gnilrets/Desktop/mydata.gz")
+
   mydata.add_variable(:n, { :type => "num" })
   mydata.add_variable(:retailer_id, { :type => "string", :length => 40 })
 
@@ -35,7 +37,13 @@ def test_build_dataset
     mydata[:retailer_id] = "R#{mydata[:n]}"
     mydata.output
   end
+
+  mydata.close
+
+
 end
+
+
 
 
 # want to do someting like this
