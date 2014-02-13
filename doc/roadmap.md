@@ -5,13 +5,13 @@
   * dataset class
   * datastep class
   * simple serialized dataset reader/writer
-  * sort
-  * merge
 
 * **0.2.0** - Groups
 
+  * sort
   * first/last processing
   * aggregator
+  * merge
 
 * **0.3.0** - Rules
 

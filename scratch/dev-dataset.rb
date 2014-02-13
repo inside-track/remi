@@ -40,9 +40,22 @@ def test_build_dataset
 
   mydata.close
 
-
 end
 
+
+class Myclass
+
+  def initialize
+    @monster = "Happy"
+  end
+
+  attr_accessor :monster
+
+  def self.create(myname)
+    myname = new()
+  end
+
+end
 
 
 
@@ -51,6 +64,9 @@ end
 #  It also advances through the datastep
 #  It also does an automatic "output" unless disabled
 =begin
+
+
+# create data
 
 datastep mydata do |d1|
 
@@ -62,6 +78,235 @@ datastep mydata do |d1|
   end
 
 end
+
+# Read and modify data
+
+datastep mydata do |out|
+
+  # mydata should inerit all of the have data
+  set have do |in|
+
+  end
+
+end
+
+
+
+# Something else
+
+dataset mydata do |ds|
+
+  ds.set_physical_location "~/Desktop/mydata.rgz"
+
+  ds.define_variable :msg string
+
+  ds.define_variables do |var|
+
+    var.retailer_key string
+    var.distributor_key string
+    var.physical_cases number
+
+  end
+
+end
+
+dataset mydata2 do |ds|
+
+  ds.set_physical_location "~/Desktop/mydata2.rgz"
+
+  ds.copy_variables mydata all
+
+  ds.define_variables do |var|
+ 
+    var.extended_price string
+
+  end
+
+end
+
+
+datastep mydata do |dp|
+
+  for num in 1..3
+    dp.output
+  end
+
+end
+
+
+
+
+## Ok, but how do I really WANT it to work (ignore ruby, figure that out later).
+
+
+# Data generation
+
+datalib = "~/Desktop"
+dataset datalib.mydata do
+
+  variables do
+
+    distributor_id string
+    retailer_id string
+    product_id string
+    physical_cases number
+
+  end
+
+  do i = 1 to 20
+
+    distributor_id = rand()
+    retailer_id = rand()
+    product_id = rand()
+    physical_cases = rand()
+
+    mydata.output
+
+  end
+
+end
+
+
+# Data read
+datalib = "~/Desktop"
+dataset datalib.mydata do
+
+  variables do
+
+    distributor_id string
+    retailer_id string
+    product_id string
+    physical_cases number
+
+  end
+
+  read mycsv do |mycsv| # variables must be explicitly declared above and set
+  
+    distributor_id = mycsv[0]
+    retialer_id = mycsv[1]
+    product_id = mycsv[2]
+    physical_cases = myscsv[3]
+
+    mydata.output()
+
+  end
+
+end
+
+
+# Data modify
+
+dataset datalib.mydata_modified do
+
+  varaibles import mydata (exclude source_file) # and use a keep too
+
+  variables do
+
+    volume number
+
+  end
+
+  read datalib.mydata do # variables in mydat_modified are implicitly set by mydata (or do I need to explicitly set them?????)
+
+    volume = physical_cases * conv_factor[product_id] # conv_factor is some locally genrated hash
+
+    mydata_modified.output()
+
+  end
+
+end
+
+
+# Multiple output
+
+dataset datalib.mydata_split_1 datalib.mydata_split_2 do |d1,d2|
+
+  d1.variables import datalib.mydata (keep retailer_key physical_cases)
+  d2.variables import datalib.mydata (keep distributor_key physical_cases)
+
+  read datalib.mydata do
+
+    d1.output()
+    d2.output()
+
+  end 
+
+end
+
+
+# Data sort
+
+#    Rule: Do not sort or modify datasets in place.  Provide a delete function.
+
+sorted datalib.mydata_modified_sorted do
+  sort datalib.mydata_modified by
+    retailer_key
+    distributor_key
+  end
+end
+
+
+# First/last processing
+
+dataset datalib.mydata_by_distributor do
+
+  read datalib.mydata_modified_sorted do
+
+    by retailer_key
+
+    variables do
+      sum_physical_cases number
+      drop physical_cases
+    end
+
+
+    if first.retailer_key
+      sum_physical_cases = 0
+    end
+
+    sum_physical_cases = sum_physical_cases + physical_cases
+
+    if last.retailer_key
+      output()
+    end
+
+  end
+
+end
+
+
+
+
+# Data merge
+
+merged datalib.mydata_merged datalib.unknown do |d1,u1|
+
+  merge datalib.rad datalib.products do |rad,products|
+
+    by rad.product_key = products.product_key
+
+    if in rad and in products
+      d1.output()
+    end
+
+    if in rad and not in products
+      u1.output()
+    end
+
+  end
+
+end
+
+
+# I think I want to be able to define a dataset at runtime
+
+
+
+
+
+# But also at other times (mayb eby defining a null dataset that gets created later)
+
+
 
 
 =end
@@ -119,7 +364,7 @@ end
 x = mydata.show_columns
 puts "x = #{x.inspect}"
 
-=begin
+#=begin
 data mydata;
   set input_set;
 
