@@ -24,34 +24,46 @@ module Remi
       
     end
 
-    def validate_directory_options
 
-      unless @options.has_key?(:dir_name)
-        raise "ERROR: dir_name not defined for directory library"
-      end
-
-      unless @options[:dir_name].is_a?(String)
-        raise "ERROR: dir_name is not a string"
-      end
-
+    def return_dataset(dataset_name)
+      puts "This is supposed to return a dataset named #{dataset_name}"
     end
 
-    def dataset_exists?
-    end
+    alias method_missing return_dataset
 
-    def return_dataset
-    end
 
     def to_s
 
       if @type == :directory
-        "Datalib: #{@type}, #{@options[:dir_name]}"
+        "Datalib: :#{@type} => #{@options[:dirname]}"
       else
         "Datalib: Undefined"
       end
 
     end
 
-  end
 
+
+
+
+
+    private
+
+    def validate_directory_options
+
+      unless @options.has_key?(:dirname)
+        raise "ERROR: :dirname not defined for directory library"
+      end
+
+      unless @options[:dirname].is_a?(String)
+        raise "ERROR: dirname is not a string"
+      end
+
+      unless File.directory?(@options[:dirname])
+        raise "ERROR: #{@options[:dirname]} does not exist"
+      end
+
+    end
+
+  end
 end

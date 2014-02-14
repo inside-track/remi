@@ -5,10 +5,16 @@ load "#{File.dirname(__FILE__)}/../lib/remi.rb"
 load "#{File.dirname(__FILE__)}/../lib/remi/datalib.rb"
 
 
-#work = Datalib.new :directory, "/Users/gnilrets/Desktop/work"
-work = Datalib.new :directory => {:dir_name => "/Users/gnilrets/Desktop/work"}
+work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
 
 puts work
+
+work.mydata
+work.toast
+
+
+
+
 
 
 =begin
