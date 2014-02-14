@@ -21,7 +21,34 @@
 load "#{File.dirname(__FILE__)}/../lib/remi.rb"
 
 # Re-load my dev library
+load "#{File.dirname(__FILE__)}/../lib/remi/datalib.rb"
 load "#{File.dirname(__FILE__)}/../lib/remi/dataset.rb"
+
+
+def rand_string(n)
+
+  (0..n).map { ('A'..'Z').to_a[rand(26)]}.join
+
+end
+
+def test_dataset
+  work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
+#  work.mydata.define_variable :retailer_key, :type => :string
+  work.mydata_multivar.variables do |var|
+
+    var.define_variable :retailer_key, :type => :string
+    var.define_variable :physical_cases, :type => :number
+    
+  end
+
+end
+
+test_dataset
+
+
+
+
+
 
 
 def test_build_dataset
@@ -43,98 +70,14 @@ def test_build_dataset
 end
 
 
-class Myclass
-
-  def initialize
-    @monster = "Happy"
-  end
-
-  attr_accessor :monster
-
-  def self.create(myname)
-    myname = new()
-  end
-
-end
-
 
 
 # want to do someting like this
 # the datastep is what opens and closes the files
 #  It also advances through the datastep
 #  It also does an automatic "output" unless disabled
+
 =begin
-
-
-# create data
-
-datastep mydata do |d1|
-
-  d1.add_variable({:msg => {:type => :string, :length => 20}})
-
-  for num in 1..3
-    d1.var(:msg) = "Hello #{num}"
-    d1.output
-  end
-
-end
-
-# Read and modify data
-
-datastep mydata do |out|
-
-  # mydata should inerit all of the have data
-  set have do |in|
-
-  end
-
-end
-
-
-
-# Something else
-
-dataset mydata do |ds|
-
-  ds.set_physical_location "~/Desktop/mydata.rgz"
-
-  ds.define_variable :msg string
-
-  ds.define_variables do |var|
-
-    var.retailer_key string
-    var.distributor_key string
-    var.physical_cases number
-
-  end
-
-end
-
-dataset mydata2 do |ds|
-
-  ds.set_physical_location "~/Desktop/mydata2.rgz"
-
-  ds.copy_variables mydata all
-
-  ds.define_variables do |var|
- 
-    var.extended_price string
-
-  end
-
-end
-
-
-datastep mydata do |dp|
-
-  for num in 1..3
-    dp.output
-  end
-
-end
-
-
-
 
 ## Ok, but how do I really WANT it to work (ignore ruby, figure that out later).
 

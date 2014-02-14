@@ -14,6 +14,19 @@ work.toast
 
 
 
+class Myclass
+
+  def initialize
+    @myprop = "This is my property"
+  end
+
+  attr_accessor :myprop
+
+  def recurse
+    self
+  end
+
+end
 
 
 

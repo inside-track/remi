@@ -5,6 +5,79 @@ module Remi
 
   class Dataset
 
+    def initialize(datalib,name)
+
+      # Initialize should check to see if dataset exists
+      # If so, read variables and other dataset options
+      # If not, initialize an empty dataset
+
+      @datalib = datalib
+      @name = name
+
+      # VARIABLES - will be their own object momentarily, hash for now
+      @vars = {}
+
+    end
+
+    def define_variable(var_name,var_meta)
+
+      if @vars.has_key?(var_name)
+        tmp_vars = @vars.merge(var_name => @vars[var_name].merge(var_meta))
+      else
+        tmp_vars = @vars.merge(var_name => var_meta)
+      end
+
+      unless tmp_vars[var_name].has_key?(:type)
+        raise ":type not defined for variable #{var_name}"
+      end
+
+      @vars = tmp_vars
+
+      puts to_s
+
+    end
+
+
+    def variables
+      
+      yield self
+
+    end
+
+
+
+    def open
+
+      # Open should put a lock on the dataset so that further
+      # calls to datalib.dataset_name return the same object
+      
+    end
+
+
+
+
+    def to_s
+
+      msg = "\n\n\n"
+      msg << "This is dataset #{@name} <#{self.object_id}> in library #{@datalib}\n"
+      msg << "VARIABLES\n---\n"
+
+      @vars.each do |key,value|
+        msg << "#{key} => #{value}\n"
+      end
+
+      msg
+
+    end
+
+  end
+end
+
+
+
+=begin Not really thought out, but it did some stuff that might want to borrow
+  class Dataset
+
     def initialize
       @variables = {}
       @row = {} # I do want row to be an array, but use a has for the moment
@@ -73,6 +146,9 @@ module Remi
   end
 
 end
+=end
+
+
 
 
 =begin

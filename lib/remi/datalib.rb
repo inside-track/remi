@@ -1,6 +1,10 @@
 module Remi
 
   class Datalib
+    
+    # initialization
+    #  work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
+
 
     def initialize(args)
 
@@ -26,7 +30,9 @@ module Remi
 
 
     def return_dataset(dataset_name)
-      puts "This is supposed to return a dataset named #{dataset_name}"
+
+      Dataset.new(self,dataset_name)
+
     end
 
     alias method_missing return_dataset
