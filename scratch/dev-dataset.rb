@@ -34,10 +34,12 @@ end
 def test_dataset
   work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
 #  work.mydata.define_variable :retailer_key, :type => :string
-  work.mydata_multivar.variables do |var|
+  work.mydata_multivar.define_variables do
 
-    var.define_variable :retailer_key, :type => :string
-    var.define_variable :physical_cases, :type => :number
+    var :retailer_key, :type => :string
+    var :physical_cases, :type => :number
+
+    var :retailer_key, :length => 8, :hash_calc => true
     
   end
 

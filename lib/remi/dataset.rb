@@ -3,6 +3,42 @@ module Remi
   require 'msgpack'
   require 'zlib'
 
+  module Variables
+
+    extend self
+
+    def evaluate_block_vars(vars,&b)
+      @vars = vars
+      puts @vars
+      self.instance_eval(&b)
+      @vars
+    end
+
+
+    # Statements in the define_variables block have access to the following methods
+
+    def append_variables_hash(var_name,var_meta)
+
+      if @vars.has_key?(var_name)
+        tmp_vars = @vars.merge(var_name => @vars[var_name].merge(var_meta))
+      else
+        tmp_vars = @vars.merge(var_name => var_meta)
+      end
+
+      unless tmp_vars[var_name].has_key?(:type)
+        raise ":type not defined for variable #{var_name}"
+      end
+
+      @vars = tmp_vars
+
+    end
+    alias_method :var, :append_variables_hash
+
+  end
+
+
+
+
   class Dataset
 
     def initialize(datalib,name)
@@ -19,32 +55,14 @@ module Remi
 
     end
 
-    def define_variable(var_name,var_meta)
 
-      if @vars.has_key?(var_name)
-        tmp_vars = @vars.merge(var_name => @vars[var_name].merge(var_meta))
-      else
-        tmp_vars = @vars.merge(var_name => var_meta)
-      end
-
-      unless tmp_vars[var_name].has_key?(:type)
-        raise ":type not defined for variable #{var_name}"
-      end
-
-      @vars = tmp_vars
+    # Variables get evaluated in a module to separate the namespace
+    def define_variables(&b)
+      @vars = Variables.evaluate_block_vars(@vars,&b)
 
       puts to_s
 
     end
-
-
-    def variables
-      
-      yield self
-
-    end
-
-
 
     def open
 
@@ -58,7 +76,7 @@ module Remi
 
     def to_s
 
-      msg = "\n\n\n"
+      msg = "\n" * 3
       msg << "This is dataset #{@name} <#{self.object_id}> in library #{@datalib}\n"
       msg << "VARIABLES\n---\n"
 
