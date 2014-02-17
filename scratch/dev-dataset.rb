@@ -23,30 +23,47 @@ load "#{File.dirname(__FILE__)}/../lib/remi.rb"
 # Re-load my dev library
 load "#{File.dirname(__FILE__)}/../lib/remi/datalib.rb"
 load "#{File.dirname(__FILE__)}/../lib/remi/dataset.rb"
+load "#{File.dirname(__FILE__)}/../lib/remi/variables.rb"
 
 
 def rand_string(n)
-
   (0..n).map { ('A'..'Z').to_a[rand(26)]}.join
-
 end
 
-def test_dataset
+def test_dataset_variables
   work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
-#  work.mydata.define_variable :retailer_key, :type => :string
   work.mydata_multivar.define_variables do
 
     var :retailer_key, :type => :string
     var :physical_cases, :type => :number
-
-    var :retailer_key, :length => 8, :hash_calc => true
     
   end
 
 end
 
-test_dataset
+#test_dataset_variables
 
+
+
+
+def test_datastep
+
+  work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
+
+  datastep work.mydata_multivar do |d1|
+
+    d1.define_variables do
+
+      var :retailer_key, :type => :string
+      var :physical_cases, :type => :number
+    
+    end
+
+  end
+
+end
+
+test_datastep
 
 
 
