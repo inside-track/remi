@@ -60,7 +60,7 @@ def test_datastep
     end
 
 
-    for i in 1..10
+    for i in 1..3
 
       d1[:rownum] = i
       d1[:retailer_key] = rand_string()

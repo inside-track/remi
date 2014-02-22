@@ -10,7 +10,17 @@ module Remi
     # All this needs to do is open and close the dataset
     puts "-" * 5 + "DATASTEP" + "-" * 5
     puts "All this needs to do is open and close each dataset given"
+
+    dataset.each do |ds|
+      ds.open
+    end
+
     yield *dataset
+
+    dataset.each do |ds|
+      ds.close
+    end
+
 
   end
 
@@ -40,6 +50,16 @@ module Remi
 
     end
 
+    # Variable accessor
+    def [](varname)
+      @vars[varname][:value]
+    end
+
+    # Variables assignment
+    def []= varname,value
+      @vars[varname][:value] = value
+    end
+
 
 
     def open
@@ -47,16 +67,16 @@ module Remi
       # Open should put a lock on the dataset so that further
       # calls to datalib.dataset_name return the same object
       
+      puts "-Opening dataset-"
+
     end
 
+    def close
 
-    def [](varname)
-      @vars[varname][:value]
+      puts "-Closing dataset-"
+
     end
 
-    def []= varname,value
-      @vars[varname][:value] = value
-    end
 
 
     def output
