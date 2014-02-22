@@ -50,6 +50,26 @@ module Remi
     end
 
 
+    def [](varname)
+      @vars[varname][:value]
+    end
+
+    def []= varname,value
+      @vars[varname][:value] = value
+    end
+
+
+    def output
+
+      puts "--OUTPUT--"
+
+      @vars.each do |key,value|
+        puts "#{key} => #{value[:value]}"
+      end
+
+    end
+
+
 
     def to_s
 

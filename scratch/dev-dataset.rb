@@ -26,10 +26,9 @@ load "#{File.dirname(__FILE__)}/../lib/remi/dataset.rb"
 load "#{File.dirname(__FILE__)}/../lib/remi/variables.rb"
 
 
-def rand_string(n)
+def rand_string(n=10)
   (0..n).map { ('A'..'Z').to_a[rand(26)]}.join
 end
-
 def test_dataset_variables
   work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
   work.mydata_multivar.define_variables do
@@ -54,10 +53,23 @@ def test_datastep
 
     d1.define_variables do
 
+      var :rownum, :type => :number
       var :retailer_key, :type => :string
       var :physical_cases, :type => :number
     
     end
+
+
+    for i in 1..10
+
+      d1[:rownum] = i
+      d1[:retailer_key] = rand_string()
+      d1[:physical_cases] = rand(100)
+
+      d1.output()
+
+    end
+
 
   end
 
@@ -69,7 +81,7 @@ test_datastep
 
 
 
-
+=begin
 def test_build_dataset
   mydata = Dataset.new()
 
@@ -87,7 +99,7 @@ def test_build_dataset
   mydata.close
 
 end
-
+=end
 
 
 
