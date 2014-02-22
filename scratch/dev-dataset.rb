@@ -49,7 +49,7 @@ def test_datastep
 
   work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
 
-  datastep work.mydata_multivar do |d1|
+  datastep work.mydata do |d1|
 
     d1.define_variables do
 
