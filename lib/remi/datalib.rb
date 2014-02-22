@@ -18,7 +18,7 @@ module Remi
       if args.has_key?(:directory)
 
         @type = :directory
-        @options = args[:directory]
+        @options = args
 
         validate_directory_options()
 
@@ -31,7 +31,7 @@ module Remi
 
     def return_dataset(dataset_name)
 
-      Dataset.new(self,dataset_name)
+      Dataset.new(self,dataset_name,@options)
 
     end
 
@@ -41,7 +41,7 @@ module Remi
     def to_s
 
       if @type == :directory
-        "Datalib: :#{@type} => #{@options[:dirname]}"
+        "Datalib: :#{@type} => #{@options[:directory][:dirname]}"
       else
         "Datalib: Undefined"
       end
@@ -57,16 +57,16 @@ module Remi
 
     def validate_directory_options
 
-      unless @options.has_key?(:dirname)
+      unless @options[:directory].has_key?(:dirname)
         raise "ERROR: :dirname not defined for directory library"
       end
 
-      unless @options[:dirname].is_a?(String)
+      unless @options[:directory][:dirname].is_a?(String)
         raise "ERROR: dirname is not a string"
       end
 
-      unless File.directory?(@options[:dirname])
-        raise "ERROR: #{@options[:dirname]} does not exist"
+      unless File.directory?(@options[:directory][:dirname])
+        raise "ERROR: #{@options[:directory][:dirname]} does not exist"
       end
 
     end

@@ -27,7 +27,7 @@ module Remi
 
   class Dataset
 
-    def initialize(datalib,name)
+    def initialize(datalib,name,lib_options)
 
       # Initialize should check to see if dataset exists
       # If so, read variables and other dataset options
@@ -35,6 +35,17 @@ module Remi
 
       @datalib = datalib
       @name = name
+
+      @header_file_full_path = ""
+      @data_file_full_path = ""
+
+      if lib_options.has_key?(:directory)
+
+        @header_file_full_path = File.join(lib_options[:directory][:dirname],"#{@name}.hgz")
+        @data_file_full_path = File.join(lib_options[:directory][:dirname],"#{@name}.rgz")
+
+      end
+
 
       # VARIABLES - will be their own object momentarily, hash for now
       @vars = {}
@@ -68,6 +79,8 @@ module Remi
       # calls to datalib.dataset_name return the same object
       
       puts "-Opening dataset-"
+      puts "I will open #{@header_file_full_path} and #{@data_file_full_path}"
+
 
     end
 
