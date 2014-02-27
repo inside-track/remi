@@ -52,6 +52,7 @@ module Remi
 
       # VARIABLES - will be their own object momentarily, hash for now
       @vars = {}
+      @nvars = 0
 
     end
 
