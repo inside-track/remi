@@ -19,8 +19,10 @@
 
 require 'benchmark'
 
+
 # Load the Remi library
 load "#{File.dirname(__FILE__)}/../lib/remi.rb"
+
 
 # Re-load my dev library
 load "#{File.dirname(__FILE__)}/../lib/remi/datalib.rb"
@@ -60,29 +62,24 @@ def test_datastep
       var :retailer_key, :type => :string
       var :physical_cases, :type => :number
 
-      for i in 1..100
+      for i in 1..10
         myvar << "myvar_#{i}".to_sym
         var myvar[i-1], :type => :string
       end
     
     end
 
-    for i in 1..1
+    for i in 1..10000
       d1[:rownum] = i
       d1[:retailer_key] = "AKDFKJDdKDJFKJOIFWIEFWEOFIHOQIHFOQIHFOIEHFOIEHFOIEFHOIEHFOsihfoihEOIFhsofishISEHFOSIHFOISHFOZIHFIOZEHFOEHFIOZEHFEOZIHIFHZOFINIEOVNIEN"
       d1[:physical_cases] = 385.18356
 
-      for i in 1..100
-        d1[myvar[i-1]] = "0123456789" * 1
+      for i in 1..10
+        d1[myvar[i-1]] = "0123456789" * 10
       end
 
       d1.output()
 
-    end
-
-
-    for i in 1..100000
-      d1.output()
     end
 
   end

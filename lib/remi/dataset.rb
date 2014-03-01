@@ -8,7 +8,10 @@ module Remi
     raise "datastep called, no block given" if not block_given?
 
     # All this needs to do is open and close the dataset
+    
+
     puts "-" * 5 + "DATASTEP" + "-" * 5
+    LOGGER.debug "MYSTEP"
     puts "All this needs to do is open and close each dataset given"
 
     dataset.each do |ds|

@@ -5,6 +5,7 @@
   * dataset class
   * datastep class
   * simple serialized dataset reader/writer
+  * csv reader/writer
 
 * **0.2.0** - Groups (public release)
 
