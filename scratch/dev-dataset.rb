@@ -53,24 +53,37 @@ def test_datastep
 
   datastep work.mydata do |d1|
 
+    myvar = []
     d1.define_variables do
 
       var :rownum, :type => :number
       var :retailer_key, :type => :string
       var :physical_cases, :type => :number
+
+      for i in 1..100
+        myvar << "myvar_#{i}".to_sym
+        var myvar[i-1], :type => :string
+      end
     
     end
 
-
-    for i in 1..50000
+    for i in 1..1
       d1[:rownum] = i
-      d1[:retailer_key] = rand_string()
-      d1[:physical_cases] = rand(100)
+      d1[:retailer_key] = "AKDFKJDdKDJFKJOIFWIEFWEOFIHOQIHFOQIHFOIEHFOIEHFOIEFHOIEHFOsihfoihEOIFhsofishISEHFOSIHFOISHFOZIHFIOZEHFOEHFIOZEHFEOZIHIFHZOFINIEOVNIEN"
+      d1[:physical_cases] = 385.18356
+
+      for i in 1..100
+        d1[myvar[i-1]] = "0123456789" * 1
+      end
 
       d1.output()
 
     end
 
+
+    for i in 1..100000
+      d1.output()
+    end
 
   end
 
