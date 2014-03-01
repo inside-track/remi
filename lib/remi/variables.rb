@@ -34,13 +34,24 @@ module Remi
 
     def var(var_name,var_meta)
 
-      logger.debug "Defining variable #{var_name} at position #{@position} wwith #{var_meta}"
+      logger.debug "Defining variable #{var_name} at position #{@position} with #{var_meta}"
 
       if @variables.has_key?(var_name)
         @variables[var_name].add_meta(var_meta)
       else
         @variables[var_name] = Variable.new @position+=1, var_meta
         @values << nil
+      end
+
+    end
+
+
+    # want variables to be imported in the right order, but not necessarily
+    # starting from the same spot
+    def var_import(ds)
+      
+      ds.vars.each do |var_name,var_obj|
+        var var_name var_obj.meta
       end
 
     end

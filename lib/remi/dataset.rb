@@ -12,7 +12,7 @@ module Remi
     # All this needs to do is open and close the dataset
     
 
-    logger.info "Starting datastep #{dataset}"
+    logger.debug "Starting datastep #{dataset}"
 
     dataset.each do |ds|
       ds.open
@@ -58,6 +58,8 @@ module Remi
 
     end
 
+    attr_accessor :vars
+
 
     # Variables get evaluated in a module to separate the namespace
     def define_variables(&b)
@@ -83,7 +85,6 @@ module Remi
       # Open should put a lock on the dataset so that further
       # calls to datalib.dataset_name return the same object
 
-#A AHAHAHAHHA - use Datalib.new work ~/Desktop/work
       logger.info "-Opening dataset #{@datalib}.#{@name}-"
       logger.info "Data file #{@data_file_full_path}"
       logger.info "Header file #{@header_file_full_path}"
