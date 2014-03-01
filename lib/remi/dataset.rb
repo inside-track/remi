@@ -5,14 +5,14 @@ module Remi
 
   def datastep(*dataset)
 
+    include Log
+
     raise "datastep called, no block given" if not block_given?
 
     # All this needs to do is open and close the dataset
     
 
-    puts "-" * 5 + "DATASTEP" + "-" * 5
-    LOGGER.debug "MYSTEP"
-    puts "All this needs to do is open and close each dataset given"
+    logger.info "Starting datastep #{dataset}"
 
     dataset.each do |ds|
       ds.open
@@ -29,6 +29,8 @@ module Remi
 
 
   class Dataset
+
+    include Log
 
     def initialize(datalib,name,lib_options)
 
@@ -60,10 +62,7 @@ module Remi
     # Variables get evaluated in a module to separate the namespace
     def define_variables(&b)
 
-      puts "Before define_varaibles: @vars = #{@vars.object_id}"
       @vars.evaluate_block_vars(&b)
-      puts "After define_varaibles: @vars = #{@vars.object_id}"
-      puts to_s
 
     end
 
@@ -83,10 +82,11 @@ module Remi
 
       # Open should put a lock on the dataset so that further
       # calls to datalib.dataset_name return the same object
-      
-      puts "-Opening dataset-"
-      puts "I will open header file #{@header_file_full_path}"
-      puts "and data file #{@data_file_full_path}"
+
+#A AHAHAHAHHA - use Datalib.new work ~/Desktop/work
+      logger.info "-Opening dataset #{@datalib}.#{@name}-"
+      logger.info "Data file #{@data_file_full_path}"
+      logger.info "Header file #{@header_file_full_path}"
 
       raw_header_file = File.open(@header_file_full_path,"w")
       @header_file = Zlib::GzipWriter.new(raw_header_file)
@@ -98,7 +98,7 @@ module Remi
 
     def close
 
-      puts "-Closing dataset-"
+      logger.info "-Closing dataset #{@datalib}.#{@name}-"
 
       # Write header file containing metadata
       @header_file.puts @vars.to_msgpack
@@ -114,11 +114,7 @@ module Remi
 
 
     def output
-=begin
-      puts "--OUTPUT--"
 
-      puts "#{@vars.values}"
-=end
       @data_file.puts @vars.values.to_msgpack
 
     end

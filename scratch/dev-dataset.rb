@@ -29,6 +29,7 @@ load "#{File.dirname(__FILE__)}/../lib/remi/datalib.rb"
 load "#{File.dirname(__FILE__)}/../lib/remi/dataset.rb"
 load "#{File.dirname(__FILE__)}/../lib/remi/variables.rb"
 
+Log.level Logger::DEBUG
 
 def rand_string(n=10)
   (0..n).map { ('A'..'Z').to_a[rand(26)]}.join

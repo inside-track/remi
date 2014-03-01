@@ -4,20 +4,39 @@ module Remi
 
   module Log
 
+    @level = Logger::ERROR
+
     def logger
-      Log.logger
-    end
-
-    def self.logger
-      @logger ||= Logger.new(STDOUT)
-
-
-
+      @logger ||= Log.logger_for(self.class.name)
     end
 
     # Accessor method to set the log level
     def self.level(level)
-      logger.level = level
+      @level = level
+    end
+
+
+    @loggers = {}
+
+    class << self
+      
+      def logger_for(classname)
+        @loggers[classname] ||= configure_logger_for(classname)
+      end
+
+      def configure_logger_for(classname)
+
+        logger = Logger.new(STDOUT)
+        logger.level = @level
+        logger.progname = classname
+
+        logger.formatter = proc do |severity, datetime, progname, msg|
+          "#{datetime.strftime('%Y-%m-%d %H:%M:%S.%L')} [#{progname}]%6s: %s\n" % [severity,msg]
+        end
+
+        logger
+
+      end
     end
 
   end
@@ -28,11 +47,6 @@ module Remi
     include Log
 
     def initialize
-
-      logger.progname = "MOFO"
-      logger.formatter = proc do |severity, datetime, progname, msg|
-        "#{datetime.strftime('%Y-%m-%d %H:%M:%S.%L')} [#{progname}]%6s: %s\n" % [severity,msg]
-      end
 
       logger.unknown "This is an unknown message"
       logger.fatal "This is an fatal message"

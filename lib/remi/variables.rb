@@ -2,7 +2,7 @@ module Remi
 
   class Variables
     include Enumerable
-
+    include Log
 
     def initialize
 
@@ -34,8 +34,7 @@ module Remi
 
     def var(var_name,var_meta)
 
-      puts "I should be defining #{var_name}, #{var_meta}"
-      puts "position = #{@position}"
+      logger.debug "Defining variable #{var_name} at position #{@position} wwith #{var_meta}"
 
       if @variables.has_key?(var_name)
         @variables[var_name].add_meta(var_meta)
@@ -88,6 +87,8 @@ module Remi
 
 
   class Variable
+
+    include Log
 
     def initialize(position,meta)
       @position = position
