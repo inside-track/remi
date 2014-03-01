@@ -50,10 +50,18 @@ def test_variable
   myvar1 = Variable.new position+=1, {}
   myvar2 = Variable.new position+=1, :type => :string
 
+  puts "Initial set"
   puts myvar1
   puts myvar2
 
+  puts "Modify metadata"
   myvar2.add_meta :type => :number, :cdc_type => 2
+  puts myvar2
+
+  puts "Swap variable position"
+  myvar1.swap_position(myvar2)
+
+  puts myvar1
   puts myvar2
 
 end

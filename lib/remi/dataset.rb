@@ -49,10 +49,7 @@ module Remi
 
       end
 
-
-      # VARIABLES - will be their own object momentarily, hash for now
-      @vars = {}
-      @nvars = 0
+      @vars = Variables.new
 
     end
 
@@ -60,7 +57,9 @@ module Remi
     # Variables get evaluated in a module to separate the namespace
     def define_variables(&b)
 
-      @vars = Variables.evaluate_block_vars(@vars,&b)
+      puts "Before define_varaibles: @vars = #{@vars.object_id}"
+      @vars.evaluate_block_vars(&b)
+      puts "After define_varaibles: @vars = #{@vars.object_id}"
       puts to_s
 
     end
@@ -150,8 +149,8 @@ module Remi
       msg << "\n"
       msg << "-" * 3 + "VARIABLES" + "-" * 3 + "\n"
 
-      @vars.each do |key,value|
-        msg << "#{key} => #{value}\n"
+      @vars.each_with_meta do |name,value,meta|
+        msg << "#{name} = #{value} | #{meta}\n"
       end
 
       msg

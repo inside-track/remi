@@ -1,62 +1,65 @@
 module Remi
 
-  module Variables
+  class Variables
+#    include Enumerable
 
-    extend self
 
-    def evaluate_block_vars(vars,&b)
-      @vars = vars
+    def initialize
+
+      @variables = {}
+      @values = []
+      @position = -1
+
+    end
+
+
+    def evaluate_block_vars(&b)
+
       self.instance_eval(&b)
-      @vars
+
     end
 
 
     # Statements in the define_variables block have access to the following methods
 
-    def append_variables_hash(var_name,var_meta)
+    def var(var_name,var_meta)
 
-      if @vars.has_key?(var_name)
-        tmp_vars = @vars.merge(var_name => @vars[var_name].merge(var_meta))
+      puts "I should be defining #{var_name}, #{var_meta}"
+      puts "position = #{@position}"
+
+      if @variables.has_key?(var_name)
+        @variables[var_name].add_meta(var_meta)
       else
-        @nvars += 1;
-        tmp_vars = @vars.merge(var_name => var_meta)
+        @variables[var_name] = Variable.new @position+=1, var_meta
+        @values << nil
       end
-
-      unless tmp_vars[var_name].has_key?(:type)
-        raise ":type not defined for variable #{var_name}"
-      end
-
-      @vars = tmp_vars
 
     end
-    alias_method :var, :append_variables_hash
+
+
+    def each
+
+      @variables.each do |var_name,var_obj|
+        
+        yield var_name, @values[var_obj.position]
+
+      end
+
+    end
+
+    def each_with_meta
+
+      @variables.each do |var_name,var_obj|
+        
+        yield var_name, @values[var_obj.position], var_obj.meta
+
+      end
+
+    end
+
 
   end
 
-
-  # A variable is an object that has a value and other metadata
-  # variables in a dataset should be collected in an array and
-  # have a position
-
-  # NO!  The variable does not contain the value, it contains
-  # a reference to position of the value in an array
-  # I think this is more like a struct than a class kQ2MWuUKi6Qr
-=begin
-  class Variable
-
-    def initialize(position)
-
-      @value = nil
-      @position = position
-      @meta = {}
-      
-    end
-
-    attr_accessor :value
-    attr_accessor :meta
-
-  end
-=end  
 
   class Variable
 
@@ -85,27 +88,6 @@ module Remi
     end
 
   end
-
-
-=begin
-  var1 = Variable.new(0,{:type => :string})
-  var2 = Variable.new(1,{:type => :number})
-
-  puts var1
-  puts var2
-
-  var1.swap_position(var2)
-
-  
-  puts var1
-  puts var2
-
-  var1.position = 3
-  puts var1.position
-
-  var1.meta[:myrule] = "Georgio"
-  puts var1.meta
-=end
 
 
 
