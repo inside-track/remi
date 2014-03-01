@@ -12,6 +12,7 @@ module Remi
 
     end
 
+    attr_accessor :values
 
     def evaluate_block_vars(&b)
 
@@ -45,6 +46,22 @@ module Remi
 
     end
 
+
+    def to_msgpack
+
+      h = {}
+      @variables.each do |var_name,var_obj|
+
+        h.merge!({ var_name => { 
+            :position => var_obj.position, 
+            :meta => var_obj.meta 
+          } })
+
+      end
+
+      h.to_msgpack
+
+    end
 
     def each
 

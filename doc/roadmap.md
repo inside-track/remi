@@ -6,7 +6,7 @@
   * datastep class
   * simple serialized dataset reader/writer
 
-* **0.2.0** - Groups
+* **0.2.0** - Groups (public release)
 
   * sort
   * first/last processing

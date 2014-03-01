@@ -98,7 +98,7 @@ module Remi
       puts "-Closing dataset-"
 
       # Write header file containing metadata
-      @header_file.puts @vars.select {|x| x != :value}
+      @header_file.puts @vars.to_msgpack
 
 
       @header_file.close
@@ -111,31 +111,12 @@ module Remi
 
 
     def output
-
+=begin
       puts "--OUTPUT--"
 
-      # Convert values to ordered array
-      #    BUT I WANT THESE in the right order (need to define order attribute)
-      #    I would like some cleaner accessor methods here to easily
-      #    and efficiently loop over vars by name or number
-      puts @vars
-      row_array = @vars.collect do |v_key,v_value|
-
-        puts "MONKEY #{v_key}, #{v_value}"
-        v_value.collect do |vv_key,vv_value|
-          puts "DOFUS #{vv_key}, #{vv_value}"
-          vv_value if vv_key == :value
-        end
-
-      end.flatten
-
-      puts "row_array = #{row_array}"
-
-      @data_file.puts row_array.to_msgpack
-
-      @vars.each do |key,value|
-        puts "#{key} => #{value[:value]}"
-      end
+      puts "#{@vars.values}"
+=end
+      @data_file.puts @vars.values.to_msgpack
 
     end
 

@@ -17,6 +17,8 @@
 
 =end
 
+require 'benchmark'
+
 # Load the Remi library
 load "#{File.dirname(__FILE__)}/../lib/remi.rb"
 
@@ -60,8 +62,7 @@ def test_datastep
     end
 
 
-    for i in 1..3
-
+    for i in 1..50000
       d1[:rownum] = i
       d1[:retailer_key] = rand_string()
       d1[:physical_cases] = rand(100)
@@ -75,7 +76,10 @@ def test_datastep
 
 end
 
-test_datastep
+time = Benchmark.realtime do
+  test_datastep
+end
+puts "Time: #{time}"
 
 
 
