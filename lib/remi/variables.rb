@@ -1,7 +1,7 @@
 module Remi
 
   class Variables
-#    include Enumerable
+    include Enumerable
 
 
     def initialize
@@ -19,6 +19,15 @@ module Remi
 
     end
 
+    # Variable accessor
+    def [](varname)
+      @values[@variables[varname].position]
+    end
+
+    # Variables assignment
+    def []= varname,value
+      @values[@variables[varname].position] = value
+    end
 
     # Statements in the define_variables block have access to the following methods
 

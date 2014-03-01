@@ -66,12 +66,12 @@ module Remi
 
     # Variable accessor
     def [](varname)
-      @vars[varname][:value]
+      @vars[varname]
     end
 
     # Variables assignment
     def []= varname,value
-      @vars[varname][:value] = value
+      @vars[varname] = value
     end
 
 
