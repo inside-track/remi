@@ -34,7 +34,7 @@ module Remi
 
     def var(var_name,var_meta)
 
-      logger.debug "Defining variable #{var_name} at position #{@position} with #{var_meta}"
+      logger.debug "Defining variable #{var_name} at position #{@position+1} with #{var_meta}"
 
       if @variables.has_key?(var_name)
         @variables[var_name].add_meta(var_meta)
@@ -49,10 +49,16 @@ module Remi
     # want variables to be imported in the right order, but not necessarily
     # starting from the same spot
     def var_import(ds)
-      
+
+      ds.open_for_read
+
+      logger.debug "Importing data from #{ds.name}"
+
       ds.vars.each do |var_name,var_obj|
-        var var_name var_obj.meta
+        var var_name, var_obj.meta
       end
+
+      ds.close
 
     end
 
@@ -77,22 +83,21 @@ module Remi
 
       @variables.each do |var_name,var_obj|
         
-        yield var_name, @values[var_obj.position]
+        yield var_name, var_obj
 
       end
 
     end
 
-    def each_with_meta
+    def each_with_values
 
       @variables.each do |var_name,var_obj|
         
-        yield var_name, @values[var_obj.position], var_obj.meta
+        yield var_name, var_obj, @values[var_obj.position]
 
       end
 
     end
-
 
   end
 

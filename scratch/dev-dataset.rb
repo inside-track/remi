@@ -38,8 +38,8 @@ def test_dataset_variables
   work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
   work.mydata_multivar.define_variables do
 
-    var :retailer_key, :type => :string
-    var :physical_cases, :type => :number
+    var :retailer_key, :type => "string"
+    var :physical_cases, :type => "number"
     
   end
 
@@ -59,13 +59,13 @@ def test_datastep
     myvar = []
     d1.define_variables do
 
-      var :rownum, :type => :number
-      var :retailer_key, :type => :string
-      var :physical_cases, :type => :number
+      var :rownum, :type => "number"
+      var :retailer_key, :type => "string"
+      var :physical_cases, :type => "number"
 
       for i in 1..10
         myvar << "myvar_#{i}".to_sym
-        var myvar[i-1], :type => :string
+        var myvar[i-1], :type => "string"
       end
     
     end
@@ -108,9 +108,9 @@ def test_writeread
 
     d1.define_variables do
 
-      var :rownum, :type => :number
-      var :retailer_key, :type => :string
-      var :physical_cases, :type => :number
+      var :rownum, :type => "number"
+      var :retailer_key, :type => "string"
+      var :physical_cases, :type => "number"
     
     end
 
@@ -135,12 +135,26 @@ def test_writeread
   # create a new file.  When called from elsewhere, it should
   # just read the metadata from the header file
 
-  work.want.define_variables do
+  datastep work.want do |d1|
+
+    d1.define_variables do
     
-    var :mofo, :type => :number
-    var_import(work.have)
+      var :mofo, :type => "number"
+      var_import(work.have)
+      var :russel, :type => "string"
+
+    end
+
+#    read work.have do |di|
+#    end
+
+
 
   end
+
+
+#  work.have.open_for_read
+
 
 =begin
   datastep work.want do |d1|

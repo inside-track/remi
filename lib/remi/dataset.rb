@@ -3,6 +3,24 @@ module Remi
   require 'msgpack'
   require 'zlib'
 
+  # Stolen from http://devblog.avdi.org/2009/07/14/recursively-symbolize-keys/
+  # Not sure I really like it.  Might want to convert to a hash method
+  def symbolize_keys(hash)
+    hash.inject({}){|result, (key, value)|
+      new_key = case key
+                when String then key.to_sym
+                else key
+                end
+      new_value = case value
+                  when Hash then symbolize_keys(value)
+                  else value
+                  end
+      result[new_key] = new_value
+      result
+    }
+  end
+
+
   def datastep(*dataset)
 
     include Log
@@ -15,13 +33,13 @@ module Remi
     logger.debug "Starting datastep #{dataset}"
 
     dataset.each do |ds|
-      ds.open
+      ds.open_for_write
     end
 
     yield *dataset
 
     dataset.each do |ds|
-      ds.close
+      ds.close_and_write_header
     end
 
 
@@ -58,6 +76,7 @@ module Remi
 
     end
 
+    attr_reader :name
     attr_accessor :vars
 
 
@@ -80,12 +99,9 @@ module Remi
 
 
 
-    def open
+    def open_for_write
 
-      # Open should put a lock on the dataset so that further
-      # calls to datalib.dataset_name return the same object
-
-      logger.info "-Opening dataset #{@datalib}.#{@name}-"
+      logger.info "-Opening dataset for write #{@datalib}.#{@name}-"
       logger.info "Data file #{@data_file_full_path}"
       logger.info "Header file #{@header_file_full_path}"
 
@@ -97,13 +113,53 @@ module Remi
 
     end
 
-    def close
 
-      logger.info "-Closing dataset #{@datalib}.#{@name}-"
+    def open_for_read
+
+      logger.info "-Opening dataset for read #{@datalib}.#{@name}-"
+      logger.info "Data file #{@data_file_full_path}"
+      logger.info "Header file #{@header_file_full_path}"
+
+      raw_header_file = File.open(@header_file_full_path,"r")
+      @header_file = Zlib::GzipReader.new(raw_header_file)
+
+      raw_data_file = File.open(@data_file_full_path,"r")
+      @data_file = Zlib::GzipReader.new(raw_data_file)
+
+      import_header
+
+    end
+
+
+    def import_header
+
+      @header_file.each do |row|
+        header = symbolize_keys(MessagePack.unpack(row.chomp))
+        logger.debug "Reading metadata #{header}"
+
+        header.each do |key,value|
+
+          @vars.var key, value[:meta]
+
+        end
+
+      end
+
+    end
+
+
+    def close_and_write_header
 
       # Write header file containing metadata
       @header_file.puts @vars.to_msgpack
 
+      close
+
+    end
+
+    def close
+
+      logger.info "-Closing dataset #{@datalib}.#{@name}-"
 
       @header_file.close
       @data_file.close
@@ -130,8 +186,8 @@ module Remi
       msg << "\n"
       msg << "-" * 3 + "VARIABLES" + "-" * 3 + "\n"
 
-      @vars.each_with_meta do |name,value,meta|
-        msg << "#{name} = #{value} | #{meta}\n"
+      @vars.each_with_values do |name,var_obj,value|
+        msg << "#{name} = #{value} | #{var_obj.meta}\n"
       end
 
       msg
