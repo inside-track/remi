@@ -27,9 +27,6 @@ module Remi
 
     raise "datastep called, no block given" if not block_given?
 
-    # All this needs to do is open and close the dataset
-    
-
     logger.debug "Starting datastep #{dataset}"
 
     dataset.each do |ds|
@@ -42,8 +39,21 @@ module Remi
       ds.close_and_write_header
     end
 
+  end
+
+
+  def read(dataset)
+
+    include Log
+
+    logger.debug "Reading dataset #{dataset.name}"
+
+    dataset.open_for_read
+    yield dataset
+    dataset.close
 
   end
+
 
 
   class Dataset
@@ -176,6 +186,20 @@ module Remi
 
     end
 
+
+    def readline(mapto_ds)
+
+
+      # hmmm... need to figure out how to just read one row here
+
+      mapto_ds.vars.each_with_values do |name,obj,value|
+        
+        @vars[name] = value
+
+      end
+
+
+    end
 
 
     def to_s

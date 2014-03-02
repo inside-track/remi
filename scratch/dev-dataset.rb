@@ -145,15 +145,21 @@ def test_writeread
 
     end
 
-#    read work.have do |di|
-#    end
+# I wonder if this should be a "datastep" method as well
+# then I would just have datasteps that could be nested to 
+# read or write depending on context
 
+    read work.have do |di|
 
+      d1[:mofo] = rand()
+      d1.readline(di)
+      d1[:russel] = "ALPHABET"
+      d1.output
+
+    end
 
   end
 
-
-#  work.have.open_for_read
 
 
 =begin
