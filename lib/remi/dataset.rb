@@ -182,11 +182,26 @@ module Remi
 
     def output
 
-      @data_file.puts @vars.values.to_msgpack
+      puts "WRITING #{@vars.values} to file"
+      puts "|#{@vars.values.to_msgpack}|"
+
+#      @data_file.puts @vars.values.to_msgpack
+      @data_file.puts "#{@vars.values.to_msgpack}"
 
     end
 
 
+    def readline
+
+      line = @data_file.readline.chomp
+#      line = MessagePack.unpack(@data_file.readline.chomp)
+#      puts "READING #{line}"
+      uline = MessagePack.unpack("#{line}")
+      puts "UNPACKED #{uline}"
+
+    end
+
+=begin
     def readline(mapto_ds)
 
 
@@ -200,7 +215,7 @@ module Remi
 
 
     end
-
+=end
 
     def to_s
 

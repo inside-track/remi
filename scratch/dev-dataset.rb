@@ -118,7 +118,7 @@ def test_writeread
 
       d1[:rownum] = i
       d1[:retailer_key] = "AKDFKJDdKDJ"
-      d1[:physical_cases] = 385.18356
+      d1[:physical_cases] = rand()*100
 
       d1.output()
 
@@ -148,13 +148,26 @@ def test_writeread
 # I wonder if this should be a "datastep" method as well
 # then I would just have datasteps that could be nested to 
 # read or write depending on context
-
+=begin
     read work.have do |di|
 
       d1[:mofo] = rand()
       d1.readline(di)
       d1[:russel] = "ALPHABET"
       d1.output
+
+    end
+=end
+
+# Work out a simple incremental reader, then wrap it up in the class
+
+    read work.have do |di|
+
+      for i in 1..11
+
+        di.readline
+
+      end
 
     end
 
