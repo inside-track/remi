@@ -114,17 +114,19 @@ def test_writeread
     
     end
 
-    for i in 1..10
+    for i in 1..12
 
       d1[:rownum] = i
       d1[:retailer_key] = "AKDFKJDdKDJ"
-      d1[:physical_cases] = rand()*100
+      d1[:physical_cases] = 10#rand_string()
 
       d1.output()
 
     end
 
   end
+
+
 
 
   # so here, work.have is a new object and different than above
@@ -148,6 +150,7 @@ def test_writeread
 # I wonder if this should be a "datastep" method as well
 # then I would just have datasteps that could be nested to 
 # read or write depending on context
+
 =begin
     read work.have do |di|
 
@@ -163,7 +166,7 @@ def test_writeread
 
     read work.have do |di|
 
-      for i in 1..11
+      for i in 1..13
 
         di.readline
 

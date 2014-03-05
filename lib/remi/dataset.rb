@@ -120,6 +120,7 @@ module Remi
 
       raw_data_file = File.open(@data_file_full_path,"w")
       @data_file = Zlib::GzipWriter.new(raw_data_file)
+      @data_stream = MessagePack::Packer.new(@data_file)
 
     end
 
@@ -135,6 +136,9 @@ module Remi
 
       raw_data_file = File.open(@data_file_full_path,"r")
       @data_file = Zlib::GzipReader.new(raw_data_file)
+      @data_stream = MessagePack::Unpacker.new(@data_file)
+
+
 
       import_header
 
@@ -186,19 +190,29 @@ module Remi
       puts "|#{@vars.values.to_msgpack}|"
 
 #      @data_file.puts @vars.values.to_msgpack
-      @data_file.puts "#{@vars.values.to_msgpack}"
+#      @data_file.puts "#{@vars.values.to_msgpack}"
+#      @vars.values.to_msgpack(@data_file)
+
+#      @data_stream.write_array_header(@vars.values.length)
+      @data_stream.write(@vars.values).flush
 
     end
 
 
     def readline
 
+      line = @data_stream.read
+      puts "UNPACKED #{line}"
+
+
+=begin
       line = @data_file.readline.chomp
 #      line = MessagePack.unpack(@data_file.readline.chomp)
-#      puts "READING #{line}"
+      puts "READING #{line}"
       uline = MessagePack.unpack("#{line}")
       puts "UNPACKED #{uline}"
-
+#      rescue EOFError
+=end
     end
 
 =begin
