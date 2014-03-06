@@ -70,10 +70,12 @@ module Remi
       @name = name
 
       @header_file_full_path = ""
-      @data_file_full_path = ""
-
       @header_file = nil
+      @header_stream = nil
+
+      @data_file_full_path = ""
       @data_file = nil
+      @data_stream = nil
 
       if lib_options.has_key?(:directory)
 
@@ -115,8 +117,10 @@ module Remi
       logger.info "Data file #{@data_file_full_path}"
       logger.info "Header file #{@header_file_full_path}"
 
+      # Header kept as stream in case we want to have multi-row headers
       raw_header_file = File.open(@header_file_full_path,"w")
       @header_file = Zlib::GzipWriter.new(raw_header_file)
+      @header_stream = MessagePack::Packer.new(@header_file)
 
       raw_data_file = File.open(@data_file_full_path,"w")
       @data_file = Zlib::GzipWriter.new(raw_data_file)
@@ -133,12 +137,11 @@ module Remi
 
       raw_header_file = File.open(@header_file_full_path,"r")
       @header_file = Zlib::GzipReader.new(raw_header_file)
+      @header_stream = MessagePack::Unpacker.new(@header_file)
 
       raw_data_file = File.open(@data_file_full_path,"r")
       @data_file = Zlib::GzipReader.new(raw_data_file)
       @data_stream = MessagePack::Unpacker.new(@data_file)
-
-
 
       import_header
 
@@ -147,8 +150,9 @@ module Remi
 
     def import_header
 
-      @header_file.each do |row|
-        header = symbolize_keys(MessagePack.unpack(row.chomp))
+      @header_stream.each do |header_row|
+
+        header = symbolize_keys(header_row)
         logger.debug "Reading metadata #{header}"
 
         header.each do |key,value|
@@ -165,7 +169,7 @@ module Remi
     def close_and_write_header
 
       # Write header file containing metadata
-      @header_file.puts @vars.to_msgpack
+      @header_stream.write(@vars.to_header).flush
 
       close
 
@@ -189,11 +193,7 @@ module Remi
       puts "WRITING #{@vars.values} to file"
       puts "|#{@vars.values.to_msgpack}|"
 
-#      @data_file.puts @vars.values.to_msgpack
-#      @data_file.puts "#{@vars.values.to_msgpack}"
-#      @vars.values.to_msgpack(@data_file)
-
-#      @data_stream.write_array_header(@vars.values.length)
+      # Consider flushing every N rows and write_array_header
       @data_stream.write(@vars.values).flush
 
     end
@@ -201,18 +201,13 @@ module Remi
 
     def readline
 
-      line = @data_stream.read
-      puts "UNPACKED #{line}"
+      @vars.values = @data_stream.read
 
+      rescue EOFError
+      
+      ensure
+      puts "UNPACKED #{@vars.values}"
 
-=begin
-      line = @data_file.readline.chomp
-#      line = MessagePack.unpack(@data_file.readline.chomp)
-      puts "READING #{line}"
-      uline = MessagePack.unpack("#{line}")
-      puts "UNPACKED #{uline}"
-#      rescue EOFError
-=end
     end
 
 =begin

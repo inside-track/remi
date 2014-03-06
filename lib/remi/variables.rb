@@ -63,7 +63,7 @@ module Remi
     end
 
 
-    def to_msgpack
+    def to_header
 
       h = {}
       @variables.each do |var_name,var_obj|
@@ -74,8 +74,13 @@ module Remi
           } })
 
       end
+      h
 
-      h.to_msgpack
+    end
+
+    def to_msgpack
+
+      to_header.to_msgpack
 
     end
 

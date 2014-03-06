@@ -166,7 +166,7 @@ def test_writeread
 
     read work.have do |di|
 
-      for i in 1..13
+      for i in 1..20
 
         di.readline
 
