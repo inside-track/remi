@@ -114,11 +114,11 @@ def test_writeread
     
     end
 
-    for i in 1..12
+    for i in 1..100
 
       d1[:rownum] = i
-      d1[:retailer_key] = "AKDFKJDdKDJ"
-      d1[:physical_cases] = 10#rand_string()
+      d1[:retailer_key] = rand_string()
+      d1[:physical_cases] = (rand()*100).to_i
 
       d1.output()
 
