@@ -67,6 +67,11 @@ module Remi
     end
 
 
+    def has_key?(key)
+      @variables.has_key?(key)
+    end
+
+
     def each
       @variables.each do |var_name,var_obj|
         yield var_name, var_obj

@@ -29,7 +29,13 @@ module Remi
 
     dataset.open_for_read
 
-    yield dataset
+    begin
+      while dataset.readrow
+        yield dataset
+      end
+    rescue EOFError
+    end
+
   ensure
     dataset.close
   end
@@ -144,8 +150,19 @@ module Remi
     end
 
 
-    def readline
+    def row_to_log
+      logger.debug "#{vars.values}"
+    end
+
+
+    def readrow
       @vars.values = @data_stream.read
+    end
+
+    def set_values(ds)
+      ds.vars.each_with_values do |name,obj,value|
+        @vars[name] = value if @vars.has_key?(name)
+      end
     end
 
 =begin

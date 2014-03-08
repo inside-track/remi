@@ -137,9 +137,9 @@ def test_writeread
   # create a new file.  When called from elsewhere, it should
   # just read the metadata from the header file
 
-  datastep work.want do |d1|
+  datastep work.want do |want|
 
-    d1.define_variables do
+    want.define_variables do
     
       var :mofo, :type => "number"
       var_import(work.have)
@@ -147,35 +147,22 @@ def test_writeread
 
     end
 
-# I wonder if this should be a "datastep" method as well
-# then I would just have datasteps that could be nested to 
-# read or write depending on context
+    read work.have do |have|
 
-=begin
-    read work.have do |di|
+      want.set_values(have)
+      want[:mofo] = "TD-#{have[:retailer_key]}"
+      want[:russel] = "RUSSEL!!!"
 
-      d1[:mofo] = rand()
-      d1.readline(di)
-      d1[:russel] = "ALPHABET"
-      d1.output
-
-    end
-=end
-
-# Work out a simple incremental reader, then wrap it up in the class
-
-    read work.have do |di|
-
-      for i in 1..20
-
-        di.readline
-
-      end
+      want.output
 
     end
 
   end
 
+
+  read work.want do |want|
+    want.row_to_log
+  end
 
 
 =begin
