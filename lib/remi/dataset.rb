@@ -1,69 +1,76 @@
 module Remi
-
   require 'msgpack'
   require 'zlib'
 
-  def datastep(*dataset)
+  ## Methods that act on datasets
 
+  def datastep(*dataset)
     include Log
 
     raise "datastep called, no block given" if not block_given?
 
-    # All this needs to do is open and close the dataset
-    
-
-    logger.info "Starting datastep #{dataset}"
+    logger.debug "DATASTEP> #{dataset}"
 
     dataset.each do |ds|
-      ds.open
+      ds.open_for_write
     end
 
     yield *dataset
-
+  ensure
     dataset.each do |ds|
-      ds.close
+      ds.close_and_write_header
+    end
+  end
+
+
+  def read(dataset)
+    include Log
+    logger.debug "DATASET.READ> **#{dataset.name}**"
+
+    dataset.open_for_read
+
+    begin
+      while dataset.readrow
+        yield dataset
+      end
+    rescue EOFError
     end
 
-
+  ensure
+    dataset.close
   end
 
 
   class Dataset
-
     include Log
 
+    attr_reader :name
+    attr_accessor :vars
+
     def initialize(datalib,name,lib_options)
-
-      # Initialize should check to see if dataset exists
-      # If so, read variables and other dataset options
-      # If not, initialize an empty dataset
-
       @datalib = datalib
       @name = name
 
       @header_file_full_path = ""
-      @data_file_full_path = ""
-
       @header_file = nil
+      @header_stream = nil
+
+      @data_file_full_path = ""
       @data_file = nil
+      @data_stream = nil
 
       if lib_options.has_key?(:directory)
-
         @header_file_full_path = File.join(lib_options[:directory][:dirname],"#{@name}.hgz")
         @data_file_full_path = File.join(lib_options[:directory][:dirname],"#{@name}.rgz")
-
       end
 
       @vars = Variables.new
-
     end
 
 
     # Variables get evaluated in a module to separate the namespace
     def define_variables(&b)
-
       @vars.evaluate_block_vars(&b)
-
     end
 
     # Variable accessor
@@ -77,195 +84,117 @@ module Remi
     end
 
 
+    def open_for_write
+      logger.info "DATASET.OPEN> **<#{@datalib}.#{@name}** for write"
+      logger.debug "  Data file #{@data_file_full_path}"
+      logger.debug "  Header file #{@header_file_full_path}"
 
-    def open
-
-      # Open should put a lock on the dataset so that further
-      # calls to datalib.dataset_name return the same object
-
-#A AHAHAHAHHA - use Datalib.new work ~/Desktop/work
-      logger.info "-Opening dataset #{@datalib}.#{@name}-"
-      logger.info "Data file #{@data_file_full_path}"
-      logger.info "Header file #{@header_file_full_path}"
-
+      # Header kept as stream in case we want to have multi-row headers
       raw_header_file = File.open(@header_file_full_path,"w")
       @header_file = Zlib::GzipWriter.new(raw_header_file)
+      @header_stream = MessagePack::Packer.new(@header_file)
 
       raw_data_file = File.open(@data_file_full_path,"w")
       @data_file = Zlib::GzipWriter.new(raw_data_file)
-
+      @data_stream = MessagePack::Packer.new(@data_file)
     end
 
+
+    def open_for_read
+      logger.info "DATASET.OPEN_FOR_READ> **<#{@datalib}.#{@name}** for read"
+      logger.debug "  Data file #{@data_file_full_path}"
+      logger.debug "  Header file #{@header_file_full_path}"
+
+      raw_header_file = File.open(@header_file_full_path,"r")
+      @header_file = Zlib::GzipReader.new(raw_header_file)
+      @header_stream = MessagePack::Unpacker.new(@header_file)
+
+      raw_data_file = File.open(@data_file_full_path,"r")
+      @data_file = Zlib::GzipReader.new(raw_data_file)
+      @data_stream = MessagePack::Unpacker.new(@data_file)
+
+      import_header
+    end
+
+
+    def import_header
+      @header_stream.each do |header_row|
+        header = symbolize_keys(header_row)
+        logger.debug "  Reading metadata #{header}"
+
+        header.each do |key,value|
+          @vars.var key, value[:meta]
+        end
+      end
+    end
+
+
+    def close_and_write_header
+      @header_stream.write(@vars.to_header).flush
+    ensure
+      close
+    end
+
+
     def close
-
-      logger.info "-Closing dataset #{@datalib}.#{@name}-"
-
-      # Write header file containing metadata
-      @header_file.puts @vars.to_msgpack
-
+      logger.info "DATASET.CLOSE> **#{@datalib}.#{@name}**"
 
       @header_file.close
       @data_file.close
-
     end
-
-
-
 
 
     def output
-
-      @data_file.puts @vars.values.to_msgpack
-
+      # Consider flushing every N rows and write_array_header
+      @data_stream.write(@vars.values).flush
     end
 
+
+    def row_to_log
+      logger.debug "#{vars.values}"
+    end
+
+
+    def readrow
+      @vars.values = @data_stream.read
+    end
+
+    def set_values(ds)
+      ds.vars.each_with_values do |name,obj,value|
+        @vars[name] = value if @vars.has_key?(name)
+      end
+    end
+
+=begin
+    def readline(mapto_ds)
+
+
+      # hmmm... need to figure out how to just read one row here
+
+      mapto_ds.vars.each_with_values do |name,obj,value|
+        
+        @vars[name] = value
+
+      end
+
+
+    end
+=end
 
 
     def to_s
+      msg = <<-EOF.unindent
+        ----    DATASET    ----
+        This is dataset #{@name} <#{self.object_id}> in library #{@datalib}
 
-      msg = "\n" * 2
-      msg << "-" * 4 + "DATASET" + "-" * 4 + "\n"
-      msg << "This is dataset #{@name} <#{self.object_id}> in library #{@datalib}\n"
-      msg << "\n"
-      msg << "-" * 3 + "VARIABLES" + "-" * 3 + "\n"
-
-      @vars.each_with_meta do |name,value,meta|
-        msg << "#{name} = #{value} | #{meta}\n"
+        --  VARIABLES  --
+      EOF
+      @vars.each_with_values do |name,var_obj,value|
+        msg << "#{name} = #{value} | #{var_obj.meta}\n"
       end
-
       msg
-
     end
-
   end
 end
 
 
-
-=begin Not really thought out, but it did some stuff that might want to borrow
-  class Dataset
-
-    def initialize
-      @variables = {}
-      @row = {} # I do want row to be an array, but use a has for the moment
-         # or maybe not, maybe I just want the data output to file to be array, internally it can be a hash
-    end
-
-
-    def open(full_path)
-
-      raw_file = File.open(full_path,"w")
-      @file = Zlib::GzipWriter.new(raw_file)
-
-    end
-
-    def close
-
-      @file.close
-
-    end
-
-
-    def add_variable(varname,varmeta)
-
-      tmpvarlist = @variables.merge({ varname => varmeta })
-
-      if not tmpvarlist[varname].has_key?(:type)
-        raise ":type not defined for variable #{varname}"
-      end
-
-      @variables = tmpvarlist
-      @row[varname] = nil
-
-    end
-
-
-
-    def []=(varname,value)
-      if @row.has_key?(varname)
-        @row[varname] = value
-      else
-        raise "Variable '#{varname}' not defined"
-      end
-    end
-
-
-
-    def [](varname)
-      @row[varname]
-    end
-
-
-
-    def output
-
-      printf "|"
-      @row.each do |key,value|
-        printf "#{key}=#{value}|"
-      end
-      printf "\n"
-
-      @file.puts @row.to_msgpack
-
-  #    puts "#{@row.inspect}"
-    end
-
-  end
-
-end
-=end
-
-
-
-
-=begin
-def serialize_msgpack(in_filename,out_filename,columns,debug=false)
-
-  file = File.open(out_filename,"w")
-  gz = Zlib::GzipWriter.new(file)
-
-
-  sum = 0
-#  CSV.open(in_filename, "r", { :headers => true } ) do |rows|
-  CSV.open(in_filename, "r") do |rows|
-
-
-    rows.each do |row|
-      puts "row: #{row.inspect}" if debug
-      puts "row is class #{row.class}" if debug
-      puts row.to_json if debug
-      gz.puts row.to_msgpack
-      sum = sum + row[columns[:physical_cases]].to_f
-      line_number = $.
-      puts "#{line_number}" if line_number % 50000 == 0
-    end
-
-  end
-  puts "Physical_Cases: sum = #{sum}"
-
-  gz.close
-
-end
-
-
-
-def deserialize_msgpack(in_filename,columns)
-
-  sum = 0
-  File.open(in_filename) do |file|
-
-    gz = Zlib::GzipReader.new(file)
-
-    gz.each do |row_msgpack|
-      row = MessagePack.unpack(row_msgpack.chomp)
-      sum += row[columns[:physical_cases]].to_f
-    end
-
-    gz.close
-
-  end
-  puts "Physical_Cases: sum = #{sum}"
-
-
-end
-=end

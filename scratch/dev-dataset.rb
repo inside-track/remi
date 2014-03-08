@@ -38,8 +38,8 @@ def test_dataset_variables
   work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
   work.mydata_multivar.define_variables do
 
-    var :retailer_key, :type => :string
-    var :physical_cases, :type => :number
+    var :retailer_key, :type => "string"
+    var :physical_cases, :type => "number"
     
   end
 
@@ -59,13 +59,13 @@ def test_datastep
     myvar = []
     d1.define_variables do
 
-      var :rownum, :type => :number
-      var :retailer_key, :type => :string
-      var :physical_cases, :type => :number
+      var :rownum, :type => "number"
+      var :retailer_key, :type => "string"
+      var :physical_cases, :type => "number"
 
       for i in 1..10
         myvar << "myvar_#{i}".to_sym
-        var myvar[i-1], :type => :string
+        var myvar[i-1], :type => "string"
       end
     
     end
@@ -86,11 +86,119 @@ def test_datastep
   end
 
 end
-
+=begin
 time = Benchmark.realtime do
   test_datastep
 end
 puts "Time: #{time}"
+=end
+
+
+
+
+
+
+
+
+def test_writeread
+
+  work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
+
+  datastep work.have do |d1|
+
+    d1.define_variables do
+
+      var :rownum, :type => "number"
+      var :retailer_key, :type => "string"
+      var :physical_cases, :type => "number"
+    
+    end
+
+    for i in 1..100
+
+      d1[:rownum] = i
+      d1[:retailer_key] = rand_string()
+      d1[:physical_cases] = (rand()*100).to_i
+
+      d1.output()
+
+    end
+
+  end
+
+
+
+
+  # so here, work.have is a new object and different than above
+  # so, do I get the below to reference the same object as above,
+  # or do I have it just read the same dataset
+
+  # it's almost like when called from a datastep, it should
+  # create a new file.  When called from elsewhere, it should
+  # just read the metadata from the header file
+
+  datastep work.want do |want|
+
+    want.define_variables do
+    
+      var :mofo, :type => "number"
+      var_import(work.have)
+      var :russel, :type => "string"
+
+    end
+
+    read work.have do |have|
+
+      want.set_values(have)
+      want[:mofo] = "TD-#{have[:retailer_key]}"
+      want[:russel] = "RUSSEL!!!"
+
+      want.output
+
+    end
+
+  end
+
+
+  read work.want do |want|
+    want.row_to_log
+  end
+
+
+=begin
+  datastep work.want do |d1|
+
+    d1.define_variables do
+
+      var_import(work.have)
+
+    end
+
+    for i in 1..10
+
+      d1[:rownum] = i
+      d1[:retailer_key] = "AKDFKJDdKDJ"
+      d1[:physical_cases] = rand()
+
+      d1.output()
+
+    end
+
+  end
+=end
+
+end
+
+time = Benchmark.realtime do
+  test_writeread
+end
+puts "Time: #{time}"
+
+
+
+
+
+
 
 
 
