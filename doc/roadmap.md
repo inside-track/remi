@@ -5,6 +5,7 @@
   * [x] dataset class
   * [x] datastep method
   * [x] simple serialized dataset reader/writer
+  * [ ] Web-based data viewer
   * [ ] unit test framework
   * [ ] csv reader/writer
 
@@ -14,7 +15,7 @@
   * first/last processing
   * aggregator
   * merge
-  * Web-based data viewer
+
 
 * **0.3.0** - Rules
 
@@ -34,3 +35,4 @@
   * data row warnings that stop after N messages
   * Default Remi project structure (e.g. remi new mycoolproject)
   * Include/exclude varaibles in `var_import` and `set_values`
+  * Rubydoc documentation for methods/classes/modules
