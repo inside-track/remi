@@ -1,6 +1,4 @@
 module Remi
-  require 'msgpack'
-  require 'zlib'
   include Log
 
   ## Methods that act on datasets
