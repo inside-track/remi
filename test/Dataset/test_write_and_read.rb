@@ -1,4 +1,3 @@
-$LOAD_PATH << "#{File.dirname(__FILE__)}/../.."
 require "test_remi"
 
 class Test_write_and_read < Test::Unit::TestCase
