@@ -1,5 +1,6 @@
 module Remi
   class Datalib
+    include Log
 
     def initialize(args)
       @type = :undefined
@@ -13,6 +14,8 @@ module Remi
         @type = :directory
         @options = args
         validate_directory_options()
+
+        logger.info "LIBRARY> Creating library pointing to #{@options[:directory]}"
       else
         raise "Unknown library type #{type}"
       end

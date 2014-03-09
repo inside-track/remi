@@ -1,11 +1,11 @@
 module Remi
   require 'msgpack'
   require 'zlib'
+  include Log
 
   ## Methods that act on datasets
 
   def datastep(*dataset)
-    include Log
 
     raise "datastep called, no block given" if not block_given?
 
@@ -24,7 +24,6 @@ module Remi
 
 
   def read(dataset)
-    include Log
     logger.debug "DATASET.READ> **#{dataset.name}**"
 
     dataset.open_for_read
@@ -44,7 +43,7 @@ module Remi
   class Dataset
     include Log
 
-    attr_reader :name
+    attr_reader :name, :_N_
     attr_accessor :vars
 
     def initialize(datalib,name,lib_options)
@@ -64,7 +63,10 @@ module Remi
         @data_file_full_path = File.join(lib_options[:directory][:dirname],"#{@name}.rgz")
       end
 
+      @_N_ = 0
+
       @vars = Variables.new
+
     end
 
 
@@ -147,6 +149,7 @@ module Remi
     def output
       # Consider flushing every N rows and write_array_header
       @data_stream.write(@vars.values).flush
+      @_N_ += 1
     end
 
 
@@ -157,29 +160,15 @@ module Remi
 
     def readrow
       @vars.values = @data_stream.read
+      @_N_ += 1
     end
+
 
     def set_values(ds)
       ds.vars.each_with_values do |name,obj,value|
         @vars[name] = value if @vars.has_key?(name)
       end
     end
-
-=begin
-    def readline(mapto_ds)
-
-
-      # hmmm... need to figure out how to just read one row here
-
-      mapto_ds.vars.each_with_values do |name,obj,value|
-        
-        @vars[name] = value
-
-      end
-
-
-    end
-=end
 
 
     def to_s
