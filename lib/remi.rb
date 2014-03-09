@@ -11,6 +11,7 @@ require 'json'
 require 'erb'
 require 'fileutils'
 
+require 'remi/config'
 require 'remi/helpers'
 require 'remi/version'
 require 'remi/log'

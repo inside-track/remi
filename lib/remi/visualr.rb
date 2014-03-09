@@ -64,13 +64,11 @@ module Remi
 
 
     def view_table
-      # convert this into a temporary remi directory
-      viewdata_dirname = File.join(Dir.home,".remi","tmp");
-      unless File.directory?(viewdata_dirname)
-        FileUtils.mkdir_p(viewdata_dirname)
+      unless File.directory?(RemiConfig.work_dirname)
+        FileUtils.mkdir_p(RemiConfig.work_dirname)
       end
 
-      viewdata_fullpath = File.join(viewdata_dirname,"visualr.html");
+      viewdata_fullpath = File.join(RemiConfig.work_dirname,"visualr.html");
       File.open(viewdata_fullpath,'w') do |f|
         f.write table_tpl.result(binding)
       end
