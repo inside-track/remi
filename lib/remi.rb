@@ -19,7 +19,6 @@ require 'remi/dataset'
 require 'remi/datalib'
 require 'remi/variables'
 require 'remi/datastep'
-
-require 'remi/visualr'
+require 'remi/dataview'
 
 include Remi

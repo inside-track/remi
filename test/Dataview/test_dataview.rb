@@ -9,10 +9,7 @@ class Test_Dataview < Test::Unit::TestCase
   end
 
   def test_dataview
-    v = Dataview.new
-    v.create_table
-    v.table_tpl
-    v.view_table
+    Dataview.view
 
     # Want:
 =begin
