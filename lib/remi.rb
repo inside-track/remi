@@ -18,6 +18,8 @@ require 'remi/log'
 require 'remi/dataset'
 require 'remi/datalib'
 require 'remi/variables'
+require 'remi/datastep'
+
 require 'remi/visualr'
 
 include Remi

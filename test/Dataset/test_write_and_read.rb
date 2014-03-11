@@ -11,7 +11,7 @@ class Test_write_and_read < Test::Unit::TestCase
   def test_write_and_read
     work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
 
-    datastep work.have do |have|
+    Datastep.create work.have do |have|
       have.define_variables do
         var :rownum, :type => "number"
         var :retailer_key, :type => "string"
@@ -27,17 +27,18 @@ class Test_write_and_read < Test::Unit::TestCase
       end
     end
 
+    puts "HELLO"
 
     n_have_rows = 0
 
-    datastep work.want do |want|
+    Datastep.create work.want do |want|
       want.define_variables do
         var :mofo, :type => "number"
         var_import(work.have)
         var :russel, :type => "string"
       end
 
-      read work.have do |have|
+      Datastep.read work.have do |have|
         want.set_values(have)
         want[:mofo] = "TD-#{have[:retailer_key]}"
         want[:russel] = "RUSSEL!!!"
@@ -48,7 +49,7 @@ class Test_write_and_read < Test::Unit::TestCase
       end
     end
 
-    read work.want do |want|
+    Datastep.read work.want do |want|
       want.row_to_log if want._N_ < 10
     end
 
