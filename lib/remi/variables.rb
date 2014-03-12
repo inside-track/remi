@@ -25,6 +25,8 @@ module Remi
     end
 
     # Statements in the define_variables block have access to the following methods
+
+
     def var(var_name,var_meta)
       logger.debug "VARAIBLE> #{var_name} at position #{@position+1} >> #{var_meta}"
 

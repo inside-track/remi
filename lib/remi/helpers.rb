@@ -1,3 +1,4 @@
+# MOVE THIS TO CORE ADDITIONS
 class String
   # Strip leading whitespace from each line that is the same as the 
   # amount of whitespace on the first line of the string.
@@ -27,5 +28,12 @@ module Remi
       result
     }
   end
+
+
+  # Random strings for generating dummy/test data (no performance guarantees)
+  def rand_alpha(n=10)
+    (0..n).map { ('A'..'Z').to_a[rand(26)]}.join
+  end
+
 
 end
