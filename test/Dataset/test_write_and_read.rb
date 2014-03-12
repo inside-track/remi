@@ -27,8 +27,6 @@ class Test_write_and_read < Test::Unit::TestCase
       end
     end
 
-    puts "HELLO"
-
     n_have_rows = 0
 
     Datastep.create work.want do |want|
