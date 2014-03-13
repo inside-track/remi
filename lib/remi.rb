@@ -10,6 +10,7 @@ require 'google_visualr'
 require 'json'
 require 'erb'
 require 'fileutils'
+require 'csv'
 
 require 'remi/config'
 require 'remi/core_additions'
