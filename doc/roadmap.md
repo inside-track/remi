@@ -5,8 +5,8 @@
   * [x] dataset class
   * [x] datastep method
   * [x] simple serialized dataset reader/writer
-  * [ ] Web-based data viewer
-  * [ ] unit test framework
+  * [x] Web-based data viewer
+  * [x] unit test framework
   * [ ] csv reader/writer
 
 * **0.2.0** - Groups (public release)
@@ -31,8 +31,8 @@
 * **TBD**
 
   * Data flows with thread support
-  * data libraries
   * data row warnings that stop after N messages
   * Default Remi project structure (e.g. remi new mycoolproject)
   * Include/exclude varaibles in `var_import` and `set_values`
   * Rubydoc documentation for methods/classes/modules
+  * Facilitate database read/writes in Remi syntax
