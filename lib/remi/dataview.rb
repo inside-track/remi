@@ -32,7 +32,7 @@ module Remi
       dataset.open_for_read
 
       # Send all columns as strings, until we have some better typing rules
-      dataset.vars.each do |var_name,var_obj|
+      dataset.vars_each do |var_name|
         google_table.new_column('string', var_name)
       end
 
@@ -41,27 +41,24 @@ module Remi
           google_table.add_rows(1)
 
           ivar = -1
-          dataset.vars.each_with_values do |var_name,var_obj,value|
-            google_table.set_cell(dataset._N_ - 1,ivar += 1,value.to_s)
+          dataset.vars_each do |var_name|
+            google_table.set_cell(dataset._N_ - 1,ivar += 1, dataset[var_name].to_s)
           end
+
         end
       rescue EOFError
       end
 
 =begin
+      # I would like to support number formats in some fashion like this
       google_table.set_cell(0, 0, 'Mike'  )
       google_table.set_cell(0, 1, {:v => 10000, :f => '$10,000'})
       google_table.set_cell(0, 2, true  )
       google_table.set_cell(1, 0, 'Jim'   )
       google_table.set_cell(1, 1, {:v => 8000 , :f => '$8,000' })
       google_table.set_cell(1, 2, false )
-      google_table.set_cell(2, 0, 'Alice' )
-      google_table.set_cell(2, 1, {:v => 12500, :f => '$12,500'})
-      google_table.set_cell(2, 2, true  )
-      google_table.set_cell(3, 0, 'Bob'   )
-      google_table.set_cell(3, 1, {:v => 7000 , :f => '$7,000' })
-      google_table.set_cell(3, 2, true  )
 =end
+
       opts   = { :width => 600, :showRowNumber => true }
       @chart = GoogleVisualr::Interactive::Table.new(google_table, opts)
       puts "Creating chart #{@chart}"

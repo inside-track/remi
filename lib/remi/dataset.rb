@@ -3,7 +3,6 @@ module Remi
     include Log
 
     attr_reader :name, :_N_
-    attr_accessor :vars
 
     def initialize(datalib,name,lib_options)
       @datalib = datalib
@@ -113,7 +112,7 @@ module Remi
 
 
     def row_to_log
-      logger.debug "#{vars.values}"
+      logger.debug "#{@vars.values}"
     end
 
 
@@ -123,9 +122,15 @@ module Remi
     end
 
 
+    def vars_each
+      @vars.each do |var_name,var_obj|
+        yield var_name,var_obj
+      end
+    end
+
     def set_values(ds)
-      ds.vars.each_with_values do |name,obj,value|
-        @vars[name] = value if @vars.has_key?(name)
+      ds.vars_each do |var_name|
+        @vars[var_name] = ds[var_name] if @vars.has_key?(var_name)
       end
     end
 

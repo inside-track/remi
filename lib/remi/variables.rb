@@ -45,7 +45,7 @@ module Remi
       ds.open_for_read
       logger.info "IMPORTING> **#{ds.name}**"
 
-      ds.vars.each do |var_name,var_obj|
+      ds.vars_each do |var_name,var_obj|
         var var_name, var_obj.meta
       end
       ds.close

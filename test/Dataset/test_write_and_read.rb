@@ -3,13 +3,8 @@ require "test_remi"
 class Test_write_and_read < Test::Unit::TestCase
 
   def setup
-  end
-
-  def teardown
-  end
-
-  def test_write_and_read
-    work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
+    @work = Datalib.new :directory => {:dirname => RemiConfig.work_dirname}
+    work = @work
 
     Datastep.create work.have do |have|
       have.define_variables do
@@ -27,7 +22,15 @@ class Test_write_and_read < Test::Unit::TestCase
       end
     end
 
-    n_have_rows = 0
+  end
+
+  def teardown
+    # Add a delete data function
+  end
+
+  def test_write_and_read
+    work = @work
+    count_have_rows = 0
 
     Datastep.create work.want do |want|
       want.define_variables do
@@ -41,17 +44,18 @@ class Test_write_and_read < Test::Unit::TestCase
         want[:mofo] = "TD-#{have[:retailer_key]}"
         want[:russel] = "RUSSEL!!!"
 
-        n_have_rows = n_have_rows + 1
+        if want._N_ < 2
+          want.row_to_log
+          assert_equal "0123456789", want[:retailer_key], "Problem assigning variable :retailer_key"
+        end
+
+        count_have_rows = count_have_rows + 1
 
         want.output
       end
     end
 
-    Datastep.read work.want do |want|
-      want.row_to_log if want._N_ < 10
-    end
-
-    assert_equal 100, n_have_rows, "Expected 100 rows, found #{n_have_rows}"
+    assert_equal 100, count_have_rows, "Expected 100 rows, found #{count_have_rows}"
 
   end
 end
