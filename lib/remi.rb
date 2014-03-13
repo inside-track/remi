@@ -12,6 +12,7 @@ require 'erb'
 require 'fileutils'
 
 require 'remi/config'
+require 'remi/core_additions'
 require 'remi/helpers'
 require 'remi/version'
 require 'remi/log'
