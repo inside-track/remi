@@ -59,7 +59,7 @@ module Remi
       google_table.set_cell(1, 2, false )
 =end
 
-      opts   = { :width => 600, :showRowNumber => true }
+      opts   = { :showRowNumber => true }
       @chart = GoogleVisualr::Interactive::Table.new(google_table, opts)
       puts "Creating chart #{@chart}"
     end
@@ -80,7 +80,7 @@ module Remi
 
         </head>
         <body>
-          <div id='table' style='height: 800px; width: 1200px;'></div>
+          <div id='table' style='height: 800px; width: 1000px;'></div>
         </body>
        </html>
       EOF
