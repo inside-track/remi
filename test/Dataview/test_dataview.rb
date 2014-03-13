@@ -21,7 +21,7 @@ class Test_Dataview < Test::Unit::TestCase
         var :retailer_key, :type => "string"
         var :physical_cases, :type => "number"
 
-        for i in 1..20
+        for i in 1..5
           myvar << "myvar_#{i}".to_sym
           var myvar[i-1], :type => "string"
         end
@@ -33,7 +33,7 @@ class Test_Dataview < Test::Unit::TestCase
         have[:retailer_key] = "TD-#{rand_alpha(7)}"
         have[:physical_cases] = (rand()*100).to_i
 
-        for i in 1..20
+        for i in 1..5
           have[myvar[i-1]] = rand_alpha(3)
         end
 
