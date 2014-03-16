@@ -20,6 +20,10 @@ module Remi
       @values[@variables[varname].position]
     end
 
+    def meta(varname)
+      @variables[varname].meta
+    end
+
     def []= varname,value
       @values[@variables[varname].position] = value
     end

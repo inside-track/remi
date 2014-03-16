@@ -4,55 +4,76 @@ class Test_csv_read < Test::Unit::TestCase
 
   def setup
     @work = Datalib.new :directory => {:dirname => RemiConfig.work_dirname}
-    work = @work
+    @csv_file_full_path = File.join(File.dirname(__FILE__),"test_file.csv")
   end
 
   def teardown
   end
 
-  def test_csv_read_custom_headers
-    work = @work
+  def assert_physical_cases
+    physical_cases = 0
+    Datastep.read @work.from_csv do |ds|
+      physical_cases += ds[:RAD__Physical_Cases].to_f
+    end
 
-    csv_file_full_path = File.join(File.dirname(__FILE__),"test_file.csv")
+    assert_equal 10.0, physical_cases, "Expected physical_cases = 10.0, found #{physical_cases}"    
+  end
 
-    Datastep.create work.from_csv do |from_csv|
-      from_csv.define_variables do
-        var :RAD__Fact_Key, :type => "string"
-        var :Distributor__Dim_Key, :type => "string"
-        var :RAD__Physical_Cases, :type => "number"
+  def test_csv_std_read_custom_headers
+
+    Datastep.create @work.from_csv do |ds|
+      ds.define_variables do
+        var :RAD__Fact_Key, :type => "string", :csv_col => 0
+        var :Distributor__Dim_Key, :type => "string", :csv_col => 1
+        var :RAD__Physical_Cases, :type => "number", :csv_col => 7
       end
 
-
-#    CSV.open(csv_file_full_path, "r", { :headers => true }) do |rows|
-      CSV.open(csv_file_full_path, "r") do |rows|
+      CSV.open(@csv_file_full_path, "r") do |rows|
         rows.each do |row|
           if $. == 1 then next end # skip header
 
-          from_csv[:RAD__Fact_Key] = row[0]
-          from_csv[:Distributor__Dim_Key] = row[1]
-          from_csv[:RAD__Physical_Cases] = row[7]
+          ds[:RAD__Fact_Key] = row[ds.meta(:RAD__Fact_Key)[:csv_col]]
+          ds[:Distributor__Dim_Key] = row[ds.meta(:Distributor__Dim_Key)[:csv_col]]
+          ds[:RAD__Physical_Cases] = row[ds.meta(:RAD__Physical_Cases)[:csv_col]]
 
-          from_csv.output
+          ds.output
         end
       end
     end
-
-#    Dataview.view work.from_csv
     
+    assert_physical_cases
+
   end
 
-# YEAH, THIS NEEDS TO BE SIMPLER!!!!
-  
-  def test_csv_read_trust_header
-    work = @work
-    csv_file_full_path = File.join(File.dirname(__FILE__),"test_file.csv")
+
+  def test_csv_helper_read_custom_headers
+
+    Datastep.create @work.from_csv do |ds|
+      ds.define_variables do
+        var :RAD__Fact_Key, :type => "string", :csv_col => 0
+        var :Distributor__Dim_Key, :type => "string", :csv_col => 1
+        var :RAD__Physical_Cases, :type => "number", :csv_col => 7
+      end
+
+      CSV.datastep(@csv_file_full_path, "r") do |row|
+        ds.set_values_from_csv(row)
+        ds.output
+      end
+    end
+    
+    assert_physical_cases
+
+  end
 
 
-    count_csv_rows = 0
-    Datastep.create work.from_csv do |from_csv|
+  def test_csv_std_read_trust_header
 
-      puts "-----------"
-      CSV.open(csv_file_full_path, "r", { :headers => true, :return_headers => true }) do |rows|
+    Datastep.create @work.from_csv do |ds|
+      CSV.open(@csv_file_full_path, "r", 
+               { :headers => true, 
+                 :return_headers => true 
+               }) do |rows|
+
         puts rows.inspect
 
         puts "HEADER_ROW: #{rows.header_row?}"
@@ -61,7 +82,7 @@ class Test_csv_read < Test::Unit::TestCase
           puts "HEADERS: #{rows.headers}"
 
           csv_headers = []
-          from_csv.define_variables do
+          ds.define_variables do
             rows.headers.each do |header|
               var header.to_sym, :type => "string"
               csv_headers << header.to_sym
@@ -72,42 +93,18 @@ class Test_csv_read < Test::Unit::TestCase
         end
           
         rows.each do |row|
-
-          count_csv_rows += 1
           puts row.inspect
 
           row.each do |key,value|
             puts "writing key=#{key}, value=#{value}"
-            from_csv[key.to_sym] = value
+            ds[key.to_sym] = value
           end
 
-            from_csv.output
-
+          ds.output
         end
-
-
-=begin
-        from_csv.define_variables do
-          var :RAD__Fact_Key, :type => "string"
-          var :Distributor__Dim_Key, :type => "string"
-          var :RAD__Physical_Cases, :type => "number"
-        end
-
-        rows.each do |row|
-          if $. == 1 then next end # skip header
-
-          from_csv[:RAD__Fact_Key] = row[0]
-          from_csv[:Distributor__Dim_Key] = row[1]
-          from_csv[:RAD__Physical_Cases] = row[7]
-
-          from_csv.output
-        end
-=end
       end
     end
 
-    assert_equal 10, count_csv_rows, "Expected 10 rows(+1 header), found #{count_csv_rows}"
-    Dataview.view work.from_csv
-    
+    assert_physical_cases
   end
 end
