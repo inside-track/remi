@@ -59,14 +59,14 @@ module Remi
       google_table.set_cell(1, 2, false )
 =end
 
-      opts   = { :width => 600, :showRowNumber => true }
+      opts   = { :showRowNumber => true }
       @chart = GoogleVisualr::Interactive::Table.new(google_table, opts)
       puts "Creating chart #{@chart}"
     end
 
 
     def table_tpl
-      @tpl = ERB.new <<-EOF #.unindent
+      @tpl = ERB.new <<-EOF.unindent
       <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
       <html xmlns='http://www.w3.org/1999/xhtml'>
         <head>
@@ -80,7 +80,7 @@ module Remi
 
         </head>
         <body>
-          <div id='table' style='height: 800px; width: 1200px;'></div>
+          <div id='table' style='height: 800px; width: 1000px;'></div>
         </body>
        </html>
       EOF
