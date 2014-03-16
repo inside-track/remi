@@ -4,7 +4,7 @@ class Test_csv_read < Test::Unit::TestCase
 
   def setup
     @work = Datalib.new :directory => {:dirname => RemiConfig.work_dirname}
-    @csv_file_full_path = File.join(File.dirname(__FILE__),"test_file.csv")
+    @csv_file_full_path = File.join(File.dirname(__FILE__),"resources/test_file.csv")
   end
 
   def teardown
