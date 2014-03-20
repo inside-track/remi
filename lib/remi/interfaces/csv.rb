@@ -1,4 +1,3 @@
-# REFACTOR: Put this class in an "interface" directory
 class CSV
 
   # Default is to always skip a header row

@@ -22,6 +22,7 @@ require 'remi/datalib'
 require 'remi/variables'
 require 'remi/datastep'
 require 'remi/dataview'
-require 'remi/csv'
+
+require 'remi/interfaces/csv'
 
 include Remi
