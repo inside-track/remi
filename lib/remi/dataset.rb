@@ -139,37 +139,6 @@ module Remi
       end
     end
 
-    # REFACTOR: perhaps these should not be core dataset methods, but should
-    # be moved to a csv helper section?
-    def set_values_from_csv(row)
-      if row.is_a?(Array)
-        set_values_from_csv_array(row)
-      elsif row.is_a?(Hash)
-        set_values_from_csv_hash(row)
-      else
-        raise TypeError, "Expecting a csv row Array or Hash"
-      end
-    end
-
-    # REFACTOR: can I change these if statement to enumerable select?
-    def set_values_from_csv_array(row)
-      @vars.each do |var_name,var_obj|
-        if var_obj.meta.has_key?(:csv_col)
-          col = var_obj.meta[:csv_col]
-          @vars[var_name] = row[col]
-        end
-      end
-    end
-
-    def set_values_from_csv_hash(row)
-      @vars.each do |var_name,var_obj|
-        if row.has_key(var_name)
-          @vars[var_name] = row[var_name]
-        end
-      end
-    end
-
-
 
 
     def to_s

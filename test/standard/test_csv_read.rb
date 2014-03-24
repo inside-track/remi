@@ -65,8 +65,43 @@ class Test_csv_read < Test::Unit::TestCase
 
   end
 
-
+=begin
   def test_csv_std_read_trust_header
+
+    Datastep.create @work.from_csv do |ds|
+      CSV.open(@csv_file_full_path, "r", 
+               { :headers => true, 
+                 :return_headers => true 
+               }) do |rows|
+
+        if rows.header_row?
+          rows.readline
+
+          ds.define_variables do
+            rows.headers.each do |header|
+              var header.to_sym, :type => "string"
+            end
+          end
+
+        end
+          
+        rows.each do |row|
+          puts row.inspect
+
+          row.each do |key,value|
+            ds[key.to_sym] = value
+          end
+
+          ds.output
+        end
+      end
+    end
+
+    assert_physical_cases
+  end
+
+
+  def test_csv_helper_read_trust_header
 
     Datastep.create @work.from_csv do |ds|
       CSV.open(@csv_file_full_path, "r", 
@@ -107,4 +142,5 @@ class Test_csv_read < Test::Unit::TestCase
 
     assert_physical_cases
   end
+=end
 end
