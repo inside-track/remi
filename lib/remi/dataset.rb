@@ -26,15 +26,12 @@ module Remi
 
       @vars = {}
       @row = []
-
     end
 
-    # Variable accessor
     def [](var_name)
       @row[@vars[var_name][:position]] if variable_defined?(var_name)
     end
 
-    # Variables assignment
     def []= var_name,value
       @row[@vars[var_name][:position]] = value if variable_defined?(var_name)
     end
