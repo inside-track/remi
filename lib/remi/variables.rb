@@ -1,12 +1,46 @@
 module Remi
-  class Variables
+  module Variables
+    class DatasetVariableAccessor
+      include Log
+
+      def initialize(ds)
+        @dataset = ds
+      end
+
+      def define(var_name,var_meta={})
+        if @dataset.vars.has_key?(var_name)
+          @dataset.vars.merge!(var_meta)
+        else
+        var_meta.merge!({:type => "string"}) unless var_meta.has_key?(:type)
+          defaults = {:type => "string", :position => @dataset.vars.length + 1}
+          @dataset.vars[var_name] = defaults.merge(var_meta)
+          @dataset.row << nil
+        end
+        logger.debug "VARIABLE> #{var_name} >> #{@dataset.vars[var_name]}"
+      end
+
+      # presumably we would have a define, add, and remove metadata methods
+      # with their own validations
+
+    end
+
+    def self.describe(*datasets,&b)
+      datasets.each do |ds|
+        yield DatasetVariableAccessor.new(ds)
+      end
+    end
+
+  end
+=begin
+
+  class _Variables
     include Enumerable
     include Log
 
     attr_accessor :values
 
     def initialize
-      @variables = {}
+      @variables = {} # Hash of variable objects
       @values = []
       @position = -1
     end
@@ -121,4 +155,5 @@ module Remi
       "Variable: #{@position} - #{@meta}"
     end
   end
+=end
 end

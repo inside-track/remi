@@ -1,3 +1,4 @@
+=begin
 class CSV
 
   # Default is to always skip a header row
@@ -43,14 +44,14 @@ module Remi
     end
 
 
-=begin
+f=begin
       @vars.each do |var_name,var_obj|
         if var_obj.meta.has_key?(:csv_col)
           col = var_obj.meta[:csv_col]
           @vars[var_name] = row[col]
         end
       end
-=end
+f=end
     end
 
     def set_values_from_csv_hash(row)
@@ -63,3 +64,4 @@ module Remi
 
   end
 end
+=end

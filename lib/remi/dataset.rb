@@ -3,6 +3,7 @@ module Remi
     include Log
 
     attr_reader :name, :_N_
+    attr_accessor :vars, :row
 
     def initialize(datalib,name,lib_options)
       @datalib = datalib
@@ -23,7 +24,8 @@ module Remi
 
       @_N_ = 0
 
-      @vars = Variables.new
+      @vars = {}
+      @row = []
 
     end
 
