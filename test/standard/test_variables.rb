@@ -12,7 +12,6 @@ class Test_variables < Test::Unit::TestCase
 
 
   def test_variables_define
-
     ds = @work.ds
 
     Variables.describe ds do |v|
@@ -22,7 +21,49 @@ class Test_variables < Test::Unit::TestCase
       v.define :physical_cases, :type => "number"
     end
 
+    ds[:rownum] = 0
+    assert_equal 0, ds[:rownum], "Unable to assign variable"
+
+    assert_raise NameError do
+      ds[:x] = "x"
+    end
+
+    assert_raise NameError do
+      puts ds[:x]
+    end
   end
+
+
+  def test_variables_define_multi
+    ds1 = @work.ds1
+    ds2 = @work.ds2
+
+    Variables.describe ds1,ds2 do |v|
+      v.define :rownum, :type => "number"
+      v.define :retailer_key
+      v.define :retailer_name
+      v.define :physical_cases, :type => "number"
+    end
+
+    Variables.describe ds1 do |v|
+      v.define :in_ds1
+    end
+
+    Variables.describe ds2 do |v|
+      v.define :in_ds2
+    end
+
+    ds1[:rownum] = 0
+    ds1[:in_ds1] = true
+    ds2[:in_ds2] = true
+
+    assert_equal 0, ds1[:rownum], "Unable to assign variable"
+    assert_equal true, ds1[:in_ds1], "Unable to assign variable"
+    assert_equal true, ds2[:in_ds2], "Unable to assign variable"
+  end
+
+
+
 
 =begin
 

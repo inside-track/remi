@@ -29,26 +29,26 @@ module Remi
 
     end
 
-
-    # Variables get evaluated in a module to separate the namespace
-    def define_variables(&b)
-      @vars.evaluate_block_vars(&b)
-    end
-
     # Variable accessor
-    def [](varname)
-      @vars[varname]
-    end
-
-    def meta(varname)
-      @vars.meta(varname)
+    def [](var_name)
+      @row[@vars[var_name][:position]] if variable_defined?(var_name)
     end
 
     # Variables assignment
-    def []= varname,value
-      @vars[varname] = value
+    def []= var_name,value
+      @row[@vars[var_name][:position]] = value if variable_defined?(var_name)
     end
 
+    def variable_defined?(var_name)
+      if @vars.has_key?(var_name)
+        true
+      else
+        msg = "Variable #{var_name} not defined for dataset #{@name}"
+        logger.error msg
+        raise NameError, msg
+        false
+      end
+    end
 
     def open_for_write
       logger.info "DATASET.OPEN> **<#{@datalib}.#{@name}** for write"
