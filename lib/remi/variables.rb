@@ -7,11 +7,10 @@ module Remi
         @dataset = ds
       end
 
-      def define(var_name,var_meta={})
+      def create(var_name,var_meta={})
         if @dataset.vars.has_key?(var_name)
           @dataset.vars.merge!(var_meta)
         else
-        var_meta.merge!({:type => "string"}) unless var_meta.has_key?(:type)
           defaults = {:type => "string", :position => @dataset.vars.length + 1}
           @dataset.vars[var_name] = defaults.merge(var_meta)
           @dataset.row << nil
@@ -19,12 +18,34 @@ module Remi
         logger.debug "VARIABLE> #{var_name} >> #{@dataset.vars[var_name]}"
       end
 
+      def modify(var_name,operation,var_meta)
+#        operation = {:keep,:drop,:change}
+      end
+
+      def import_from_dataset(from_ds, options={})
+        raise "Unknown option #{options}" unless (options.keys & [:keep,:drop]).any?
+        
+=begin
+# oops, I need to have a dataset written to file before it can be opened
+    def var_import(ds)
+      ds.open_for_read
+      logger.info "IMPORTING> **#{ds.name}**"
+
+      ds.vars_each do |var_name,var_obj|
+        var var_name, var_obj.meta
+      end
+      ds.close
+    end
+=end
+        
+      end
+
       # presumably we would have a define, add, and remove metadata methods
       # with their own validations
 
     end
 
-    def self.describe(*datasets,&b)
+    def self.define(*datasets,&b)
       datasets.each do |ds|
         yield DatasetVariableAccessor.new(ds)
       end

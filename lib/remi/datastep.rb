@@ -7,11 +7,10 @@ module Remi
     extend self
 
     def create(*dataset)
-      raise "datastep called, no block given" if not block_given?
-
-      logger.debug "DATASTEP> #{dataset}"
+      raise "datastep called, no block given" unless block_given?
 
       dataset.each do |ds|
+        logger.debug "DATASTEP.CREATE> #{ds.name}"
         ds.open_for_write
       end
 

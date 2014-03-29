@@ -4,13 +4,18 @@ class Test_write_and_read < Test::Unit::TestCase
 
   def setup
     @work = Datalib.new :directory => {:dirname => RemiConfig.work_dirname}
-    work = @work
+  end
 
-    Datastep.create work.have do |have|
-      have.define_variables do
-        var :rownum, :type => "number"
-        var :retailer_key, :type => "string"
-        var :physical_cases, :type => "number"
+  def teardown
+    # Add a delete data function
+  end
+
+  def test_write
+    Datastep.create @work.have do |have|
+      Variables.define have do |v|
+        v.create :rownum, :type => "number"
+        v.create :retailer_key
+        v.create :physical_cases, :type => "number"
       end
 
       for i in 1..100
@@ -21,25 +26,38 @@ class Test_write_and_read < Test::Unit::TestCase
         have.output
       end
     end
-
   end
 
-  def teardown
-    # Add a delete data function
-  end
-
-  def test_write_and_read
-    work = @work
+  def test_read
     count_have_rows = 0
 
-    Datastep.create work.want do |want|
+    Datastep.read @work.have do |have|
+      if have._N_ < 2
+        have.row_to_log
+        assert_equal "0123456789", have[:retailer_key], "Problem reading variable :retailer_key"
+      end
+      count_have_rows += 1
+    end
+
+    assert_equal 100, count_have_rows, "Expected 100 rows, found #{count_have_rows}"
+  end
+
+
+  def _test_read_to_write
+    Datastep.create @work.want do |want|
+      Varibles.define want do |v|
+        v.create :mofo, :type => "number"
+        v.import @work.have
+        v.create :russel
+      end
+
       want.define_variables do
         var :mofo, :type => "number"
         var_import(work.have)
         var :russel, :type => "string"
       end
 
-      Datastep.read work.have do |have|
+      Datastep.read @work.have do |have|
         want.set_values(have)
         want[:mofo] = "TD-#{have[:retailer_key]}"
         want[:russel] = "RUSSEL!!!"

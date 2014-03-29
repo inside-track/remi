@@ -14,11 +14,11 @@ class Test_variables < Test::Unit::TestCase
   def test_variables_define
     ds = @work.ds
 
-    Variables.describe ds do |v|
-      v.define :rownum, :type => "number"
-      v.define :retailer_key
-      v.define :retailer_name
-      v.define :physical_cases, :type => "number"
+    Variables.define ds do |v|
+      v.create :rownum, :type => "number"
+      v.create :retailer_key
+      v.create :retailer_name
+      v.create :physical_cases, :type => "number"
     end
 
     ds[:rownum] = 0
@@ -38,19 +38,19 @@ class Test_variables < Test::Unit::TestCase
     ds1 = @work.ds1
     ds2 = @work.ds2
 
-    Variables.describe ds1,ds2 do |v|
-      v.define :rownum, :type => "number"
-      v.define :retailer_key
-      v.define :retailer_name
-      v.define :physical_cases, :type => "number"
+    Variables.define ds1,ds2 do |v|
+      v.create :rownum, :type => "number"
+      v.create :retailer_key
+      v.create :retailer_name
+      v.create :physical_cases, :type => "number"
     end
 
-    Variables.describe ds1 do |v|
-      v.define :in_ds1
+    Variables.define ds1 do |v|
+      v.create :in_ds1
     end
 
-    Variables.describe ds2 do |v|
-      v.define :in_ds2
+    Variables.define ds2 do |v|
+      v.create :in_ds2
     end
 
     ds1[:rownum] = 0
@@ -62,6 +62,33 @@ class Test_variables < Test::Unit::TestCase
     assert_equal true, ds2[:in_ds2], "Unable to assign variable"
   end
 
+
+  def test_assign_variables_from_other_dataset
+    ds1 = @work.ds1
+    ds2 = @work.ds2
+    ds3 = @work.ds3
+    ds4 = @work.ds4
+
+    Variables.define ds1 do |v|
+      v.create :rownum, :type => "number"
+      v.create :retailer_key
+      v.create :retailer_name
+      v.create :physical_cases, :type => "number"
+    end
+
+    Variables.define ds2 do |v|
+      v.import ds1, :all
+    end
+
+    Variables.define ds3 do |v|
+      v.import ds1, :keep => [:retailer_key,:physical_cases]
+    end
+
+    Variables.define ds4 do |v|
+      v.import ds1, :drop => [:rownum,:retailer_key]
+    end
+    
+  end
 
 
 

@@ -85,18 +85,14 @@ module Remi
 
     def import_header
       @header_stream.each do |header_row|
-        header = symbolize_keys(header_row)
-        logger.debug "  Reading metadata #{header}"
-
-        header.each do |key,value|
-          @vars.var key, value[:meta]
-        end
+        @vars = symbolize_keys(header_row)
+        logger.debug "  Reading metadata #{@vars}"
       end
     end
 
 
     def close_and_write_header
-      @header_stream.write(@vars.to_header).flush
+      @header_stream.write(@vars).flush
     ensure
       close
     end
@@ -112,35 +108,20 @@ module Remi
 
     def output
       # Consider flushing every N rows and write_array_header
-      @data_stream.write(@vars.values).flush
+      @data_stream.write(@row).flush
       @_N_ += 1
     end
 
 
     def row_to_log
-      logger.debug "#{@vars.values}"
+      logger.debug "#{@row}"
     end
 
 
     def readrow
-      @vars.values = @data_stream.read
+      @row = @data_stream.read
       @_N_ += 1
     end
-
-
-    def vars_each
-      @vars.each do |var_name,var_obj|
-        yield var_name,var_obj
-      end
-    end
-
-    # REFACTOR: change this to set_values_from_dataset
-    def set_values(ds)
-      ds.vars_each do |var_name|
-        @vars[var_name] = ds[var_name] if @vars.has_key?(var_name)
-      end
-    end
-
 
 
     def to_s
