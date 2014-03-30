@@ -15,6 +15,11 @@ class Test_variables < Test::Unit::TestCase
     assert test, "Unexpected variables: FOUND: #{result}, EXPECTED: #{expected}"
   end
 
+  def same_meta?(expected,result)
+    test = (expected - result) == (result - expected)
+    assert test, "Unexpected metadata: FOUND: #{result}, EXPECTED: #{expected}"
+  end
+
   def test_variables_define
     ds = @work.ds
 
@@ -98,6 +103,41 @@ class Test_variables < Test::Unit::TestCase
       v.import ds1, :drop => [:rownum,:retailer_key]
     end
     same_vars?([:retailer_name,:physical_cases],ds4.vars.keys)
+  end
+
+
+  def test_modify_variables
+    ds1 = @work.ds1
+    ds2 = @work.ds2
+
+    Variables.define ds1 do |v|
+      v.create :rownum, :type => "number"
+      v.create :retailer_key, :meta1 => "one", :meta2 => "two", :meta3 => "three", :meta4 => "four"
+      v.create :retailer_name
+      v.create :physical_cases, :type => "number"
+    end
+
+    Variables.define ds1 do |v|
+      v.modify_meta :rownum, :md5_sum => true
+    end
+    same_meta?([:type,:md5_sum],ds1.vars[:rownum].metadata.keys)
+
+    # Metadata should be overwritten with second create statement
+    Variables.define ds1 do |v|
+      v.create :rownum
+    end
+    same_meta?([:type],ds1.vars[:rownum].metadata.keys)
+    assert_equal "string", ds1.vars[:rownum][:type], "Create did not overwrite variable metadata"
+
+    Variables.define ds1 do |v|
+      v.drop_meta :retailer_key, :meta2
+    end
+    same_meta?([:type,:meta1,:meta3,:meta4],ds1.vars[:retailer_key].metadata.keys)
+
+    Variables.define ds1 do |v|
+      v.keep_meta :retailer_key, :type, :meta4
+    end
+    same_meta?([:type,:meta4],ds1.vars[:retailer_key].metadata.keys)
   end
 end
 

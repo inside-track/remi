@@ -29,11 +29,11 @@ module Remi
     end
 
     def [](var_name)
-      @row[@vars[var_name][:position]] if variable_defined?(var_name)
+      @row[@vars[var_name].position] if variable_defined?(var_name)
     end
 
     def []= var_name,value
-      @row[@vars[var_name][:position]] = value if variable_defined?(var_name)
+      @row[@vars[var_name].position] = value if variable_defined?(var_name)
     end
 
     def variable_defined?(var_name)
@@ -82,14 +82,20 @@ module Remi
 
     def import_header
       @header_stream.each do |header_row|
-        @vars = symbolize_keys(header_row)
+        symbolize_keys(header_row).each do |key,value|
+          @vars[key] = Variables::Variable.new(value[:metadata],value[:position])
+        end
         logger.debug "  Reading metadata #{@vars}"
       end
     end
 
 
     def close_and_write_header
-      @header_stream.write(@vars).flush
+      header = {}
+      @vars.each do |var_name,var_obj|
+        header.merge!(var_name => var_obj.to_hash)
+      end
+      @header_stream.write(header).flush
     ensure
       close
     end

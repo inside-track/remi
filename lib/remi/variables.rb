@@ -1,5 +1,35 @@
 module Remi
   module Variables
+    class Variable
+      attr_reader :position, :metadata
+
+      def initialize(metadata,position)
+        @metadata = {:type => "string"}.merge(metadata)
+        @position = position
+      end
+
+      def [](meta_name)
+        @metadata[meta_name]
+      end
+
+      def []= meta_name, meta_value
+        @metadata[meta_name] = meta_value
+      end
+      
+      def merge!(metadata)
+        @metadata.merge!(metadata)
+      end
+
+      def to_hash
+        { :position => @position, :metadata => @metadata }
+      end
+
+      def to_s
+        to_hash.to_s
+      end
+    end
+
+
     class DatasetVariableAccessor
       include Log
 
@@ -7,21 +37,45 @@ module Remi
         @dataset = ds
       end
 
+
       def create(var_name,var_meta={})
         if @dataset.vars.has_key?(var_name)
-          @dataset.vars.merge!(var_meta)
+          @dataset.vars[var_name] = Variable.new(var_meta,@dataset.vars[var_name].position)
         else
-          default = {:type => "string"}
-          manditory = {:position => @dataset.vars.length + 1}
-          @dataset.vars[var_name] = default.merge(var_meta).merge(manditory)
+          @dataset.vars[var_name] = Variable.new(var_meta,@dataset.vars.length + 1)
           @dataset.row << nil
         end
         logger.debug "VARIABLE> #{var_name} >> #{@dataset.vars[var_name]}"
       end
 
-      def modify(var_name,operation,var_meta)
-#        operation = {:keep,:drop,:change}
+
+      # I don't like how I have to type .metadata everywhere.
+      # I'm usually accessing the metadata so I need to figure out how to
+      # pass through any method calls to the metadata (except position)
+
+      # I also need some maniditory metadata that doesn't get keeped/dropped
+      
+      def modify_meta(var_name,var_meta = {})
+        raise "Unknown variable <#{var_name}>" unless @dataset.vars.has_key?(var_name)
+        @dataset.vars[var_name].merge!(var_meta)
       end
+
+      
+      def drop_meta(var_name,*drop)
+        @dataset.vars[var_name].metadata.each do |key,value|
+          puts "drop = #{drop}"
+          puts "I am looking for #{key} and #{drop.include? key}"
+          @dataset.vars[var_name].metadata.delete(key) if drop.include? key
+        end
+      end
+
+      
+      def keep_meta(var_name,*keep)
+        @dataset.vars[var_name].metadata.each do |key,value|
+          @dataset.vars[var_name].metadata.delete(key) unless keep.include? key
+        end
+      end
+
 
       def import(source, options={})
         if source.is_a?(Dataset)
