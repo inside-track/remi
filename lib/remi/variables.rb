@@ -1,10 +1,12 @@
 module Remi
   module Variables
     class Variable
-      attr_reader :position
+      attr_reader :position, :mandatory_metadata
 
       def initialize(metadata,position)
-        @metadata = {:type => "string"}.merge(metadata)
+        @mandatory_metadata = [:type]
+        @default_metadata = { :type => "string" }
+        @metadata = @default_metadata.merge(metadata)
         @position = position
       end
 
@@ -50,7 +52,7 @@ module Remi
       
       def drop_meta(var_name,*drop)
         @dataset.vars[var_name].each do |key,value|
-          puts "drop = #{drop}"
+          next if @dataset.vars[var_name].mandatory_metadata.include? key
           @dataset.vars[var_name].delete(key) if drop.include? key
         end
       end
@@ -58,6 +60,7 @@ module Remi
       
       def keep_meta(var_name,*keep)
         @dataset.vars[var_name].each do |key,value|
+          next if @dataset.vars[var_name].mandatory_metadata.include? key
           @dataset.vars[var_name].delete(key) unless keep.include? key
         end
       end

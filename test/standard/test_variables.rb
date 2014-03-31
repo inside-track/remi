@@ -129,13 +129,15 @@ class Test_variables < Test::Unit::TestCase
     same_meta?([:type],ds1.vars[:rownum].keys)
     assert_equal "string", ds1.vars[:rownum][:type], "Create did not overwrite variable metadata"
 
+    # Note that you cannot drop manditory metadata (:type)
     Variables.define ds1 do |v|
-      v.drop_meta :retailer_key, :meta2
+      v.drop_meta :retailer_key, :meta2, :type
     end
     same_meta?([:type,:meta1,:meta3,:meta4],ds1.vars[:retailer_key].keys)
 
+    # Note that keep does not apply to manditory metadata (:type)
     Variables.define ds1 do |v|
-      v.keep_meta :retailer_key, :type, :meta4
+      v.keep_meta :retailer_key, :meta4
     end
     same_meta?([:type,:meta4],ds1.vars[:retailer_key].keys)
   end
