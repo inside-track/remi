@@ -1,23 +1,15 @@
 module Remi
   module Variables
     class Variable
-      attr_reader :position, :metadata
+      attr_reader :position
 
       def initialize(metadata,position)
         @metadata = {:type => "string"}.merge(metadata)
         @position = position
       end
 
-      def [](meta_name)
-        @metadata[meta_name]
-      end
-
-      def []= meta_name, meta_value
-        @metadata[meta_name] = meta_value
-      end
-      
-      def merge!(metadata)
-        @metadata.merge!(metadata)
+      def method_missing(method_name,*args,&block)
+        @metadata.send(method_name,*args,&block)
       end
 
       def to_hash
@@ -48,11 +40,6 @@ module Remi
         logger.debug "VARIABLE> #{var_name} >> #{@dataset.vars[var_name]}"
       end
 
-
-      # I don't like how I have to type .metadata everywhere.
-      # I'm usually accessing the metadata so I need to figure out how to
-      # pass through any method calls to the metadata (except position)
-
       # I also need some maniditory metadata that doesn't get keeped/dropped
       
       def modify_meta(var_name,var_meta = {})
@@ -62,17 +49,16 @@ module Remi
 
       
       def drop_meta(var_name,*drop)
-        @dataset.vars[var_name].metadata.each do |key,value|
+        @dataset.vars[var_name].each do |key,value|
           puts "drop = #{drop}"
-          puts "I am looking for #{key} and #{drop.include? key}"
-          @dataset.vars[var_name].metadata.delete(key) if drop.include? key
+          @dataset.vars[var_name].delete(key) if drop.include? key
         end
       end
 
       
       def keep_meta(var_name,*keep)
-        @dataset.vars[var_name].metadata.each do |key,value|
-          @dataset.vars[var_name].metadata.delete(key) unless keep.include? key
+        @dataset.vars[var_name].each do |key,value|
+          @dataset.vars[var_name].delete(key) unless keep.include? key
         end
       end
 

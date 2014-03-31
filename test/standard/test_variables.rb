@@ -120,24 +120,24 @@ class Test_variables < Test::Unit::TestCase
     Variables.define ds1 do |v|
       v.modify_meta :rownum, :md5_sum => true
     end
-    same_meta?([:type,:md5_sum],ds1.vars[:rownum].metadata.keys)
+    same_meta?([:type,:md5_sum],ds1.vars[:rownum].keys)
 
     # Metadata should be overwritten with second create statement
     Variables.define ds1 do |v|
       v.create :rownum
     end
-    same_meta?([:type],ds1.vars[:rownum].metadata.keys)
+    same_meta?([:type],ds1.vars[:rownum].keys)
     assert_equal "string", ds1.vars[:rownum][:type], "Create did not overwrite variable metadata"
 
     Variables.define ds1 do |v|
       v.drop_meta :retailer_key, :meta2
     end
-    same_meta?([:type,:meta1,:meta3,:meta4],ds1.vars[:retailer_key].metadata.keys)
+    same_meta?([:type,:meta1,:meta3,:meta4],ds1.vars[:retailer_key].keys)
 
     Variables.define ds1 do |v|
       v.keep_meta :retailer_key, :type, :meta4
     end
-    same_meta?([:type,:meta4],ds1.vars[:retailer_key].metadata.keys)
+    same_meta?([:type,:meta4],ds1.vars[:retailer_key].keys)
   end
 end
 
