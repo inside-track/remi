@@ -11,22 +11,22 @@ class Test_Dataview < Test::Unit::TestCase
 
 
   def test_dataview
-
     work = Datalib.new :directory => {:dirname => RemiConfig.work_dirname}
 
-    myvar = []
     Datastep.create work.have do |have|
-      have.define_variables do
-        var :rownum, :type => "number"
-        var :retailer_key, :type => "string"
-        var :physical_cases, :type => "number"
 
+      myvar = []
+      Variables.define have do |v|
+        v.create :rownum, :type => "number"
+        v.create :retailer_key
+        v.create :physical_cases, :type => "number"
+        
         for i in 1..5
           myvar << "myvar_#{i}".to_sym
-          var myvar[i-1], :type => "string"
+          v.create myvar[i-1]
         end
-
       end
+      puts have
 
       for i in 1..1020
         have[:rownum] = i

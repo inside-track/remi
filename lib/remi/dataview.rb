@@ -1,8 +1,6 @@
 module Remi
-
   module Dataview
     include Log
-
     extend self
 
     @chart = nil
@@ -26,13 +24,12 @@ module Remi
 
 
     def create_google_table(dataset)
-
       google_table = GoogleVisualr::DataTable.new
 
       dataset.open_for_read
 
       # Send all columns as strings, until we have some better typing rules
-      dataset.vars_each do |var_name|
+      dataset.vars.each do |var_name,var_key|
         google_table.new_column('string', var_name)
       end
 
@@ -41,7 +38,7 @@ module Remi
           google_table.add_rows(1)
 
           ivar = -1
-          dataset.vars_each do |var_name|
+          dataset.vars.each do |var_name,var_key|
             google_table.set_cell(dataset._N_ - 1,ivar += 1, dataset[var_name].to_s)
           end
 

@@ -29,8 +29,9 @@ class Test_write_and_read < Test::Unit::TestCase
   end
 
   def test_read
-    count_have_rows = 0
+    test_write # so test_write isn't always happening first...think I need a nested test suite
 
+    count_have_rows = 0
     Datastep.read @work.have do |have|
       if have._N_ < 2
         have.row_to_log

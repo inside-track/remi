@@ -36,7 +36,7 @@ module Remi
         if @dataset.vars.has_key?(var_name)
           @dataset.vars[var_name] = Variable.new(var_meta,@dataset.vars[var_name].position)
         else
-          @dataset.vars[var_name] = Variable.new(var_meta,@dataset.vars.length + 1)
+          @dataset.vars[var_name] = Variable.new(var_meta,@dataset.vars.length)
           @dataset.row << nil
         end
         logger.debug "VARIABLE> #{var_name} >> #{@dataset.vars[var_name]}"

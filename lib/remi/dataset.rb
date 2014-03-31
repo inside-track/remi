@@ -134,9 +134,14 @@ module Remi
 
         --  VARIABLES  --
       EOF
-      @vars.each_with_values do |name,var_obj,value|
-        msg << "#{name} = #{value} | #{var_obj.meta}\n"
+      
+      @vars.each do |var_name,var_obj|
+        msg << "#{var_name} = #{var_obj}\n"
       end
+      
+#      @vars.each_with_values do |name,var_obj,value|
+#        msg << "#{name} = #{value} | #{var_obj.meta}\n"
+#      end
       msg
     end
   end

@@ -20,12 +20,11 @@ class Test_csv_read < Test::Unit::TestCase
   end
 
   def test_csv_std_read_custom_headers
-
     Datastep.create @work.from_csv do |ds|
-      ds.define_variables do
-        var :RAD__Fact_Key, :type => "string", :csv_col => 0
-        var :Distributor__Dim_Key, :type => "string", :csv_col => 1
-        var :RAD__Physical_Cases, :type => "number", :csv_col => 7
+      Variables.define ds do |v|
+        v.create :RAD__Fact_Key, :type => "string", :csv_col => 0
+        v.create :Distributor__Dim_Key, :type => "string", :csv_col => 1
+        v.create :RAD__Physical_Cases, :type => "number", :csv_col => 7
       end
 
       CSV.open(@csv_file_full_path, "r") do |rows|
@@ -49,10 +48,10 @@ class Test_csv_read < Test::Unit::TestCase
   def test_csv_helper_read_custom_headers
 
     Datastep.create @work.from_csv do |ds|
-      ds.define_variables do
-        var :RAD__Fact_Key, :type => "string", :csv_col => 0
-        var :Distributor__Dim_Key, :type => "string", :csv_col => 1
-        var :RAD__Physical_Cases, :type => "number", :csv_col => 7
+      Variables.define do |v|
+        v.create :RAD__Fact_Key, :type => "string", :csv_col => 0
+        v.create :Distributor__Dim_Key, :type => "string", :csv_col => 1
+        v.create :RAD__Physical_Cases, :type => "number", :csv_col => 7
       end
 
       CSV.datastep(@csv_file_full_path, "r") do |row|
