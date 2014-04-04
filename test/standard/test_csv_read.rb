@@ -20,23 +20,22 @@ class Test_csv_read < Test::Unit::TestCase
   end
 
   def test_csv_std_read_custom_headers
-
     Datastep.create @work.from_csv do |ds|
-      ds.define_variables do
-        var :RAD__Fact_Key, :type => "string", :csv_col => 0
-        var :Distributor__Dim_Key, :type => "string", :csv_col => 1
-        var :RAD__Physical_Cases, :type => "number", :csv_col => 7
+      Variables.define ds do |v|
+        v.create :RAD__Fact_Key, :type => "string", :csv_col => 0
+        v.create :Distributor__Dim_Key, :type => "string", :csv_col => 1
+        v.create :RAD__Physical_Cases, :type => "number", :csv_col => 7
       end
 
       CSV.open(@csv_file_full_path, "r") do |rows|
         rows.each do |row|
           if $. == 1 then next end # skip header
 
-          ds[:RAD__Fact_Key] = row[ds.meta(:RAD__Fact_Key)[:csv_col]]
-          ds[:Distributor__Dim_Key] = row[ds.meta(:Distributor__Dim_Key)[:csv_col]]
-          ds[:RAD__Physical_Cases] = row[ds.meta(:RAD__Physical_Cases)[:csv_col]]
+          ds[:RAD__Fact_Key] = row[ds.vars[:RAD__Fact_Key][:csv_col]]
+          ds[:Distributor__Dim_Key] = row[ds.vars[:Distributor__Dim_Key][:csv_col]]
+          ds[:RAD__Physical_Cases] = row[ds.vars[:RAD__Physical_Cases][:csv_col]]
 
-          ds.output
+          ds.write_row
         end
       end
     end
@@ -49,15 +48,15 @@ class Test_csv_read < Test::Unit::TestCase
   def test_csv_helper_read_custom_headers
 
     Datastep.create @work.from_csv do |ds|
-      ds.define_variables do
-        var :RAD__Fact_Key, :type => "string", :csv_col => 0
-        var :Distributor__Dim_Key, :type => "string", :csv_col => 1
-        var :RAD__Physical_Cases, :type => "number", :csv_col => 7
+      Variables.define ds do |v|
+        v.create :RAD__Fact_Key, :type => "string", :csv_col => 0
+        v.create :Distributor__Dim_Key, :type => "string", :csv_col => 1
+        v.create :RAD__Physical_Cases, :type => "number", :csv_col => 7
       end
 
       CSV.datastep(@csv_file_full_path, "r") do |row|
-        ds.set_values_from_csv(row)
-        ds.output
+        ds.read_row_from_csv(row)
+        ds.write_row
       end
     end
     
@@ -92,7 +91,7 @@ class Test_csv_read < Test::Unit::TestCase
             ds[key.to_sym] = value
           end
 
-          ds.output
+          ds.write_row
         end
       end
     end
@@ -135,7 +134,7 @@ class Test_csv_read < Test::Unit::TestCase
             ds[key.to_sym] = value
           end
 
-          ds.output
+          ds.write_row
         end
       end
     end
