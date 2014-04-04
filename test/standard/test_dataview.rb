@@ -37,7 +37,7 @@ class Test_Dataview < Test::Unit::TestCase
           have[myvar[i-1]] = rand_alpha(3)
         end
 
-        have.output
+        have.write_row
       end
     end
 

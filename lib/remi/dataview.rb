@@ -26,24 +26,24 @@ module Remi
     def create_google_table(dataset)
       google_table = GoogleVisualr::DataTable.new
 
-      dataset.open_for_read
+      Datastep.read dataset do |ds|
+        if ds._N_ == 1
+          # Send all columns as strings, until we have some better typing rules
+          dataset.vars.each do |var_name,var_key|
+            google_table.new_column('string', var_name)
+          end
+        end
 
-      # Send all columns as strings, until we have some better typing rules
-      dataset.vars.each do |var_name,var_key|
-        google_table.new_column('string', var_name)
-      end
-
-      begin
-        while dataset.readrow and dataset._N_ < 1000 # yes, that's a hard cutoff at 1000 rows
+        if ds._N_ <= 1000
           google_table.add_rows(1)
 
           ivar = -1
-          dataset.vars.each do |var_name,var_key|
+          dataset.vars.each do |var_name,var_obj|
             google_table.set_cell(dataset._N_ - 1,ivar += 1, dataset[var_name].to_s)
           end
-
+        else
+          break
         end
-      rescue EOFError
       end
 
 =begin

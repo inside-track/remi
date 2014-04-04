@@ -22,7 +22,7 @@ module Remi
         @data_file_full_path = File.join(lib_options[:directory][:dirname],"#{@name}.rgz")
       end
 
-      @_N_ = 0
+      @_N_ = nil # not initialized until open is set
 
       @vars = {}
       @row = []
@@ -60,6 +60,8 @@ module Remi
       raw_data_file = File.open(@data_file_full_path,"w")
       @data_file = Zlib::GzipWriter.new(raw_data_file)
       @data_stream = MessagePack::Packer.new(@data_file)
+
+      @_N_ = 1
     end
 
 
@@ -77,6 +79,7 @@ module Remi
       @data_stream = MessagePack::Unpacker.new(@data_file)
 
       import_header
+      @_N_ = 0
     end
 
 
@@ -109,7 +112,22 @@ module Remi
     end
 
 
-    def output
+    def read_row_from(dataset, keep: nil, drop: [])
+      # This is really just a shortcut method for reading an input
+      # dataset that uses the same variable names.  If the names are
+      # different, the mapping should be done explicitly.
+      # If any variables are in dataset, but not in self, they are ignored.
+      # You would really only want to use keep/drop if you wanted to make
+      # sure that the same variable name was not imported from dataset
+      @vars.each do |var_name,var_obj|
+        next if drop.include? var_name
+        next unless keep.nil? || (keep.include? var_name)
+        self[var_name] = dataset[var_name] if dataset.vars.has_key?(var_name)
+      end
+    end
+
+
+    def write_row
       # Consider flushing every N rows and write_array_header
       @data_stream.write(@row).flush
       @_N_ += 1
@@ -121,7 +139,7 @@ module Remi
     end
 
 
-    def readrow
+    def read_row
       @row = @data_stream.read
       @_N_ += 1
     end

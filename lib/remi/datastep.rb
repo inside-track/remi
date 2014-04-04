@@ -28,7 +28,7 @@ module Remi
       dataset.open_for_read
 
       begin
-        while dataset.readrow
+        while dataset.read_row
           yield dataset
         end
       rescue EOFError
