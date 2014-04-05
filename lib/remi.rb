@@ -1,8 +1,3 @@
-$LOAD_PATH << File.dirname(__FILE__)
-
-require 'rubygems'
-require 'bundler/setup'
-
 require 'msgpack'
 require 'zlib'
 require 'launchy'
@@ -24,5 +19,3 @@ require 'remi/datastep'
 require 'remi/dataview'
 
 require 'remi/interfaces/csv'
-
-include Remi
