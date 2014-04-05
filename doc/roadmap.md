@@ -7,14 +7,15 @@
   * [x] simple serialized dataset reader/writer
   * [x] Web-based data viewer
   * [x] unit test framework
-  * [ ] csv reader/writer
+  * [x] csv reader/writer
 
 * **0.2.0** - Groups (public release)
 
-  * sort
-  * first/last processing
-  * aggregator
-  * merge
+  * [ ] migrate to Rspec
+  * [ ] sort
+  * [ ] first/last processing
+  * [ ] aggregator
+  * [ ] merge
 
 
 * **0.3.0** - Rules
