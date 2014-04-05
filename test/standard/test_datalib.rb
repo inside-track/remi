@@ -9,7 +9,7 @@ class Test_define_lib < Test::Unit::TestCase
   end
 
   def test_define_lib
-    work = Datalib.new :directory => {:dirname => "#{ENV['HOME']}/Desktop/work"}
+    work = Datalib.new :directory => {:dirname => RemiConfig.work_dirname}
     assert_kind_of Datalib, work, "work is not a Datalib"
   end
 
