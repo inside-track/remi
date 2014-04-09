@@ -6,6 +6,7 @@ require 'json'
 require 'erb'
 require 'fileutils'
 require 'csv'
+require 'digest/md5'
 
 require 'remi/config'
 require 'remi/core_additions'
