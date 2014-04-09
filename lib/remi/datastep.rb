@@ -37,5 +37,36 @@ module Remi
     ensure
       dataset.close
     end
+
+
+    def sort(in_ds, out: nil, by: [])
+      out_ds = out
+      sort_keys = by
+      create out_ds do |out_ds|
+        Variables.define out_ds do |v|
+          v.import in_ds
+        end
+
+        rows_with_sort_key = []
+        read in_ds do |in_ds|
+          rows_with_sort_key << [Array(sort_keys).map {|key| in_ds[key] }, in_ds.row]
+        end
+
+        rows_with_sort_key.sort! do |a,b|
+          result = nil
+          a[0].zip(b[0]).each do |va,vb|
+            result = (va <=> vb)
+            break unless result == 0
+          end
+          result
+        end
+
+        rows_with_sort_key.each do |row_with_sort_key|
+          out_ds.row = row_with_sort_key[1]
+          out_ds.write_row
+        end
+      end
+    end
+
   end
 end
