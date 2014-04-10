@@ -92,35 +92,35 @@ class Test_merge < Test::Unit::TestCase
         ds2.read_row
 
 
-        last_compare = (ds1[:key] <=> ds2[:key])
+        prev_compare = (ds1[:key] <=> ds2[:key])
         while !(ds1.EOF or ds2.EOF)
 
           this_compare = (ds1[:key] <=> ds2[:key])
-          puts "ds1: #{ds1.row} | ds2: #{ds2.row} | #{this_compare} | #{ds1.last(:key)} | #{ds2.last(:key)}"
+          puts "ds1: #{ds1.row} | ds2: #{ds2.row} | #{this_compare} | #{ds1.prev(:key)} | #{ds2.prev(:key)}"
 
           case ds1[:key] <=> ds2[:key]
           when 0
             ds.read_row_from ds1
-            last_ds1_key = ds1[:key]
+            prev_ds1_key = ds1[:key]
             ds1.read_row
 
             ds.read_row_from ds2
-            last_ds2_key = ds2[:key]
+            prev_ds2_key = ds2[:key]
             ds2.read_row
 
           when -1
-            ds.read_row_from ds2_nil if ds1[:key] != ds1.last(:key)
+            ds.read_row_from ds2_nil if ds1[:key] != ds1.prev(:key)
             ds.read_row_from ds1
             ds1.read_row
           when 1
-            ds.read_row_from ds1_nil if ds2[:key] != ds2.last(:key)
+            ds.read_row_from ds1_nil if ds2[:key] != ds2.prev(:key)
             ds.read_row_from ds2
             ds2.read_row
           end
 
           ds.write_row
 
-          last_compare = this_compare
+          prev_compare = this_compare
         end
 
         while !ds1.EOF

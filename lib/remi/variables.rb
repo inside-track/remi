@@ -38,7 +38,7 @@ module Remi
         else
           @dataset.vars[var_name] = Variable.new(var_meta,@dataset.vars.length)
           @dataset.row << nil
-          @dataset.last_row << nil
+          @dataset.prev_row << nil
         end
         logger.debug "VARIABLE> #{var_name} >> #{@dataset.vars[var_name]}"
       end
