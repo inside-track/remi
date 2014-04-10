@@ -68,5 +68,8 @@ module Remi
       end
     end
 
+    def merge
+    end
+
   end
 end

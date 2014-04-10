@@ -2,7 +2,7 @@ module Remi
   class Dataset
     include Log
 
-    attr_reader :name, :_N_
+    attr_reader :name, :_N_, :EOF
     attr_accessor :vars, :row
 
     def initialize(datalib,name,lib_options)
@@ -23,6 +23,7 @@ module Remi
       end
 
       @_N_ = nil # not initialized until open is set
+      @EOF = false
 
       @vars = {}
       @row = []
@@ -45,6 +46,10 @@ module Remi
         raise NameError, msg
         false
       end
+    end
+
+    def length
+      @row.length
     end
 
     def open_for_write
@@ -140,8 +145,14 @@ module Remi
 
 
     def read_row
-      @row = @data_stream.read
-      @_N_ += 1
+      begin
+        @row = @data_stream.read
+        @_N_ += 1
+        true
+      rescue EOFError
+        @EOF = true
+        false
+      end
     end
 
 
