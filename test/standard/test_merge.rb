@@ -1,5 +1,8 @@
 require "test_remi"
 
+# REVISE THIS WHEN I HAVE BY GROUPS
+
+
 class Test_merge < Test::Unit::TestCase
 
   def setup
@@ -53,10 +56,7 @@ class Test_merge < Test::Unit::TestCase
     # Add a delete data function
   end
 
-  def test_wtf
-  end
-
-  def test_merge
+  def _test_merge
 
     # Also make sure to see what's happening with retained values
 
@@ -142,8 +142,8 @@ class Test_merge < Test::Unit::TestCase
     end
 
 
-#    Dataview.view @work.data_A
-#    Dataview.view @work.data_B
+    Dataview.view @work.data_A
+    Dataview.view @work.data_B
     Dataview.view @work.data_C
 
   end
