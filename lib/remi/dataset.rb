@@ -3,7 +3,7 @@ module Remi
     include Log
 
     attr_reader :name, :_N_, :EOF
-    attr_accessor :vars, :row
+    attr_accessor :vars, :row, :last_row
 
     def initialize(datalib,name,lib_options)
       @datalib = datalib
@@ -27,10 +27,15 @@ module Remi
 
       @vars = {}
       @row = []
+      @last_row = []
     end
 
     def [](var_name)
       @row[@vars[var_name].position] if variable_defined?(var_name)
+    end
+
+    def last(var_name)
+      @last_row[@vars[var_name].position] if variable_defined?(var_name)
     end
 
     def []= var_name,value
@@ -134,6 +139,7 @@ module Remi
 
     def write_row
       # Consider flushing every N rows and write_array_header
+      @last_row = @row.dup
       @data_stream.write(@row).flush
       @_N_ += 1
     end
@@ -146,7 +152,9 @@ module Remi
 
     def read_row
       begin
+        tmp_last_row = @row.dup
         @row = @data_stream.read
+        @last_row = tmp_last_row # don't want to update @last_row if read fails
         @_N_ += 1
         true
       rescue EOFError
@@ -167,10 +175,6 @@ module Remi
       @vars.each do |var_name,var_obj|
         msg << "#{var_name} = #{var_obj}\n"
       end
-      
-#      @vars.each_with_values do |name,var_obj,value|
-#        msg << "#{name} = #{value} | #{var_obj.meta}\n"
-#      end
       msg
     end
   end

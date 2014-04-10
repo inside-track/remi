@@ -91,16 +91,12 @@ class Test_merge < Test::Unit::TestCase
         ds1.read_row
         ds2.read_row
 
-        # How about modifying dataset to always keep track of last row?
 
         last_compare = (ds1[:key] <=> ds2[:key])
-        last_ds1_key = ds1[:key]
-        last_ds2_key = ds2[:key]
         while !(ds1.EOF or ds2.EOF)
 
-
           this_compare = (ds1[:key] <=> ds2[:key])
-          puts "ds1: #{ds1.row} | ds2: #{ds2.row} | #{this_compare} | #{last_ds1_key} | #{last_ds2_key}"
+          puts "ds1: #{ds1.row} | ds2: #{ds2.row} | #{this_compare} | #{ds1.last(:key)} | #{ds2.last(:key)}"
 
           case ds1[:key] <=> ds2[:key]
           when 0
@@ -113,14 +109,12 @@ class Test_merge < Test::Unit::TestCase
             ds2.read_row
 
           when -1
-            ds.read_row_from ds2_nil if ds1[:key] != last_ds1_key
+            ds.read_row_from ds2_nil if ds1[:key] != ds1.last(:key)
             ds.read_row_from ds1
-            last_ds1_key = ds1[:key]
             ds1.read_row
           when 1
-            ds.read_row_from ds1_nil if ds2[:key] != last_ds2_key
+            ds.read_row_from ds1_nil if ds2[:key] != ds2.last(:key)
             ds.read_row_from ds2
-            last_ds2_key = ds2[:key]
             ds2.read_row
           end
 
