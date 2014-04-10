@@ -72,10 +72,17 @@ class Test_merge < Test::Unit::TestCase
         v.import ds2
       end
 
-      buffer_ds = @work.buffer_ds
-      Variables.define buffer_ds do |v|
-        v.import ds
+      ds1_nil = @work.ds1_nil
+      Variables.define ds1_nil do |v|
+        v.import ds1
       end
+      ds1_nil.row = Array.new(ds1.length)
+
+      ds2_nil = @work.ds2_nil
+      Variables.define ds2_nil do |v|
+        v.import ds2
+      end
+      ds2_nil.row = Array.new(ds2.length)
 
       ds1.open_for_read
       ds2.open_for_read
@@ -83,46 +90,57 @@ class Test_merge < Test::Unit::TestCase
       begin
         ds1.read_row
         ds2.read_row
-        
-        while !(ds1.EOF and ds2.EOF)
-          puts "-- Comparing row --"
-          puts "ds1: #{ds1.row} - key:#{ds1[:key]}"
-          puts "ds2: #{ds2.row} - key:#{ds2[:key]}"
 
-          key_compare = ds1[:key] <=> ds2[:key]
+        # How about modifying dataset to always keep track of last row?
 
-          puts "key_compare: #{key_compare}"
-          puts "ds1.EOF:#{ds1.EOF}/ds1.EOF:#{ds1.EOF}"
-
-          #hmmmm
-          buffer_ds.row = Array.new(ds.length)
+        last_compare = (ds1[:key] <=> ds2[:key])
+        last_ds1_key = ds1[:key]
+        last_ds2_key = ds2[:key]
+        while !(ds1.EOF or ds2.EOF)
 
 
-          if key_compare == 0
-            buffer_ds.read_row_from ds1
-            ds1.read_row
-            buffer_ds.read_row_from ds2
-            ds2.read_row
-          elsif ds2.EOF
+          this_compare = (ds1[:key] <=> ds2[:key])
+          puts "ds1: #{ds1.row} | ds2: #{ds2.row} | #{this_compare} | #{last_ds1_key} | #{last_ds2_key}"
+
+          case ds1[:key] <=> ds2[:key]
+          when 0
             ds.read_row_from ds1
+            last_ds1_key = ds1[:key]
             ds1.read_row
-          elsif ds1.EOF
+
             ds.read_row_from ds2
+            last_ds2_key = ds2[:key]
             ds2.read_row
-          elsif key_compare == -1
+
+          when -1
+            ds.read_row_from ds2_nil if ds1[:key] != last_ds1_key
             ds.read_row_from ds1
+            last_ds1_key = ds1[:key]
             ds1.read_row
-          elsif key_compare == 1
+          when 1
+            ds.read_row_from ds1_nil if ds2[:key] != last_ds2_key
             ds.read_row_from ds2
+            last_ds2_key = ds2[:key]
             ds2.read_row
           end
 
           ds.write_row
-          puts "ds1.EOF:#{ds1.EOF}/ds2.EOF:#{ds2.EOF}"
-          puts "WTF: #{!(ds1.EOF and ds2.EOF)}"
-#          break
 
+          last_compare = this_compare
         end
+
+        while !ds1.EOF
+          ds.read_row_from ds1
+          ds1.read_row
+          ds.write_row
+        end
+
+        while !ds2.EOF
+          ds.read_row_from ds2
+          ds2.read_row
+          ds.write_row
+        end
+        
       ensure
         ds1.close
         ds2.close
@@ -130,8 +148,8 @@ class Test_merge < Test::Unit::TestCase
     end
 
 
-    Dataview.view @work.data_A
-    Dataview.view @work.data_B
+#    Dataview.view @work.data_A
+#    Dataview.view @work.data_B
     Dataview.view @work.data_C
 
   end
