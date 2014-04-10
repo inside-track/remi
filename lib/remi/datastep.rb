@@ -22,10 +22,11 @@ module Remi
     end
 
 
-    def read(dataset)
+    def read(dataset,by: [])
       logger.debug "DATASET.READ> **#{dataset.name}**"
 
       dataset.open_for_read
+      dataset.initialize_by_groups(by) if by.length > 0
 
       begin
         while dataset.read_row

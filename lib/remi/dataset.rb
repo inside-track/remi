@@ -28,6 +28,11 @@ module Remi
       @vars = {}
       @row = []
       @prev_row = []
+
+      @by_groups = []
+      @by_first = {}
+      @by_last = {}
+
     end
 
     def [](var_name)
@@ -55,6 +60,41 @@ module Remi
 
     def length
       @row.length
+    end
+
+    
+    def first(var_name)
+      @by_first[var_name]
+    end
+
+    def last(var_name)
+      @by_last[var_name]
+    end
+
+    def initialize_by_groups(by_groups=[])
+      @by_groups = by_groups
+      @by_groups.each do |var_name|
+        @by_first[var_name] = nil if variable_defined?(var_name)
+        @by_last[var_name] = nil if variable_defined?(var_name)
+      end
+    end
+
+    def has_by_groups?
+      @by_groups.length > 0
+    end
+
+    def update_by_groups
+      # This needs to be a cascading assignment
+      # Think I'm going to need to have a @next_row too!
+      parent_first = false
+      parent_last = false
+      @by_groups.each do |var_name|
+        @by_first[var_name] = (self[var_name] != self.prev(var_name)) or parent_first
+#        @by_last[var_name] = (self[var_name] != self.next(var_name)) or parent_last
+
+        parent_first = @by_first[var_name]
+#        parent_last = @by_last[var_name]
+      end
     end
 
     def open_for_write
@@ -156,6 +196,7 @@ module Remi
         @row = @data_stream.read
         @prev_row = tmp_prev_row # don't want to update @prev_row if read fails
         @_N_ += 1
+        update_by_groups if has_by_groups?
         true
       rescue EOFError
         @EOF = true
