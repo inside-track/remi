@@ -39,6 +39,7 @@ module Remi
           @dataset.vars[var_name] = Variable.new(var_meta,@dataset.vars.length)
           @dataset.row << nil
           @dataset.prev_row << nil
+          @dataset.next_row << nil
         end
         logger.debug "VARIABLE> #{var_name} >> #{@dataset.vars[var_name]}"
       end

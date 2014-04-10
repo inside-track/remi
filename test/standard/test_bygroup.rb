@@ -46,6 +46,11 @@ class Test_bygroup < Test::Unit::TestCase
       end
 
       Datastep.read @work.mydata, by: [:grp1] do |mydata|
+        puts "----"
+        puts "prev: #{mydata.prev_row}"
+        puts "curr: #{mydata.row}"
+        puts "next: #{mydata.next_row}"
+
         ds.read_row_from mydata
         ds[:first_grp1] = mydata.first(:grp1)
         ds[:last_grp1] = mydata.last(:grp1)
@@ -56,7 +61,6 @@ class Test_bygroup < Test::Unit::TestCase
     end
 
     Dataview.view @work.with_first_last
-
   end
 end
 

@@ -3,7 +3,7 @@ module Remi
     include Log
 
     attr_reader :name, :_N_, :EOF
-    attr_accessor :vars, :row, :prev_row
+    attr_accessor :vars, :row, :prev_row, :next_row
 
     def initialize(datalib,name,lib_options)
       @datalib = datalib
@@ -28,6 +28,7 @@ module Remi
       @vars = {}
       @row = []
       @prev_row = []
+      @next_row = []
 
       @by_groups = []
       @by_first = {}
@@ -41,6 +42,10 @@ module Remi
 
     def prev(var_name)
       @prev_row[@vars[var_name].position] if variable_defined?(var_name)
+    end
+
+    def next(var_name)
+      @next_row[@vars[var_name].position] if variable_defined?(var_name)
     end
 
     def []= var_name,value
@@ -84,16 +89,14 @@ module Remi
     end
 
     def update_by_groups
-      # This needs to be a cascading assignment
-      # Think I'm going to need to have a @next_row too!
       parent_first = false
       parent_last = false
       @by_groups.each do |var_name|
         @by_first[var_name] = (self[var_name] != self.prev(var_name)) or parent_first
-#        @by_last[var_name] = (self[var_name] != self.next(var_name)) or parent_last
+        @by_last[var_name] = (self[var_name] != self.next(var_name)) or parent_last
 
         parent_first = @by_first[var_name]
-#        parent_last = @by_last[var_name]
+        parent_last = @by_last[var_name]
       end
     end
 
@@ -192,11 +195,30 @@ module Remi
 
     def read_row
       begin
-        tmp_prev_row = @row.dup
-        @row = @data_stream.read
-        @prev_row = tmp_prev_row # don't want to update @prev_row if read fails
+        prev_row = @row.dup # don't want to update @prev_row if read fails
+        if @_N_ > 0
+          @row = @next_row
+          @EOF = @next_EOF
+          return false if @EOF
+        else
+          begin
+            @row = @data_stream.read
+          rescue EOFError
+            @EOF = true
+            return false
+          end
+        end
+        @prev_row = prev_row
         @_N_ += 1
+
+        begin
+          @next_row = @data_stream.read
+        rescue EOFError
+          @next_row = [nil] * @row.length
+          @next_EOF = true
+        end
         update_by_groups if has_by_groups?
+
         true
       rescue EOFError
         @EOF = true
