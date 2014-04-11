@@ -28,11 +28,6 @@ module Remi
       dataset.open_for_read
       dataset.initialize_by_groups(by) if by.length > 0
 
-      puts "Bprev: #{dataset.prev_row}"
-      puts "Bcurr: #{dataset.row}"
-      puts "Bnext: #{dataset.next_row}"
-
-
       begin
         while dataset.read_row
           yield dataset

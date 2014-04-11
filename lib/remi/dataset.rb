@@ -92,8 +92,8 @@ module Remi
       parent_first = false
       parent_last = false
       @by_groups.each do |var_name|
-        @by_first[var_name] = (self[var_name] != self.prev(var_name)) or parent_first
-        @by_last[var_name] = (self[var_name] != self.next(var_name)) or parent_last
+        @by_first[var_name] = ((self[var_name] != self.prev(var_name)) or parent_first)
+        @by_last[var_name] = ((self[var_name] != self.next(var_name)) or parent_last)
 
         parent_first = @by_first[var_name]
         parent_last = @by_last[var_name]
@@ -143,6 +143,10 @@ module Remi
         end
         logger.debug "  Reading metadata #{@vars}"
       end
+      
+      @row = [nil] * @vars.length
+      @prev_row = @row.dup
+      @next_row = @row.dup
     end
 
 
