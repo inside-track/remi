@@ -18,5 +18,6 @@ require 'remi/datalib'
 require 'remi/variables'
 require 'remi/datastep'
 require 'remi/dataview'
+require 'remi/interleave'
 
 require 'remi/interfaces/csv'
