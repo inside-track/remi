@@ -56,6 +56,7 @@ class Test_interleave < Test::Unit::TestCase
       Variables.define ds do |v|
         v.import @work.data_A
         v.import @work.data_B
+        v.create :in_ds_name
       end
 
       Datastep.interleave @work.data_A, @work.data_B, by: :grp1 do |dsi|
@@ -64,12 +65,13 @@ class Test_interleave < Test::Unit::TestCase
         # like the name of which dataset it's in
 #        puts "Reading interleaved row from #{dsi.dataset_name}"
         ds.read_row_from dsi
+        ds[:in_ds_name] = dsi.name
         ds.write_row
       end
     end
 
-    Dataview.view @work.data_A
-    Dataview.view @work.data_B
+#    Dataview.view @work.data_A
+#    Dataview.view @work.data_B
     Dataview.view @work.data_C
   end
 end

@@ -15,7 +15,10 @@ module Remi
         @options = args
         validate_directory_options()
 
-        logger.info "LIBRARY> Creating library pointing to #{@options[:directory]}"
+        logger.info "LIBRARY> Creating directory library pointing to #{@options[:directory]}"
+      elsif args.has_key?(:transient)
+        @type = :transient
+        logger.info "LIBRARY> Creating transient library"
       else
         raise "Unknown library type #{type}"
       end

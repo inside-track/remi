@@ -77,7 +77,9 @@ module Remi
       end
 
       def import_from_dataset(ds, keep: [], drop: [])
-        ds.open_for_read
+        ds_already_open = ds.is_open?
+
+        ds.open_for_read unless ds_already_open
         logger.info "IMPORTING> **#{ds.name}**"
 
         ds.vars.each do |var_name,var_meta|
@@ -85,7 +87,7 @@ module Remi
             create var_name, var_meta
           end
         end
-        ds.close
+        ds.close unless ds_already_open
       end
 
     end

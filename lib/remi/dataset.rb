@@ -9,6 +9,7 @@ module Remi
       @datalib = datalib
       @name = name
 
+      @is_open = false
       @header_file_full_path = ""
       @header_file = nil
       @header_stream = nil
@@ -114,6 +115,7 @@ module Remi
       @data_file = Zlib::GzipWriter.new(raw_data_file)
       @data_stream = MessagePack::Packer.new(@data_file)
 
+      @is_open =true
       @_N_ = 1
     end
 
@@ -131,10 +133,14 @@ module Remi
       @data_file = Zlib::GzipReader.new(raw_data_file)
       @data_stream = MessagePack::Unpacker.new(@data_file)
 
+      @is_open = true
       import_header
       @_N_ = 0
     end
 
+    def is_open?
+      @is_open
+    end
 
     def import_header
       @header_stream.each do |header_row|
@@ -166,6 +172,7 @@ module Remi
 
       @header_file.close
       @data_file.close
+      @is_open = false
     end
 
 
