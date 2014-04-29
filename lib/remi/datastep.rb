@@ -26,7 +26,7 @@ module Remi
       logger.debug "DATASET.READ> **#{dataset.name}**"
 
       dataset.open_for_read
-      dataset.initialize_by_groups(by) if by.length > 0
+      dataset.initialize_by_groups(Array(by)) if Array(by).length > 0
 
       begin
         while dataset.read_row
@@ -42,7 +42,7 @@ module Remi
 
     def sort(in_ds, out: nil, by: [])
       out_ds = out
-      sort_keys = by
+      sort_keys = Array(by)
       create out_ds do |out_ds|
         Variables.define out_ds do |v|
           v.import in_ds
@@ -50,7 +50,7 @@ module Remi
 
         rows_with_sort_key = []
         read in_ds do |in_ds|
-          rows_with_sort_key << [Array(sort_keys).map {|key| in_ds[key] }, in_ds.row]
+          rows_with_sort_key << [sort_keys.map { |key| in_ds[key] }, in_ds.row]
         end
 
         rows_with_sort_key.sort! do |a,b|

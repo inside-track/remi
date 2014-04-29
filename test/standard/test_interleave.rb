@@ -59,7 +59,7 @@ class Test_interleave < Test::Unit::TestCase
         v.create :in_ds_name
       end
 
-      Datastep.interleave @work.data_A, @work.data_B, by: :grp1 do |dsi|
+      Datastep.interleave @work.data_A, @work.data_B, by: [:grp1,:grp2] do |dsi|
         # dsi could be an interleave object that contains whichever
         # dataset is up next but also includes other information
         # like the name of which dataset it's in

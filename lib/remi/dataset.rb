@@ -69,12 +69,20 @@ module Remi
     end
 
     
-    def first(var_name)
-      @by_first[var_name]
+    def first(*var_name)
+      if var_name.length == 0
+        @by_first[@by_groups[-1]]
+      else
+        @by_first[var_name[0]]
+      end
     end
 
-    def last(var_name)
-      @by_last[var_name]
+    def last(*var_name)
+      if var_name.length == 0
+        @by_last[@by_groups[-1]]
+      else
+        @by_last[var_name[0]]
+      end
     end
 
     def initialize_by_groups(by_groups=[])
@@ -223,6 +231,7 @@ module Remi
         @_N_ += 1
 
         begin
+          @next_EOF = false
           @next_row = @data_stream.read
         rescue EOFError
           @next_row = [nil] * @row.length
