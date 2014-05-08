@@ -1,4 +1,8 @@
-require "test_remi"
+require "remi_spec"
+
+=begin
+unfinished tests that need to be migrated to spec when ready
+
 
 class Test_interleave < Test::Unit::TestCase
 
@@ -76,4 +80,4 @@ class Test_interleave < Test::Unit::TestCase
   end
 end
 
-
+=end
