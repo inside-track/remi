@@ -1,4 +1,7 @@
-require "test_remi"
+require "remi_spec"
+
+=begin
+unfinished test that needs to be migrated to a spec when ready
 
 class Test_sort < Test::Unit::TestCase
 
@@ -61,3 +64,4 @@ class Test_sort < Test::Unit::TestCase
 end
 
 
+=end

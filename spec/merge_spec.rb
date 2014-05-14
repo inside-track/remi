@@ -1,4 +1,7 @@
-require "test_remi"
+require "remi_spec"
+
+=begin
+unfinished test that will need to be migrated to a spec
 
 # REVISE THIS WHEN I HAVE BY GROUPS
 
@@ -150,5 +153,4 @@ class Test_merge < Test::Unit::TestCase
 
 
 end
-
-
+=end

@@ -43,7 +43,6 @@ class CSV
       end
         
       rows.each do |row|
-        puts "ROW: #{row.inspect}"
         yield row if $. > skip_n_lines
       end
     end
@@ -56,7 +55,6 @@ module Remi
   class Dataset
 
     def read_row_from_csv(row)
-      puts "This is a #{row.class.name}"
       if row.is_a?(Array)
         read_row_from_csv_array(row)
       elsif row.is_a?(CSV::Row)
