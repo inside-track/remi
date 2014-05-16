@@ -90,13 +90,15 @@ module Remi
 
         # Sort the datasets by their keys
         puts "ds_sort_key = #{ds_sort_key.collect {|x| x[1]}}"
-        ds_sort_key.sort! do |a,b|
-          result = nil
-          a[1].zip(b[1]).each do |va,vb|
-            result = (va <=> vb)
-            break unless result == 0
+        if sort_keys != [] 
+          ds_sort_key.sort! do |a,b|
+            result = nil
+            a[1].zip(b[1]).each do |va,vb|
+              result = (va <=> vb)
+              break unless result == 0
+            end
+            result
           end
-          result
         end
 
         puts "Sorted result"
