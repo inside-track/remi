@@ -2,13 +2,14 @@ module Remi
   class Dataset
     include Log
 
-    attr_reader :name, :_N_
-    attr_accessor :vars, :row
+    attr_reader :name, :_N_, :EOF, :next_EOF
+    attr_accessor :vars, :row, :prev_row, :next_row
 
     def initialize(datalib,name,lib_options)
       @datalib = datalib
       @name = name
 
+      @is_open = false
       @header_file_full_path = ""
       @header_file = nil
       @header_stream = nil
@@ -23,13 +24,31 @@ module Remi
       end
 
       @_N_ = nil # not initialized until open is set
+      @EOF = false
+      @next_EOF = nil
+      @prev_EOF = nil
 
       @vars = {}
       @row = []
+      @prev_row = []
+      @next_row = []
+
+      @by_groups = []
+      @by_first = {}
+      @by_last = {}
+
     end
 
     def [](var_name)
       @row[@vars[var_name].position] if variable_defined?(var_name)
+    end
+
+    def prev(var_name)
+      @prev_row[@vars[var_name].position] if variable_defined?(var_name)
+    end
+
+    def next(var_name)
+      @next_row[@vars[var_name].position] if variable_defined?(var_name)
     end
 
     def []= var_name,value
@@ -47,6 +66,51 @@ module Remi
       end
     end
 
+    def length
+      @row.length
+    end
+
+    
+    def first(*var_name)
+      if var_name.length == 0
+        @by_first[@by_groups[-1]]
+      else
+        @by_first[var_name[0]]
+      end
+    end
+
+    def last(*var_name)
+      if var_name.length == 0
+        @by_last[@by_groups[-1]]
+      else
+        @by_last[var_name[0]]
+      end
+    end
+
+    def initialize_by_groups(by_groups=[])
+      @by_groups = by_groups
+      @by_groups.each do |var_name|
+        @by_first[var_name] = nil if variable_defined?(var_name)
+        @by_last[var_name] = nil if variable_defined?(var_name)
+      end
+    end
+
+    def has_by_groups?
+      @by_groups.length > 0
+    end
+
+    def update_by_groups
+      parent_first = false
+      parent_last = false
+      @by_groups.each do |var_name|
+        @by_first[var_name] = ((self[var_name] != self.prev(var_name)) or parent_first)
+        @by_last[var_name] = ((self[var_name] != self.next(var_name)) or parent_last)
+
+        parent_first = @by_first[var_name]
+        parent_last = @by_last[var_name]
+      end
+    end
+
     def open_for_write
       logger.info "DATASET.OPEN> **<#{@datalib}.#{@name}** for write"
       logger.debug "  Data file #{@data_file_full_path}"
@@ -61,6 +125,7 @@ module Remi
       @data_file = Zlib::GzipWriter.new(raw_data_file)
       @data_stream = MessagePack::Packer.new(@data_file)
 
+      @is_open =true
       @_N_ = 1
     end
 
@@ -78,10 +143,14 @@ module Remi
       @data_file = Zlib::GzipReader.new(raw_data_file)
       @data_stream = MessagePack::Unpacker.new(@data_file)
 
+      @is_open = true
       import_header
       @_N_ = 0
     end
 
+    def is_open?
+      @is_open
+    end
 
     def import_header
       @header_stream.each do |header_row|
@@ -90,6 +159,10 @@ module Remi
         end
         logger.debug "  Reading metadata #{@vars}"
       end
+      
+      @row = [nil] * @vars.length
+      @prev_row = @row.dup
+      @next_row = @row.dup
     end
 
 
@@ -109,6 +182,7 @@ module Remi
 
       @header_file.close
       @data_file.close
+      @is_open = false
     end
 
 
@@ -129,6 +203,7 @@ module Remi
 
     def write_row
       # Consider flushing every N rows and write_array_header
+      @prev_row = @row.dup
       @data_stream.write(@row).flush
       @_N_ += 1
     end
@@ -140,8 +215,37 @@ module Remi
 
 
     def read_row
-      @row = @data_stream.read
-      @_N_ += 1
+      begin
+        prev_row = @row.dup # don't want to update @prev_row if read fails
+        if @_N_ > 0
+          @row = @next_row
+          @EOF = @next_EOF
+          return false if @EOF
+        else
+          begin
+            @row = @data_stream.read
+          rescue EOFError
+            @EOF = true
+            return false
+          end
+        end
+        @prev_row = prev_row
+        @_N_ += 1
+
+        begin
+          @next_EOF = false
+          @next_row = @data_stream.read
+        rescue EOFError
+          @next_row = [nil] * @row.length
+          @next_EOF = true
+        end
+        update_by_groups if has_by_groups?
+
+        true
+      rescue EOFError
+        @EOF = true
+        false
+      end
     end
 
 
@@ -156,10 +260,6 @@ module Remi
       @vars.each do |var_name,var_obj|
         msg << "#{var_name} = #{var_obj}\n"
       end
-      
-#      @vars.each_with_values do |name,var_obj,value|
-#        msg << "#{name} = #{value} | #{var_obj.meta}\n"
-#      end
       msg
     end
   end

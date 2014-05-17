@@ -14,7 +14,8 @@ module Remi
         FileUtils.mkdir_p(RemiConfig.work_dirname)
       end
 
-      viewdata_fullpath = File.join(RemiConfig.work_dirname,"visualr.html");
+      file_name = "visualr-#{dataset.name}-#{Digest::MD5.hexdigest Time.new.to_s}.html"
+      viewdata_fullpath = File.join(RemiConfig.work_dirname,file_name);
       File.open(viewdata_fullpath,'w') do |f|
         f.write table_tpl.result(binding)
       end
