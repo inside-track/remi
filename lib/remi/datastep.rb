@@ -40,16 +40,72 @@ module Remi
     end
 
 
-    def sort(in_ds, out: nil, by: [])
+    def sort(in_ds, out: nil, by: [], in_memory: false, split_size: 100000)
+      if in_memory
+        sort_in_memory(in_ds, out: out, by: by)
+        return
+      end
+
+      worklib = Datalib.new :directory => {:dirname => RemiConfig.work_dirname}
+
+      split_datasets = []
+      rows = []
+      Datastep.read in_ds do |in_ds|
+        if (in_ds._N_ - 1) % split_size == 0
+          puts "STARTING A SPLIT"
+          rows = []
+        end
+
+        rows << in_ds.row
+
+
+        if in_ds._N_ % split_size == 0 || in_ds.next_EOF
+          split_datasets << worklib.send("split_#{split_datasets.length}".to_sym)
+
+          Datastep.create split_datasets[-1] do |split_ds|
+            Variables.define split_ds do |v|
+              v.import in_ds
+            end
+
+            rows.each do |row|
+              split_ds.row = row
+              split_ds.write_row
+            end
+          end
+        end
+      end
+
+
+      sorted_datasets = []
+      split_datasets.each_with_index do |ds,i|
+        sorted_datasets << worklib.send("split_sort_#{i}".to_sym)
+        sort_in_memory(ds, out: sorted_datasets[-1], by: by)
+      end
+
+
+      Datastep.create out do |ds|
+        Variables.define ds do |v|
+          v.import in_ds
+        end
+
+        Datastep.interleave *sorted_datasets, by: by do |dsi|
+          ds.read_row_from dsi
+          ds.write_row
+        end
+      end
+    end
+
+
+    def sort_in_memory(in_ds, out: nil, by: [])
       out_ds = out
       sort_keys = Array(by)
-      create out_ds do |out_ds|
+      Datastep.create out_ds do |out_ds|
         Variables.define out_ds do |v|
           v.import in_ds
         end
 
         rows_with_sort_key = []
-        read in_ds do |in_ds|
+        Datastep.read in_ds do |in_ds|
           rows_with_sort_key << [sort_keys.map { |key| in_ds[key] }, in_ds.row]
         end
 

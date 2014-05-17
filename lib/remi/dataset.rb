@@ -2,7 +2,7 @@ module Remi
   class Dataset
     include Log
 
-    attr_reader :name, :_N_, :EOF
+    attr_reader :name, :_N_, :EOF, :next_EOF
     attr_accessor :vars, :row, :prev_row, :next_row
 
     def initialize(datalib,name,lib_options)
@@ -25,6 +25,8 @@ module Remi
 
       @_N_ = nil # not initialized until open is set
       @EOF = false
+      @next_EOF = nil
+      @prev_EOF = nil
 
       @vars = {}
       @row = []
