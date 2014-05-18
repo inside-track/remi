@@ -11,11 +11,15 @@
 
 * **0.2.0** - Groups (public release)
 
-  * [ ] migrate to Rspec
-  * [ ] sort
-  * [ ] first/last processing
+  * [x] migrate to Rspec
+  * [x] sort
+  * [x] first/last processing
+  * [ ] documentation system
+  * [ ] configurable logging - user and debug
   * [ ] aggregator
   * [ ] merge
+  * [ ] syntax review and refactor
+  * [ ] datalib enhancements - in-memory, create/delete
 
 
 * **0.3.0** - Rules
@@ -32,8 +36,7 @@
 * **TBD**
 
   * Data flows with thread support
+    * Data flows might be satisfied with state machines and resque
   * data row warnings that stop after N messages
   * Default Remi project structure (e.g. remi new mycoolproject)
-  * Include/exclude varaibles in `var_import` and `set_values`
-  * Rubydoc documentation for methods/classes/modules
   * Facilitate database read/writes in Remi syntax
