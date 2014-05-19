@@ -1,18 +1,79 @@
 # Remi - Ruby Extract Modify Integrate
 
-**Purpose**
+**Purpose:** Remi is a Ruby-based ETL suite designed to facilitate
+transformation of data in accordance with business rules and logic.
+It is intended to be used primarily with structured data in the GB-TB
+range (i.e, data too big to comfortably fit into memory, but not big
+enough to want to go with a hadoop-like solution).
 
-**Vision**
+**Vision:** The core functionality of an ETL tool includes the ability
+to define, sort, merge, and aggregate data.  What is often lacking in
+ETL tools is how the transformations represented by ETL code relate to
+business logic.  In a fast-paced agile data environment, it is nearly
+impossible to maintain business-user-level documentation that is
+accurate, up-to-date, and comprehensible.  The goal of Remi is to
+provide all of the core functionality of a solid ETL tool while also
+borrowing from Test and Behavior Driven Development methodologies to
+make it possible to maintain a tight link between the actual ETL code
+and the realities of rapidly changing business rules.  I'll refer to
+this concept as *Business Rule Driven Development (BRDD)*.
+
+
+
+**Status:** Right now the focus is mostly on refining the basic ETL
+structure in how Remi will define, sort, merge, and aggregate data.
+Once this basic functionality has been established and demonstrated to
+have performance on par for production work, BRDD development can begin.
+
+I intend to follow [semantic versioning](http://semver.org/)
+principles.  But of course, while we're still on major version zero,
+no attempt will be made to maintain backward compatability.
+
 
 ## Installation
 
-So, this will eventually be packaged as a gem, but for now I'm just doing
+So, this will eventually be packaged as a gem with a tool to set up
+standard Remi projects, but for now we're only testing, so just
 
     bundle install
 
+and go!
+
 ## Usage Overview
 
+Data in Remi is stored in *Datasets*.  A dataset is an ordered
+collection of values of data organized by variables.
+
+Typically, datasets occupy
+physical space on a drive, although they might eventually be
+abstracted to enable support for in-memory or in-database datasets
+that use a common API.  *Datasets* are contained in a *Data Library*
+that may be a directory in a file system, a database/schema on a
+database server, or just some partitioned space in memory.  A
+*Datastep* is an operation on a *Dataset* that involves transforming.
+
+### Libraries
+
+probably should be doing libname[:dataset] to be more ruby-natural
+
+### Creating data
+
+### Viewing data
+
+### Reading data
+
+### Importing from CSV
+
+### Sorting
+
+### Merging
+
+### Aggregating
+
 ## Contributing
+
+Fork, code, pull request.  Try to follow the
+[Ruby style guide](https://github.com/styleguide/ruby).
 
 ## About
 
