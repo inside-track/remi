@@ -9,20 +9,23 @@
   * [x] unit test framework
   * [x] csv reader/writer
 
-* **0.2.0** - Groups (public release)
+* **0.2.0** - Sort/Groups (quiet public release when complete)
 
   * [x] migrate to Rspec
   * [x] sort
   * [x] first/last processing
   * [ ] documentation system
+  * [ ] syntax review and refactor
+  * [ ] datalib enhancements - in-memory, create/delete
   * [ ] configurable logging - user and debug
+  * [ ] works as a gem
+
+* **0.3.0** - Merge/aggregation
   * [ ] aggregator
   * [ ] merge
   * [ ] syntax review and refactor
-  * [ ] datalib enhancements - in-memory, create/delete
 
-
-* **0.3.0** - Rules
+* **0.4.0** - Rules
 
   * Rules are methods triggered by variable or dataset metadata.  For
     example, there could be string length rule.  The rule would be

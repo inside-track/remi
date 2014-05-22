@@ -1,4 +1,3 @@
-
 Note: Yes, the vision is quite long winded.  Mostly because at this
 stage it's difficult to provide specifics, so a story will have to do
 and be refined and simplified as we go.
