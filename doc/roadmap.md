@@ -24,8 +24,9 @@
   * [ ] aggregator
   * [ ] merge
   * [ ] syntax review and refactor
+  * [ ] performance benchmarking
 
-* **0.4.0** - Rules
+* **0.4.0** - Business Rule Driven Development
 
   * Rules are methods triggered by variable or dataset metadata.  For
     example, there could be string length rule.  The rule would be
@@ -42,4 +43,5 @@
     * Data flows might be satisfied with state machines and resque
   * data row warnings that stop after N messages
   * Default Remi project structure (e.g. remi new mycoolproject)
-  * Facilitate database read/writes in Remi syntax
+  * Facilitate database read/writes in Remi syntax - or maybe just
+    provide a natural interface to ActiveRecord

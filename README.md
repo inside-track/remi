@@ -1,32 +1,52 @@
 # Remi - Ruby Extract Modify Integrate
 
 **Purpose:** Remi is a Ruby-based ETL suite that is built to provide
-an expressive data transformation language and facilitate the design,
-definition, and implementation business rules and logic.
+an expressive data transformation language and facilitate the design
+and implementation of business logic.
 
-**Vision:** [fluffy version](/doc/vision_a_story.md).  In our vision
-of Remi, we see
+**Vision:** The vision of a functioning Remi solution includes (See
+also the [fluffier long version](/doc/vision_a_story.md))
 
-The vision of a functioning Remi solution includes
+* *Core transformations* - The heart of any ETL solution is the
+  ability to define, sort, merge, and aggregate data.  Remi seeks to
+  provide a framework to make these core tasks simple and natural.
 
-* Core transformation logic
-* Business rule driven development support
-* Versioned data modeling support
-* Data flows to support modularized control of many-layered projects
-* Leverage the power of Ruby
-* Finally, Remi is a toolset that makes developing ETL solutions more
-  fun!
+* *Business rule driven development support* - Borrowing from
+  principles of Test Driven Development (TDD), Remi will be built to
+  support Business Rule Driven Development (BRDD).  BRDD captures the
+  idea that the definition of business rules, data discovery, and ETL
+  coding all need to be developed in concert and continually refined.
+  Additionally, *all* transformation logic encoded in the ETL need to
+  accessible to business users.
 
+* *Versioned data modeling support* - In order to have an agile data
+  warehouse, we need to be able to quickly build and rebuild the data
+  model that is populated using ETL.  Versioning the data model is
+  necessary to enable sane management of the data model changes.  Remi
+  will very likely borrow heavily (if not completely) from ActiveRecord
+  and Rails, which already provide solid data model versioning.
+
+* *Data flows* - Efficiently moving data from multiple source systems
+  to multiple target systems can involve a large number intermediate
+  steps and complex dependencies.  Remi will provide a data flow logic
+  to define and assist in the proper execution of these dependencies
+  for larger projects.  It will conform to the BRDD principle that the
+  transformations that are performed on the data will still be exposed
+  and consumable to business users.
+
+* *Fun* - Finally, Remi is a toolset that makes developing ETL
+  solutions more fun!
 
 **Status:** Right now the focus is mostly on refining the basic ETL
 structure in how Remi will define, sort, merge, and aggregate data.
 Once this basic functionality has been established and demonstrated to
-have performance on par for production work, BRDD development can
-begin. See the [/doc/roadmap.md](Roadmap) for a rough sketch of plans.
+have performance on par with other solutions for production work, BRDD
+development can begin. See the [/doc/roadmap.md](Roadmap) for a rough
+sketch of plans.
 
 I intend to follow [semantic versioning](http://semver.org/)
-principles.  But of course, while we're still on major version zero,
-no attempt will be made to maintain backward compatibility.
+principles.  Of course, while we're still on major version zero, no
+attempt will be made to maintain backward compatibility.
 
 
 ## Installation
