@@ -1,11 +1,26 @@
 module Remi
 
-  # Datastep methods operate on Dataset objects
+  # Public: Methods in the Datastep module are meant to perform transformation
+  # operatons on Dataset objects.
   module Datastep
     include Log
-
     extend self
 
+    # Used to create data in datasets.  Each dataset listed as an argument
+    # is opened for writing at the beginning of the block and is closed
+    # at the end.
+    #
+    # dataset - An argument array of datasets that will be created.
+    #
+    # Yields a dataset object that is ready for write.
+    #
+    # Examples
+    #   Datastep.create mydataset do |ds|
+    #     # ... variable definitions and transforms ...
+    #     ds.write_row
+    #   end
+    #
+    # Returns nothing.
     def create(*dataset)
       raise "datastep called, no block given" unless block_given?
 
@@ -22,7 +37,13 @@ module Remi
     end
 
 
-    def read(dataset,by: [])
+    # Reads a dataset.
+    #
+    # dataset - The dataset instance to be read.
+    # by - An ordered array of variable name that define a by-group (default: [])
+    #
+    # Returns nothing.
+    def read(dataset, by: [])
       logger.debug "DATASET.READ> **#{dataset.name}**"
 
       dataset.open_for_read
