@@ -6,11 +6,21 @@ module Remi
     include Log
     extend self
 
-    # Creates one or more datasets.
+    # Used to create data in datasets.  Each dataset listed as an argument
+    # is opened for writing at the beginning of the block and is closed
+    # at the end.
     #
     # dataset - An argument array of datasets that will be created.
     #
-    # Returns nothing
+    # Yields a dataset object that is ready for write.
+    #
+    # Examples
+    #   Datastep.create mydataset do |ds|
+    #     # ... variable definitions and transforms ...
+    #     ds.write_row
+    #   end
+    #
+    # Returns nothing.
     def create(*dataset)
       raise "datastep called, no block given" unless block_given?
 
@@ -27,12 +37,12 @@ module Remi
     end
 
 
-    # Reads a datastep.
+    # Reads a dataset.
     #
     # dataset - The dataset instance to be read.
     # by - An ordered array of variable name that define a by-group (default: [])
     #
-    # Returns a block
+    # Returns nothing.
     def read(dataset, by: [])
       logger.debug "DATASET.READ> **#{dataset.name}**"
 
