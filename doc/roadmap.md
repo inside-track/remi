@@ -14,11 +14,11 @@
   * [x] migrate to Rspec
   * [x] sort
   * [x] first/last processing
-  * [ ] documentation system
+  * [x] documentation system
+  * [ ] works as a gem
+  * [ ] configurable logging - user and debug
   * [ ] syntax review and refactor
   * [ ] datalib enhancements - in-memory, create/delete
-  * [ ] configurable logging - user and debug
-  * [ ] works as a gem
 
 * **0.3.0** - Merge/aggregation
   * [ ] aggregator
