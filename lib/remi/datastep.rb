@@ -8,7 +8,7 @@ module Remi
 
     # Creates one or more datasets.
     #
-    # *dataset - an argument array of datasets
+    # dataset - An argument array of datasets that will be created.
     #
     # Returns nothing
     def create(*dataset)
@@ -27,7 +27,13 @@ module Remi
     end
 
 
-    def read(dataset,by: [])
+    # Reads a datastep.
+    #
+    # dataset - The dataset instance to be read.
+    # by - An ordered array of variable name that define a by-group (default: [])
+    #
+    # Returns a block
+    def read(dataset, by: [])
       logger.debug "DATASET.READ> **#{dataset.name}**"
 
       dataset.open_for_read
