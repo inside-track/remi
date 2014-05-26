@@ -34,5 +34,6 @@ DEPENDENCIES
   google_visualr
   launchy
   msgpack
+  rake
   rake-tomdoc
   rspec (~> 2.14)
