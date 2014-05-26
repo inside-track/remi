@@ -1,11 +1,16 @@
 module Remi
 
-  # Datastep methods operate on Dataset objects
+  # Public: Methods in the Datastep module are meant to perform transformation
+  # operatons on Dataset objects.
   module Datastep
     include Log
-
     extend self
 
+    # Creates one or more datasets.
+    #
+    # *dataset - an argument array of datasets
+    #
+    # Returns nothing
     def create(*dataset)
       raise "datastep called, no block given" unless block_given?
 
