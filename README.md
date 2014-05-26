@@ -464,6 +464,8 @@ outer join is too big).
 
 ### Business Rules
 
+###### Proposed
+
 I'm still very fuzzy on the structure of the business rule definitions
 and tests.  I'm not sure whether this can be just an extension of
 Rspec, or if it needs to be a completely new system.  I'm expecting
