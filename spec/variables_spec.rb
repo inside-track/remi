@@ -64,33 +64,55 @@ describe Variables do
   end
 
 
+
+
   describe "assigning variables from another dataset" do
-    before do
-      @ds1 = @work.ds1
-      @ds2 = @work.ds2
-      define_test_variables(@ds1)
+
+    shared_examples_for "assigning variables from another dataset" do
+      it "should import all variables" do
+        Variables.define @ds2 do |v|
+          v.import @ds1
+        end
+        @ds2.vars.keys.should =~ [:rownum,:retailer_key,:retailer_name,:physical_cases]
+      end
+
+      it "should import only specified variables" do
+        Variables.define @ds2 do |v|
+          v.import @ds1, :keep => [:retailer_key,:physical_cases]
+        end
+        @ds2.vars.keys.should =~ [:retailer_key,:physical_cases]
+      end
+
+      it "should not import only specified variables" do
+        Variables.define @ds2 do |v|
+          v.import @ds1, :drop => [:retailer_key,:physical_cases]
+        end
+        @ds2.vars.keys.should =~ [:rownum,:retailer_name]
+      end
     end
 
-    it "should import all variables" do
-      Variables.define @ds2 do |v|
-        v.import @ds1
+    describe "with a transient datalib" do
+      before do
+        tmplib = Datalib.new :transient => {}
+        @ds1 = tmplib.ds1
+        @ds2 = tmplib.ds2
+        define_test_variables(@ds1)
       end
-      @ds2.vars.keys.should =~ [:rownum,:retailer_key,:retailer_name,:physical_cases]
+
+      it_behaves_like "assigning variables from another dataset"
     end
 
-    it "should import only specified variables" do
-      Variables.define @ds2 do |v|
-        v.import @ds1, :keep => [:retailer_key,:physical_cases]
+    # SO, the above works, but I don't like that it has to use the tmplib library
+    describe "with a standard datalib", :future => true do
+      before do
+        @ds1 = @work.ds1
+        @ds2 = @work.ds2
+        define_test_variables(@ds1)
       end
-      @ds2.vars.keys.should =~ [:retailer_key,:physical_cases]
+
+      it_behaves_like "assigning variables from another dataset"
     end
 
-    it "should not import only specified variables" do
-      Variables.define @ds2 do |v|
-        v.import @ds1, :drop => [:retailer_key,:physical_cases]
-      end
-      @ds2.vars.keys.should =~ [:rownum,:retailer_name]
-    end
   end
 
 

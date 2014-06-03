@@ -1,17 +1,23 @@
-require 'msgpack'
+# Core Ruby
 require 'zlib'
-require 'launchy'
-require 'google_visualr'
 require 'json'
 require 'erb'
 require 'fileutils'
 require 'csv'
 require 'digest/md5'
+require 'tmpdir'
 
+# Gems
+require 'msgpack'
+require 'launchy'
+require 'google_visualr'
+require 'configatron/core'
+
+# Remi
+require 'remi/version'
 require 'remi/config'
 require 'remi/core_additions'
 require 'remi/helpers'
-require 'remi/version'
 require 'remi/log'
 require 'remi/dataset'
 require 'remi/datalib'
@@ -20,4 +26,5 @@ require 'remi/datastep'
 require 'remi/dataview'
 require 'remi/interleave'
 
+# Remi components
 require 'remi/interfaces/csv'

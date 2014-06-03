@@ -23,6 +23,10 @@ module Remi
         @data_file_full_path = File.join(lib_options[:directory][:dirname],"#{@name}.rgz")
       end
 
+      if lib_options.has_key?(:transient)
+        @is_open = true
+      end
+
       @_N_ = nil # not initialized until open is set
       @EOF = false
       @next_EOF = nil

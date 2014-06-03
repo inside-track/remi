@@ -1,13 +1,14 @@
 module Remi
-  # Might want to make configuration a bit more sophisticated and
-  # create settings in blocks like this (http://speakmy.name/2011/05/29/simple-configuration-for-ruby-apps/)
-  # + create a way to read a json config file
+  # Public: Configatron instance used to set global configuration options for Remi
+  RemiConfig = Configatron::Store.new
 
-  module RemiConfig
-    extend self
+  # Config options in the 'info' namespace cannot be modified
+  RemiConfig.info.version = Remi::VERSION
+  RemiConfig.info.lock!
 
-    attr_accessor :work_dirname
+  RemiConfig.work_dirname = Dir.mktmpdir("Remi-work", Dir.tmpdir)
+  RemiConfig.system_work_dirname = Configatron::Dynamic.new { Dir.mktmpdir("Remi-system_work", Dir.tmpdir) }
 
-    @work_dirname = File.join(Dir.home,".remi","tmp")
-  end
+  # Number of records to split large datasets for sorting
+  RemiConfig.sort.split_size = 1000000
 end

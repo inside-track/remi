@@ -61,7 +61,7 @@ module Remi
     end
 
 
-    def sort(in_ds, out: nil, by: [], in_memory: false, split_size: 100000)
+    def sort(in_ds, out: nil, by: [], in_memory: false, split_size: RemiConfig.sort.split_size)
       if in_memory
         sort_in_memory(in_ds, out: out, by: by)
         return

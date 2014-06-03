@@ -18,6 +18,7 @@ module Remi
         logger.info "LIBRARY> Creating directory library pointing to #{@options[:directory]}"
       elsif args.has_key?(:transient)
         @type = :transient
+        @options = args
         logger.info "LIBRARY> Creating transient library"
       else
         raise "Unknown library type #{type}"
