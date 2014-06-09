@@ -6,6 +6,7 @@ require 'fileutils'
 require 'csv'
 require 'digest/md5'
 require 'tmpdir'
+require 'logger'
 
 # Gems
 require 'msgpack'

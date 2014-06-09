@@ -1,51 +1,87 @@
 module Remi
-  require 'logger'
 
-  module Log
-    @level = Logger::ERROR
+  # Public: RemiLog is a module that provides a singleton object to perform
+  # logging activity across all classes and objects.  By default, Remi sets
+  # up two loggers - a system logger (RemiLog.sys) and a row-level logger (RemiLog.sys)
+  # but more loggers can be defined if needed.  The purpose of having multiple
+  # loggers is to allow for setting each logger at different logging levels.  So, for
+  # example, the system logger could be set to Debug while the the row-level logger
+  # is set to Error.
+  #
+  # Examples
+  #
+  #   # Create a new logger named 'user' and set it's repoting level to INFO
+  #   RemiLog.user.level = Logger::INFO
+  #
+  #   # Write a message to the logger
+  #   RemiLog.user.info "Doing something really cool here!"
+  module RemiLog
 
-    def logger
-      @logger ||= Log.logger_for(self.class.name.split('::').last)
-    end
-
-    # Accessor method to set the log level
-    def self.level(level)
-      @level = level
-    end
-
+    # Single instance hash that holds all loggers defined
     @loggers = {}
 
     class << self
-      def logger_for(classname)
-        @loggers[classname] ||= configure_logger_for(classname)
+
+      # Public: Used to access or create logger instances.
+      #
+      # m - Name of the logger.
+      # *args - args[0] is used to define the logger output method when initially configured.
+      #
+      # Examples
+      #
+      # RemiLog.user # Creates a new logger
+      # string = StringIO.new
+      # RemiLog.usertest string # Creates a new logger that outputs to a StringIO object
+      #
+      # Returns a Logger instance
+      def method_missing(m,*args)
+        @loggers[m] ||= configure_logger_for(m,*args)
       end
 
-      def configure_logger_for(classname)
+      # Public: Delete a logger.  Once initialized, the logger output method cannot
+      # be changed.  However, the logger can be deleted and restarted to accomplish
+      # the same effect.
+      #
+      # m - Name of the logger.
+      #
+      # Examples
+      #
+      # Remilog.delete :user
+      #
+      # Returns the logger object, but deletes it from the hash of loggers.
+      def delete(m)
+        @loggers.delete(m)
+      end
 
-        logger = Logger.new(STDOUT)
-        logger.level = @level
-        logger.progname = classname
+
+      private
+
+      # Internal: Creates a new logger
+      #
+      # m - Name of the logger.
+      # *args - Optional arguments.  args[0] will set the output method.
+      #
+      # Returns the logger.
+      def configure_logger_for(m,*args)
+        puts "Configuring logger for #{m} using #{args[0]}"
+        logger = Logger.new(args[0] || STDOUT) # Make the default log output be set via configatron
+        logger.level = Logger::ERROR # Make the default log level be set via configatron
+        logger.progname = m.upcase
 
         logger.formatter = proc do |severity, datetime, progname, msg|
           "#{datetime.strftime('%Y-%m-%d %H:%M:%S.%L')} %-12s%-6s: %s\n" % ["[#{progname}]",severity,msg]
         end
-
+        
         logger
       end
+
     end
   end
-  
 
-  class Testlogger
-    include Log
 
-    def initialize
-      logger.unknown "This is an unknown message"
-      logger.fatal "This is an fatal message"
-      logger.error "This is an error message"
-      logger.warn "This is a warn message"
-      logger.info "This is an info message"
-      logger.debug "This is a debug message"
-    end
-  end
+  # Define two standard loggers:
+  #   RemiLog.sys is for general Remi logging
+  #   RemiLog.row is for very detailed logging that may print multiple logging messages per row.
+  RemiLog.sys
+  RemiLog.row
 end
