@@ -16,7 +16,7 @@
   * [x] first/last processing
   * [x] documentation system
   * [x] works as a gem
-  * [ ] configurable logging - user and debug
+  * [x] configurable logging - user and debug
   * [ ] syntax review and refactor
   * [ ] datalib enhancements - in-memory, create/delete
 
