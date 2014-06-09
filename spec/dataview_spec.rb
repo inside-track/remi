@@ -18,7 +18,6 @@ describe "Data Viewer" do
             v.create myvar[i-1]
           end
         end
-        puts have
 
         for i in 1..1020
           have[:rownum] = i
