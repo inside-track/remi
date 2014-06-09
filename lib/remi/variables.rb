@@ -25,8 +25,6 @@ module Remi
 
 
     class DatasetVariableAccessor
-      include Log
-
       def initialize(ds)
         @dataset = ds
       end
@@ -41,7 +39,7 @@ module Remi
           @dataset.prev_row << nil
           @dataset.next_row << nil
         end
-        logger.debug "VARIABLE> #{var_name} >> #{@dataset.vars[var_name]}"
+        RemiLog.sys.debug "Creating variable #{var_name} >> #{@dataset.vars[var_name]}"
       end
 
       # I also need some maniditory metadata that doesn't get keeped/dropped
@@ -80,7 +78,7 @@ module Remi
         ds_already_open = ds.is_open?
 
         ds.open_for_read unless ds_already_open
-        logger.info "IMPORTING> **#{ds.name}**"
+        RemiLog.sys.info "Importing variables from Dataset **#{ds.name}**"
 
         ds.vars.each do |var_name,var_meta|
           if (keep.empty? or keep.include? var_name) and not drop.include? var_name

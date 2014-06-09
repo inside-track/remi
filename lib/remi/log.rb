@@ -63,7 +63,6 @@ module Remi
       #
       # Returns the logger.
       def configure_logger_for(m,*args)
-        puts "Configuring logger for #{m} using #{args[0]}"
         logger = Logger.new(args[0] || STDOUT) # Make the default log output be set via configatron
         logger.level = Logger::ERROR # Make the default log level be set via configatron
         logger.progname = m.upcase

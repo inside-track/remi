@@ -1,6 +1,5 @@
 module Remi
   module Dataview
-    include Log
     extend self
 
     @chart = nil
@@ -59,7 +58,6 @@ module Remi
 
       opts   = { :showRowNumber => true }
       @chart = GoogleVisualr::Interactive::Table.new(google_table, opts)
-      puts "Creating chart #{@chart}"
     end
 
 

@@ -2,7 +2,6 @@ module Remi
 
   # Dont think I really need this, since I can get the names from the datasets themselves
   class Interleaver
-    include Log
     def initialize(*datasets)
       @datasets = datasets
       @dataset_name = []
@@ -34,7 +33,7 @@ module Remi
 
       ds_nil = {}
       datasets.each do |ds|
-        logger.debug "DATASET.INTERLEAVE> **#{ds.name}**"
+        RemiLog.sys.debug "Interleaving dataset **#{ds.name}**"
 
         ds.open_for_read
         ds.initialize_by_groups(sort_keys) if sort_keys.length > 0
