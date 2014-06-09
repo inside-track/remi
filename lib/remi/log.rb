@@ -63,8 +63,8 @@ module Remi
       #
       # Returns the logger.
       def configure_logger_for(m,*args)
-        logger = Logger.new(args[0] || STDOUT) # Make the default log output be set via configatron
-        logger.level = Logger::ERROR # Make the default log level be set via configatron
+        logger = Logger.new(args[0] || RemiConfig.log.output)
+        logger.level = RemiConfig.log.level
         logger.progname = m.upcase
 
         logger.formatter = proc do |severity, datetime, progname, msg|
@@ -76,11 +76,4 @@ module Remi
 
     end
   end
-
-
-  # Define two standard loggers:
-  #   RemiLog.sys is for general Remi logging
-  #   RemiLog.row is for very detailed logging that may print multiple logging messages per row.
-  RemiLog.sys
-  RemiLog.row
 end
