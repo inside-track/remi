@@ -3,7 +3,6 @@ module Remi
   # Public: Methods in the Datastep module are meant to perform transformation
   # operatons on Dataset objects.
   module Datastep
-    include Log
     extend self
 
     # Used to create data in datasets.  Each dataset listed as an argument
@@ -25,7 +24,7 @@ module Remi
       raise "datastep called, no block given" unless block_given?
 
       dataset.each do |ds|
-        logger.debug "DATASTEP.CREATE> #{ds.name}"
+        RemiLog.sys.debug "Creating Dataset #{ds.name}"
         ds.open_for_write
       end
 
@@ -44,7 +43,7 @@ module Remi
     #
     # Returns nothing.
     def read(dataset, by: [])
-      logger.debug "DATASET.READ> **#{dataset.name}**"
+      RemiLog.sys.debug "Reading Dataset **#{dataset.name}**"
 
       dataset.open_for_read
       dataset.initialize_by_groups(Array(by)) if Array(by).length > 0
@@ -73,7 +72,6 @@ module Remi
       rows = []
       Datastep.read in_ds do |in_ds|
         if (in_ds._N_ - 1) % split_size == 0
-          puts "STARTING A SPLIT"
           rows = []
         end
 

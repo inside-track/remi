@@ -7,4 +7,3 @@ require 'remi'
 require 'benchmark'
 
 include Remi
-Log.level Logger::DEBUG

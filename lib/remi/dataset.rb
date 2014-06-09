@@ -1,6 +1,5 @@
 module Remi
   class Dataset
-    include Log
 
     attr_reader :name, :_N_, :EOF, :next_EOF
     attr_accessor :vars, :row, :prev_row, :next_row
@@ -64,7 +63,7 @@ module Remi
         true
       else
         msg = "Variable #{var_name} not defined for dataset #{@name}"
-        logger.error msg
+        RemiLog.sys.error msg
         raise NameError, msg
         false
       end
@@ -116,9 +115,9 @@ module Remi
     end
 
     def open_for_write
-      logger.info "DATASET.OPEN> **<#{@datalib}.#{@name}** for write"
-      logger.debug "  Data file #{@data_file_full_path}"
-      logger.debug "  Header file #{@header_file_full_path}"
+      RemiLog.sys.info  "Opening dataset **<#{@datalib}.#{@name}** for write"
+      RemiLog.sys.debug "  Data file #{@data_file_full_path}"
+      RemiLog.sys.debug "  Header file #{@header_file_full_path}"
 
       # Header kept as stream in case we want to have multi-row headers
       raw_header_file = File.open(@header_file_full_path,"w")
@@ -135,9 +134,9 @@ module Remi
 
 
     def open_for_read
-      logger.info "DATASET.OPEN_FOR_READ> **<#{@datalib}.#{@name}** for read"
-      logger.debug "  Data file #{@data_file_full_path}"
-      logger.debug "  Header file #{@header_file_full_path}"
+      RemiLog.sys.info  "Opening dataset **<#{@datalib}.#{@name}** for read"
+      RemiLog.sys.debug "  Data file #{@data_file_full_path}"
+      RemiLog.sys.debug "  Header file #{@header_file_full_path}"
 
       raw_header_file = File.open(@header_file_full_path,"r")
       @header_file = Zlib::GzipReader.new(raw_header_file)
@@ -161,7 +160,7 @@ module Remi
         symbolize_keys(header_row).each do |key,value|
           @vars[key] = Variables::Variable.new(value[:metadata],value[:position])
         end
-        logger.debug "  Reading metadata #{@vars}"
+        RemiLog.sys.debug "  Reading metadata #{@vars}"
       end
       
       @row = [nil] * @vars.length
@@ -182,7 +181,7 @@ module Remi
 
 
     def close
-      logger.info "DATASET.CLOSE> **#{@datalib}.#{@name}**"
+      RemiLog.sys.info "Closing Dataset **#{@datalib}.#{@name}**"
 
       @header_file.close
       @data_file.close
@@ -214,7 +213,7 @@ module Remi
 
 
     def row_to_log
-      logger.debug "#{@row}"
+      RemiLog.row.info "#{@row}"
     end
 
 

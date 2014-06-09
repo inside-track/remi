@@ -1,6 +1,5 @@
 module Remi
   class Datalib
-    include Log
 
     def initialize(args)
       @type = :undefined
@@ -15,11 +14,11 @@ module Remi
         @options = args
         validate_directory_options()
 
-        logger.info "LIBRARY> Creating directory library pointing to #{@options[:directory]}"
+        RemiLog.sys.info "Creating directory library pointing to #{@options[:directory]}"
       elsif args.has_key?(:transient)
         @type = :transient
         @options = args
-        logger.info "LIBRARY> Creating transient library"
+        RemiLog.sys.info "Creating transient library"
       else
         raise "Unknown library type #{type}"
       end
