@@ -1,5 +1,87 @@
 require 'remi_spec'
 
+describe Variable do
+
+  describe "A variable is an object that has a value and metadata" do
+
+    context "which can be created in one line" do
+      subject(:id) { Variable.new :some_meta => "That's so meta"  }
+
+      it { should have_key(:some_meta) }
+
+      it "Should define the mandatory type key" do
+        subject.should have_key(:type)
+      end
+    end
+
+    context "and can be defined in a block" do
+      let(:id) do
+        Variable.define do
+          meta :type      => "string"
+          meta :length    => 18
+          meta :some_meta => "More meta than you"
+        end
+      end
+
+      specify { expect(id).to have_key(:length) }
+
+      context "which is useful for importing variable metadata from other variables" do
+        let(:id_derived) do
+          id_origin = id # Don't understand why id not in scope of block below
+
+          Variable.define do
+            like id_origin
+            meta :alt_meta => "Way, way meta"
+          end
+        end
+
+        specify { expect(id_derived).to have_key(:some_meta) }
+        specify { expect(id_derived).to have_key(:alt_meta) }
+      end
+    end
+  end
+
+  describe "Modifying metadata" do
+    subject(:id) do
+      Variable.define do
+        meta :type      => "string"
+        meta :length    => 18
+        meta :meta_keep => "More meta than you"
+        meta :meta_drop => "Way more meta than you"
+      end
+    end
+
+    shared_examples "surviving metadata" do
+      specify { expect(subject).to have_keys(:type, :length, :meta_keep) }
+      specify { expect(subject).not_to have_key(:meta_drop) }
+    end
+
+
+    context "can be non-destructively dropped" do
+      subject(:id_derived) { id.drop_meta :meta_drop }
+      it_behaves_like "surviving metadata"
+    end
+
+    context "can be destructively dropped" do
+      before { id.drop_meta! :meta_drop }
+      it_behaves_like "surviving metadata"
+    end
+
+    context "can be non-destructively kept" do
+      subject(:id_derived) { id.keep_meta :length, :meta_keep }
+      it_behaves_like "surviving metadata"
+    end
+
+    context "can be destructively kept" do
+      before { id.keep_meta! :length, :meta_keep }
+      it_behaves_like "surviving metadata"
+    end
+  end
+end
+
+
+=begin SOME OLD WORLD STUFF
+
 describe Variables do
 
   before do
@@ -167,3 +249,4 @@ describe Variables do
     end
   end
 end
+=end
