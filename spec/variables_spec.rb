@@ -5,12 +5,21 @@ describe Variable do
   describe "A variable is an object that has a value and metadata" do
 
     context "which can be created in one line" do
-      subject(:id) { Variable.new :some_meta => "That's so meta"  }
+      subject(:id) { Variable.new :some_meta => "That's so meta" }
 
       it { should have_key(:some_meta) }
 
-      it "Should define the mandatory type key" do
+      it "should define the mandatory type key" do
         subject.should have_key(:type)
+      end
+
+      context "using an array accessor to return metadata" do
+        specify { expect(subject[:some_meta]).to eq "That's so meta" }
+      end
+
+      context "using an array accessor to modify metadata" do
+        before { id[:some_meta] = "Metamodify" }
+        specify { expect(id[:some_meta]).to eq "Metamodify" }
       end
     end
 

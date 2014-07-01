@@ -4,13 +4,22 @@ module Remi
   class Variable
 
     # Required metadata keys and their default values
-    MANDATORY_METADATA = { :type => "string" }
+    DEFAULT = { :type => "string" }
+    MANDATORY_KEYS = DEFAULT.keys
 
     def initialize(new_meta={})
-      @metadata = MANDATORY_METADATA.merge(new_meta)
+      @metadata = DEFAULT.merge(new_meta)
     end
 
     attr_accessor :metadata
+
+    def [](key)
+      @metadata[key]
+    end
+
+    def []=(key, value)
+      @metadata[key] = value
+    end
 
     def has_key?(key)
       @metadata.has_key?(key)
@@ -20,6 +29,9 @@ module Remi
       (keys - @metadata.keys).empty?
     end
 
+    def to_hash
+      @metadata
+    end
 
     def self.define(&block)
       variable = new
@@ -49,11 +61,9 @@ module Remi
     end
 
     def modify_collection(selector, mandatory_join_sign, *meta_list)
-      trimmed_meta_list = meta_list.flatten.send(mandatory_join_sign, MANDATORY_METADATA.keys).uniq
+      trimmed_meta_list = meta_list.flatten.send(mandatory_join_sign, MANDATORY_KEYS).uniq
       @metadata.send(selector) { |key| trimmed_meta_list.include? key }
     end
-
-
 
 
     class VariableDelegator < SimpleDelegator
