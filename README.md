@@ -74,6 +74,50 @@ dataset that can involve reading, writing, modifying variable values,
 sorting, merging, interleaving, or aggregating.
 
 
+
+### Variables
+
+Variables are objects that contain metadata describing the columns of
+dataset.  They are very closely related to a hash, but include some additional
+functionality.
+
+````
+# A varible can be defined on a single line use the 'new' constructor.
+# Any metadata can be can be defined, but a :type is required (defaults to "string" if not given).
+id = Variable.new { :length => 18, :label => "SalesForce Id" }
+
+# Metadata elements can be referenced using normal accessor methods.
+id[:type]
+# => "string"
+
+# Variable metadata can also be defined in a block for more complex requirements.
+id = Variable.define do
+  meta :type   => "string"
+  meta :label  => "SalesForce Id"
+  meta :length => 18
+  meta :regex  => /[a-zA-Z0-9]{15,18}/
+end
+
+# This can be useful for creating other variables that are similar
+account_id = Variable.define do
+  like id
+  meta :label => "Account Id"
+end
+
+# Metadata elements can be destructively and non-destructively dropped
+another_id id.drop_meta :label, :regex
+# => same as variable id, but without the :label and :regex metadata
+id.drop_meta! :label, :regex
+# => removed the :label and :regex metadata from id
+
+# Or kept (note that mandatory components, like :type, do not get dropped)
+another id id.keep_meta :length
+#=> same as variable id, but with only the :length metadata (and mandatory :type)
+id.keep_meta! :length
+#=> all metadata components except :length (and mandatory :type) are removed
+````
+
+
 ### Libraries and datasets
 
 Presently, Remi only supports directory-based data libraries.  A data library

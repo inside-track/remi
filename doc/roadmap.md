@@ -20,7 +20,7 @@
   * [ ] syntax review and refactor
   * [ ] datalib enhancements - in-memory, create/delete
 
-* **0.3.0** - Merge/aggregation
+* **0.3.0** - Merge/aggregation (slightly louder public release)
   * [ ] aggregator
   * [ ] merge
   * [ ] syntax review and refactor
