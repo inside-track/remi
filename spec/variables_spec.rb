@@ -5,7 +5,7 @@ describe Variable do
   describe "A variable is an object that has a value and metadata" do
 
     context "which can be created in one line" do
-      subject(:id) { Variable.new :some_meta => "That's so meta" }
+      subject(:testvar) { Variable.new :some_meta => "That's so meta" }
 
       it { should have_key(:some_meta) }
 
@@ -18,41 +18,41 @@ describe Variable do
       end
 
       context "using an array accessor to modify metadata" do
-        before { id[:some_meta] = "Metamodify" }
-        specify { expect(id[:some_meta]).to eq "Metamodify" }
+        before { testvar[:some_meta] = "Metamodify" }
+        specify { expect(testvar[:some_meta]).to eq "Metamodify" }
       end
     end
 
     context "and can be defined in a block" do
-      let(:id) do
-        Variable.define do
+      let(:testvar) do
+        Variable.new do
           meta :type      => "string"
           meta :length    => 18
           meta :some_meta => "More meta than you"
         end
       end
 
-      specify { expect(id).to have_key(:length) }
+      specify { expect(testvar).to have_key(:length) }
 
       context "which is useful for importing variable metadata from other variables" do
-        let(:id_derived) do
-          id_origin = id # Don't understand why id not in scope of block below
+        let(:testvar_derived) do
+          testvar_origin = testvar # Don't understand why testvar not in scope of block below
 
-          Variable.define do
-            like id_origin
+          Variable.new do
+            like testvar_origin
             meta :alt_meta => "Way, way meta"
           end
         end
 
-        specify { expect(id_derived).to have_key(:some_meta) }
-        specify { expect(id_derived).to have_key(:alt_meta) }
+        specify { expect(testvar_derived).to have_key(:some_meta) }
+        specify { expect(testvar_derived).to have_key(:alt_meta) }
       end
     end
   end
 
   describe "Modifying metadata" do
-    subject(:id) do
-      Variable.define do
+    subject(:testvar) do
+      Variable.new do
         meta :type      => "string"
         meta :length    => 18
         meta :meta_keep => "More meta than you"
@@ -67,23 +67,53 @@ describe Variable do
 
 
     context "can be non-destructively dropped" do
-      subject(:id_derived) { id.drop_meta :meta_drop }
+      subject(:testvar_derived) { testvar.drop_meta :meta_drop }
       it_behaves_like "surviving metadata"
     end
 
     context "can be destructively dropped" do
-      before { id.drop_meta! :meta_drop }
+      before { testvar.drop_meta! :meta_drop }
       it_behaves_like "surviving metadata"
     end
 
     context "can be non-destructively kept" do
-      subject(:id_derived) { id.keep_meta :length, :meta_keep }
+      subject(:testvar_derived) { testvar.keep_meta :length, :meta_keep }
       it_behaves_like "surviving metadata"
     end
 
     context "can be destructively kept" do
-      before { id.keep_meta! :length, :meta_keep }
+      before { testvar.keep_meta! :length, :meta_keep }
       it_behaves_like "surviving metadata"
+    end
+
+    context "can be modified in a block" do
+      before do
+        testvar.modify! do
+          meta :length => 21
+        end
+      end
+
+      specify { expect(testvar[:length]).to eq 21 }
+
+      context "with drop method specified without a bang" do
+        before do
+          testvar.modify! do
+            drop_meta :meta_drop
+          end
+        end
+
+        it_behaves_like "surviving metadata"
+      end
+
+      context "with keep method specified without a bang" do
+        before do
+          testvar.modify! do
+            keep_meta :length, :meta_keep
+          end
+        end
+
+        it_behaves_like "surviving metadata"
+      end
     end
   end
 end

@@ -1,4 +1,3 @@
-require 'delegate'
 module Remi
 
   # Public: Defines variable objects that contain metadata about data
@@ -7,7 +6,7 @@ module Remi
   #
   # Examples
   #
-  #   var_simple = Variable.new { :length => 18, :label => "SalesForce Id" }
+  #   var_simple = Variable.new :length => 18, :label => "SalesForce Id"
   #
   #   var_w_regex_validation = Variable.define do
   #     like var_simple
@@ -27,9 +26,25 @@ module Remi
     # Public: Initialize a new variable.
     #
     # meta - A hash containing metadata to be included in the variable.
-    def initialize(meta={})
+    def initialize(meta={}, &block)
       @metadata = DEFAULT.merge(meta)
+
+      modify!(&block) if block_given?
     end
+
+
+    # Public: Used to modify variable metadata in a block.
+    #
+    # block - A block of commands used to manipulate variable metadata.
+    #         The special set of methods available in this block can
+    #         be found in the VariableDelegator class
+    #
+    # Returns nothing.
+    def modify!(&block)
+      delegator = VariableDelegator.new(self)
+      delegator.instance_eval(&block)
+    end
+
 
     # Public: Array accessor reader method for metadata.
     #
@@ -82,26 +97,10 @@ module Remi
 
 
 
-    # HEY! - Should I also create a define! (or describe!) block for variables
-    # so they can be modified in block fashion?
-    # Also, perhaps this should be part of new rather than define?
 
 
 
 
-    # Public: Used to define variable metadata in a block.
-    #
-    # block - A block of commands used to manipulate variable metadata.
-    #         The special set of methods available in this block can
-    #         be found in the VariableDelegator class
-    #
-    # Returns a new Variable object.
-    def self.define(&block)
-      variable = new
-      delegator = VariableDelegator.new(variable)
-      delegator.instance_eval(&block)
-      variable
-    end
 
 
     # Public: Creates a copy of a variable including all metadata keys
@@ -207,6 +206,34 @@ module Remi
       # Returns nothing.
       def like(var)
          self.to_hash.merge!(var.to_hash)
+      end
+
+      # Public: Alias for drop_meta! form within a modify! block.
+      #
+      # drop_list - A comma delimited list of keys to be excluded from the variable.
+      #
+      # Examples
+      #   myvar.modify!
+      #     drop_meta :some_meta
+      #   end
+      #
+      # Returns nothing.
+      def drop_meta(*drop_list)
+        self.drop_meta!(*drop_list)
+      end
+
+      # Public: Alias for keep_meta! form within a modify! block.
+      #
+      # keep_list - A comma delimited list of keys to be retained in the variable.
+      #
+      # Examples
+      #   myvar.modify!
+      #     keep_meta :some_meta, :some_other_meta
+      #   end
+      #
+      # Returns nothing.
+      def keep_meta(*keep_list)
+        self.keep_meta!(*keep_list)
       end
     end
   end

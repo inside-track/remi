@@ -84,14 +84,14 @@ functionality.
 ````
 # A varible can be defined on a single line use the 'new' constructor.
 # Any metadata can be can be defined, but a :type is required (defaults to "string" if not given).
-id = Variable.new { :length => 18, :label => "SalesForce Id" }
+id = Variable.new :length => 18, :label => "SalesForce Id"
 
 # Metadata elements can be referenced using normal accessor methods.
 id[:type]
 # => "string"
 
 # Variable metadata can also be defined in a block for more complex requirements.
-id = Variable.define do
+id = Variable.new do
   meta :type   => "string"
   meta :label  => "SalesForce Id"
   meta :length => 18
@@ -99,7 +99,7 @@ id = Variable.define do
 end
 
 # This can be useful for creating other variables that are similar
-account_id = Variable.define do
+account_id = Variable.new do
   like id
   meta :label => "Account Id"
 end
@@ -115,6 +115,13 @@ another id id.keep_meta :length
 #=> same as variable id, but with only the :length metadata (and mandatory :type)
 id.keep_meta! :length
 #=> all metadata components except :length (and mandatory :type) are removed
+
+# keep_meta! and drop_meta! are aliased as non-bang methods in a modify! block
+id.modify! do
+  meta      :length => 21
+  drop_meta :regex
+end
+
 ````
 
 
