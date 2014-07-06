@@ -105,14 +105,16 @@ account_id = Variable.new do
 end
 
 # Metadata elements can be destructively and non-destructively dropped
-another_id id.drop_meta :label, :regex
+another_id = id.drop_meta :label, :regex
 # => same as variable id, but without the :label and :regex metadata
+
 id.drop_meta! :label, :regex
 # => removed the :label and :regex metadata from id
 
 # Or kept (note that mandatory components, like :type, do not get dropped)
-another id id.keep_meta :length
+another_id = id.keep_meta :length
 #=> same as variable id, but with only the :length metadata (and mandatory :type)
+
 id.keep_meta! :length
 #=> all metadata components except :length (and mandatory :type) are removed
 
@@ -121,8 +123,73 @@ id.modify! do
   meta      :length => 21
   drop_meta :regex
 end
-
 ````
+
+
+
+### Variable Sets
+
+The VariableSet class defines a collection of variables.  All datasets
+are composed of an internal variable set that maps to the columns of
+data in the dataset.  Variable sets can also be defined in a larger
+scope and modified and reused by other datasets.
+
+
+IDEA: So I'm thinking that I'll need a numeric index when the variables get mapped
+to data columns.  This could either be defined in the dataset, or here in the
+variable set.  If here, it could be managed within the variable set, or it could be
+a mandatory metadata field on the variables in the dataset field.
+
+
+````ruby
+# Can be defined on a single row as an array of previously-defined variables
+account_vars = VariableSet.new account_id, name, address, premise_type, last_contact_date
+
+# Specific variables are referenced using array accessors
+account_vars[:name]
+# => Variable
+
+# Or, more commonly, in a block
+account_vars = VariableSet.new do
+  # Within a block, variable metdata can be defined at the same time
+  var account_id        :length => 18
+  var name
+  var address
+  var premise_type      :valid_values => ["On-Premise", "Off-Premise"]
+  var last_contact_date :type => "date"
+end
+
+# Which can be useful for creating derived variable sets
+distributor_vars = VariableSet.new do
+  like account_vars.drop_vars :premise_type, :last_contact_date
+  var region_code
+end
+
+
+# Variables in a variable set can be destructively and non-destructively dropped
+retailer_vars = account_vars.drop_vars :last_contact_date
+# => same as account_vars, but without the :last_contact_date variable
+
+account_vars.drop_vars! :premise_type, :last_contact_date
+# => removed the :premise_type and :last_contact_date variables from account_vars variableset
+
+# Variables in a variable set can also be kept destructively and non-destructively
+retailer_vars = account_vars.keep_vars :account_id, :name, :address
+# => same as account_vars, but with only the :account_id, :name, and :address variables
+
+account_vars.keep_vars! :account_id, :name, :address
+# => account_vars, but with only the :account_id, :name, and :address variables
+
+# keep_vars! and drop_vars! are aliased as non-bang methods in a modify! block
+account_vars.modify! do
+  drop_vars :last_contact_date
+  like      distributor_vars.keep_vars :region_code
+  var       sales_rep_id :length => 18
+end
+# => drops the :last_contact_date variable, imports the :region_code variable from
+#    distributor_vars, and adds a new variable called sales_rep_id
+````
+
 
 
 ### Libraries and datasets
