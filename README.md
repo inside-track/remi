@@ -81,7 +81,7 @@ Variables are objects that contain metadata describing the columns of
 dataset.  They are very closely related to a hash, but include some additional
 functionality.
 
-````
+````ruby
 # A varible can be defined on a single line use the 'new' constructor.
 # Any metadata can be can be defined, but a :type is required (defaults to "string" if not given).
 id = Variable.new :length => 18, :label => "SalesForce Id"
@@ -152,17 +152,17 @@ account_vars[:name]
 # Or, more commonly, in a block
 account_vars = VariableSet.new do
   # Within a block, variable metdata can be defined at the same time
-  var account_id        :length => 18
-  var name
-  var address
-  var premise_type      :valid_values => ["On-Premise", "Off-Premise"]
-  var last_contact_date :type => "date"
+  var :account_id        => { :length => 18 } # set some metadata
+  var :name              => {}                # use default metadata
+  var :address           => address           # defined from an existing address variable
+  var :premise_type      => { :valid_values => ["On-Premise", "Off-Premise"] }
+  var :last_contact_date => { :type => "date" }
 end
 
 # Which can be useful for creating derived variable sets
 distributor_vars = VariableSet.new do
   like account_vars.drop_vars :premise_type, :last_contact_date
-  var region_code
+  var :region_code => {}
 end
 
 
@@ -184,7 +184,7 @@ account_vars.keep_vars! :account_id, :name, :address
 account_vars.modify! do
   drop_vars :last_contact_date
   like      distributor_vars.keep_vars :region_code
-  var       sales_rep_id :length => 18
+  var       :sales_rep_id => { :length => 18 }
 end
 # => drops the :last_contact_date variable, imports the :region_code variable from
 #    distributor_vars, and adds a new variable called sales_rep_id
