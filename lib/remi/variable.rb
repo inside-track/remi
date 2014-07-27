@@ -94,6 +94,14 @@ module Remi
       @metadata
     end
 
+    # Public: Variable equality test.
+    #
+    # another_variable - Another variable object.
+    #
+    # Returns a boolean indicating whether two variables have the same metadata.
+    def ==(another_variable)
+      self.to_hash == another_variable.to_hash
+    end
 
 
 
