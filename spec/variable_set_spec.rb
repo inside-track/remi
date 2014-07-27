@@ -18,7 +18,7 @@ describe VariableSet do
       it { should have_keys(:account_id, :name) }
 
       context "using an array accessor to return a variable" do
-        specify { expect(subject[:name]).to eq shared_vars[:name] }
+        specify { expect(subject[:name].meta).to eq shared_vars[:name] }
       end
     end
 
@@ -34,8 +34,8 @@ describe VariableSet do
       end
 
       specify { expect(varset).to have_keys :account_id, :name, :balance }
-      specify { expect(varset[:name]).to be_a Variable }
-      specify { expect(varset[:balance]).to be_a Variable }
+      specify { expect(varset[:name].meta).to be_a Variable }
+      specify { expect(varset[:balance].meta).to be_a Variable }
 
       context "can be derived from other variable sets" do
         let(:varset_derived) do
@@ -53,7 +53,7 @@ describe VariableSet do
     end
   end
 
-  describe "Modifying varaible sets" do
+  describe "Modifying variable sets" do
     subject(:varset) do
       VariableSet.new do
         var :account_id  => { :length => 18 }
@@ -95,7 +95,7 @@ describe VariableSet do
         end
       end
 
-      specify { expect(varset[:account_id][:length]).to eq 21 }
+      specify { expect(varset[:account_id].meta[:length]).to eq 21 }
 
       context "with drop method specified without a bang" do
         before do

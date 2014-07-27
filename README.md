@@ -135,12 +135,6 @@ data in the dataset.  Variable sets can also be defined in a larger
 scope and modified and reused by other datasets.
 
 
-IDEA: So I'm thinking that I'll need a numeric index when the variables get mapped
-to data columns.  This could either be defined in the dataset, or here in the
-variable set.  If here, it could be managed within the variable set, or it could be
-a mandatory metadata field on the variables in the dataset field.
-
-
 ````ruby
 # Can be defined on a single row as an array of previously-defined variables
 account_vars = VariableSet.new account_id, name, address, premise_type, last_contact_date
@@ -189,6 +183,31 @@ end
 # => drops the :last_contact_date variable, imports the :region_code variable from
 #    distributor_vars, and adds a new variable called sales_rep_id
 ````
+
+
+
+
+IDEA: So I'm thinking that I'll need a numeric index when the variables get mapped
+to data columns.  This could either be defined in the dataset, or here in the
+variable set.  If here, it could be managed within the variable set, or it could be
+a mandatory metadata field on the variables in the dataset field.
+````ruby
+account_vars[:id].index
+account_vars[:id].meta
+````
+
+So I could change Variable to VariableMeta and then create a new Variable class that
+is a combination of VariableMeta and an index.  This could be the object that is
+returned by a variable set array accessor.
+
+Or I could create a VariableWithIndex object.  Might make more sense since it has
+a very specialized use and a Variable index only has meaning within the context
+of a VariableSet.
+
+It might be a bit of a pain to have to re-index variables after each
+keep/drop operation.  But maybe not.  I just need a generic re-index option.
+This may not be so hard since Ruby apparently guarantees that hash element
+order is given by the order of insertion.
 
 
 

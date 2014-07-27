@@ -1,6 +1,5 @@
 module Remi
 
-
   # Public: Defines variable set objects that collect variables and their
   # metadata.
   #
@@ -17,12 +16,25 @@ module Remi
   #   end
   class VariableSet
 
+    # Public: Struct that associates an index with a Variable.
+    VariableWithIndex = Struct.new(:meta, :index) do
+
+      # Public: Converting to hash removes any indexes.
+      #
+      # Returns a hash representing the Variable metadata.
+      def to_hash
+        self.meta.to_hash
+      end
+    end
+
     # Public: Initializes a new variable set.
     #
     # vars - A hash containing variables and metadata to be included in
     #        the variable set.
     def initialize(vars = {}, &block)
-      @vars = vars
+      @vars = {}
+      @vars = vars_from_hash(vars)
+      @index = []
 
       modify!(&block) if block_given?
     end
@@ -146,10 +158,40 @@ module Remi
       self
     end
 
+    # Public: Converts a hash that contains keys that are variable
+    # names and values that are variable metadata (either Hash or
+    # Variable object) into a hash that contains values that are
+    # VariableWithIndex objects.
+    #
+    # var_hash - The hash containting variable name keys and variable metadata values.
+    #
+    # Returns a hash.
+    def vars_from_hash(var_hash)
+      result = {}
+      var_hash.each do |name, var|
+        result[name] = VariableWithIndex.new(Variable.new(var), next_index(name))
+      end
+      
+      result
+    end
+
 
 
 
     private
+
+    # Private: Gets the next index for a new variable named var.  If
+    # the variable already exists, it returns the index of that
+    # variable.
+    #
+    # var - The name of the new variable.
+    def next_index(var=nil)
+      if @vars[var].nil? then
+        @vars.length
+      else
+        @vars[var].index
+      end
+    end
 
     # Private: Generic method used to add or remove variables from a variable set.
     #
@@ -182,7 +224,7 @@ module Remi
       def var(key_val)
         key_val.each do |key, val|
           variable = (val.is_a? Variable) ? val.dup : Variable.new(val)
-          self.to_hash.merge!(key => variable)
+          self.to_hash.merge!(vars_from_hash({ key => variable }))
         end
       end
 
@@ -193,7 +235,7 @@ module Remi
       # Returns nothing.
       def like(var)
         raise "Expecting a VariableSet" unless var.is_a? VariableSet
-        self.to_hash.merge!(var.to_hash)
+        self.to_hash.merge!(vars_from_hash(var.to_hash))
       end
 
       # Public: Alias for drop_vars! form within a modify! block.
