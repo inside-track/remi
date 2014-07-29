@@ -121,7 +121,69 @@ describe VariableSet do
 
   end
 
+
   describe "Ordering variables" do
+    let(:varset) do
+      VariableSet.new do
+        var :account_id  => { :length => 18 }
+        var :name        => {}
+        var :address     => {}
+      end
+    end
+
+    context "adding a new variable" do
+      before do
+        varset.modify! do
+          var :premise_type => { :valid_values => ["on", "off"] }
+        end
+      end
+
+      it "should have the right index" do
+        expect(varset[:premise_type].index).to eq 3
+      end
+    end
+
+    context "keeping/dropping variables" do
+      it "should re-index remaining variables on drop" do
+        expect { varset.drop_vars!(:name) }.to change { varset[:address].index }.from(2).to(1)
+      end
+
+      it "should re-index remaining variables on keep" do
+        expect { varset.keep_vars!(:name) }.to change { varset[:name].index }.from(1).to(0)
+      end
+    end
+
+    context "reordering variables" do
+      before do
+        varset.modify! do
+          order :name, :address, :account_id
+        end
+      end
+
+      it "should change the indexes of reordered variables" do
+        expect([:account_id, :name, :address].collect { |name| varset[name].index }).to eq [2,0,1]
+      end
+      
+      it "should loop through variables in the indexed order" do
+        index_order = varset.collect { |name, var| var.index }
+        expect(index_order).to eq 0.upto(varset.length-1).to_a
+      end
+    end
+
+    context "combining variablesets" do
+      let(:varset2) do
+        orig_varset = varset
+        VariableSet.new do
+          var :account_type => {}
+          var :name         => { :comment => "this is overwritten" }
+          like orig_varset
+        end
+      end
+
+      it "should contain the combination of variables in the right order" do
+        expect([:account_type, :name, :account_id, :address].collect { |name| varset2[name].index }).to eq [0,1,2,3]
+      end
+    end
   end
 end
 

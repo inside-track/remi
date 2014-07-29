@@ -15,6 +15,7 @@ module Remi
   #     var :last_contact_date => { :type => "date" }
   #   end
   class VariableSet
+    include Enumerable
 
     # Public: Struct that associates an index with a Variable.
     VariableWithIndex = Struct.new(:meta, :index) do
@@ -34,7 +35,6 @@ module Remi
     def initialize(vars = {}, &block)
       @vars = {}
       @vars = vars_from_hash(vars)
-      @index = []
 
       modify!(&block) if block_given?
     end
@@ -128,6 +128,7 @@ module Remi
     # Returns self.
     def drop_vars!(*drop_list)
       modify_collection(:delete_if, *drop_list)
+      reindex
       self
     end
 
@@ -155,6 +156,7 @@ module Remi
     # Returns self.
     def keep_vars!(*keep_list)
       modify_collection(:keep_if, *keep_list)
+      reindex
       self
     end
 
@@ -175,7 +177,54 @@ module Remi
       result
     end
 
+    # Public: Loops over each variable in the variable set yielding the name
+    # and VariableWithIndex.  Yielded variables are ordered by their index.
+    #
+    # Examples
+    #   varset.each do |name, var|
+    #     puts "#{name}: #{var.index}"
+    #   end
+    #
+    # Yields a key/value pair.
+    def each
+      @vars.sort_by { |name, var| var.index }.each do |name, var|
+        yield name, var
+      end
+    end
 
+    # Public: Reads through all of the variables in the VariableSet and assigns each
+    # a new index.  Needed when variables are removed or inserted into the set.
+    #
+    # Returns nothing.
+    def reindex
+      new_index = 0.upto(@vars.length - 1).to_a
+
+      @vars.each do |name, var|
+        var.index = new_index.shift
+      end
+
+      nil
+    end
+
+    # Public: Orders variables according in the order of a supplied list of variables.
+    #
+    # order_ary - An array of variable names in the order that they should be stored.
+    #
+    # Examples
+    #  varset.order(:name, :address, :account_id)
+    #
+    # Returns nothing.
+    def order(*order_ary)
+      order_ary.each_with_index { |name, idx| @vars[name].index = idx }
+      nil
+    end
+
+    # Public: The number of variables stored in this variable set.
+    #
+    # Returns the the number of variables in the variable set.
+    def length
+      @vars.length
+    end
 
 
     private
@@ -230,12 +279,15 @@ module Remi
 
       # Public: Used to merge in all metadata from an existing variable.
       #
-      # var - A variable object.
+      # varset - A variable object.
       #
       # Returns nothing.
-      def like(var)
-        raise "Expecting a VariableSet" unless var.is_a? VariableSet
-        self.to_hash.merge!(vars_from_hash(var.to_hash))
+      def like(varset)
+        raise "Expecting a VariableSet" unless varset.is_a? VariableSet
+        varset.each do |name, variable|
+          var name => variable.meta
+        end
+        
       end
 
       # Public: Alias for drop_vars! form within a modify! block.

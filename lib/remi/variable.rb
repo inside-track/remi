@@ -16,6 +16,7 @@ module Remi
   #   var_simple_again = var_w_regex_validation.drop_meta :regex
   #   var_simple_again = var_w_regex_validation.keep_meta :length, :label
   class Variable
+    include Enumerable
 
     # Required metadata default values
     DEFAULT = { :type => "string" }
