@@ -7,6 +7,6 @@ gem 'launchy', '~> 2.4'
 gem 'configatron', '~> 3.2'
 
 group :development do
-  gem 'rspec', '~> 2.14'
+  gem 'rspec', '~> 3.1'
   gem 'rake-tomdoc'
 end
