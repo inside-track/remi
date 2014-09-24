@@ -6,8 +6,8 @@ module Remi
   RemiConfig.info.version = Remi::VERSION
   RemiConfig.info.lock!
 
-  RemiConfig.work_dirname = Dir.mktmpdir("Remi-work", Dir.tmpdir)
-  RemiConfig.system_work_dirname = Configatron::Dynamic.new { Dir.mktmpdir("Remi-system_work", Dir.tmpdir) }
+  RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir)
+  RemiConfig.system_work_dirname = Configatron::Dynamic.new { Dir.mktmpdir("Remi-system_work-", Dir.tmpdir) }
 
   # Default logging output
   RemiConfig.log.output = STDOUT

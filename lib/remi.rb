@@ -29,5 +29,8 @@ require 'remi/datastep'
 require 'remi/dataview'
 require 'remi/interleave'
 
+require 'remi/datalibs/canonical_datalib.rb'
+require 'remi/interfaces/canonical_interface.rb'
+
 # Remi components
 require 'remi/interfaces/csv'
