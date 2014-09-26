@@ -54,6 +54,11 @@ describe Datalibs::CanonicalDatalib do
     it "fails to build a new dataset" do
       expect { mylib.build(:mydata) }.to raise_error Interfaces::DatasetAlreadyExists
     end
+
+    it "overwrites an existing dataset using the bang version" do
+      expect { mylib.build!(:mydata) }.not_to raise_error
+    end
+
   end
 
 end

@@ -36,14 +36,33 @@ module Remi
       # and only defined columns end up getting persisted.
 
       # should return a new dataset instance that points to a Directory interface
-      def build(dataset_name)
-        interface = Interfaces::CanonicalInterface.new(self, dataset_name)
 
-        raise Interfaces::DatasetAlreadyExists if interface.dataset_exists?
-        
-        interface.create_empty_dataset
-        Dataset.new(dataset_name, interface)
+
+      # Public: Used to initialize a new dataset in a library.  This will
+      # create a new empty dataset in directory specified by the library.
+      # If a dataset already exists, it raises an error.
+      #
+      # dataset_name - Name of the dataset to initialize.
+      #
+      # Returns a Dataset.
+      def build(dataset_name)
+        raise Interfaces::DatasetAlreadyExists if interface(dataset_name).dataset_exists?
+        build!(dataset_name)
       end
+
+      # Public: Used to initialize a new dataset in a library.  This will
+      # create a new empty dataset in directory specified by the library.
+      # If a dataset already exists, it will be overwritten.
+      #
+      # dataset_name - Name of the dataset to initialize.
+      #
+      # Returns a Dataset.
+      def build!(dataset_name)
+        interface(dataset_name).create_empty_dataset
+        Dataset.new(dataset_name, interface(dataset_name))
+      end
+
+
 
       # should return an existing dataset reference
       # error if the dataset does not exist
@@ -60,7 +79,7 @@ module Remi
       private
 
       def interface(dataset_name)
-        
+        Interfaces::CanonicalInterface.new(self, dataset_name)        
       end
 
     end
