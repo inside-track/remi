@@ -9,9 +9,11 @@ module Remi
         @directory = Pathname.new(@dir_name)
       end
 
+      # Public: 
       def datasets
-        # use this, but strip out the extension/path
-        Dir[File.join(@dir_name, "*.hgz")]
+        Dir[File.join(@dir_name, "*.hgz")].collect do |filename|
+          Pathname.new(filename).sub_ext('').basename.to_s.to_sym
+        end
       end
 
       def length

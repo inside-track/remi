@@ -34,6 +34,11 @@ describe Datalibs::CanonicalDatalib do
     end
   end
 
+  it "returns an array of dataset names" do
+    mylib.build(:mydata1)
+    mylib.build(:mydata2)
+    expect(mylib.datasets).to match_array([:mydata1, :mydata2])
+  end
 
   context "when a dataset already exists" do
     before { mylib.build(:mydata) }
