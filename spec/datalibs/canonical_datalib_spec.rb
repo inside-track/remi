@@ -17,8 +17,8 @@ describe Datalibs::CanonicalDatalib do
     expect(mylib.length).to eq 0
   end
 
-  it "fails when accessing a non-existent dataset" do
-    expect { mylib[:mydata] }.to raise_error(Interfaces::UnknownDataset)
+  it "returns nil when accessing a non-existent dataset" do
+    expect(mylib[:mydata]).to be_nil
   end
 
   context "building a new dataset" do

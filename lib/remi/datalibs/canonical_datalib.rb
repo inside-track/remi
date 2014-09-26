@@ -64,15 +64,13 @@ module Remi
 
 
 
-      # should return an existing dataset reference
-      # error if the dataset does not exist
+      # Public: Array accessor for the Datalib used to retrieve a Dataset.
+      #
+      # dataset_name - Name of the dataset in the library.
+      #
+      # Returns the Dataset object specified by the name or nil if one does not exist.
       def [](dataset_name)
-        interface = Interfaces::CanonicalInterface.new(self, dataset_name)
-
-        raise Interfaces::UnknownDataset unless interface.dataset_exists?
-
-        # lookup the hgz file with the name dataset and return a dataset object
-        # using the Directory interface.
+        return nil unless interface(dataset_name).dataset_exists?
         Dataset.new(dataset_name, interface(dataset_name))
       end
 
