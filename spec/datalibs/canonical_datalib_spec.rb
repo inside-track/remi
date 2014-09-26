@@ -6,8 +6,6 @@ describe Datalibs::CanonicalDatalib do
   before { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
 
   let(:mylib) { Datalibs::CanonicalDatalib.new(RemiConfig.work_dirname) }
-#  let(:mylib) { Datalibs::CanonicalDatalib.new("#{ENV['HOME']}/Desktop/work") }
-
 
   it "is a directory datalib object" do
     expect(mylib).to be_a(Datalibs::CanonicalDatalib)
@@ -23,7 +21,6 @@ describe Datalibs::CanonicalDatalib do
 
   context "building a new dataset" do
     let(:mydata) { mylib.build(:mydata) }
-#    after { mydata.delete }
 
     it "creates a new dataset" do
       expect { mydata }.to change { mylib.length }.from(0).to(1)

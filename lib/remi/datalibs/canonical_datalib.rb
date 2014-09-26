@@ -4,39 +4,29 @@ module Remi
 
       attr_accessor :dir_name
 
+      # Public: Initialiazes a CanonicalDatalib.
+      #
+      # dir_name - The directory name that the canonical datalib points to.
       def initialize(dir_name)
         @dir_name = dir_name
         @directory = Pathname.new(@dir_name)
       end
 
-      # Public: 
+      # Public: Returns an array of datasets names as symbols.
+      #
+      # Returns an array.
       def datasets
         Dir[File.join(@dir_name, "*.hgz")].collect do |filename|
           Pathname.new(filename).sub_ext('').basename.to_s.to_sym
         end
       end
 
+      # Public: Returns the number of datasets currently defined in the library.
+      #
+      # Returns a number.
       def length
         datasets.length
       end
-
-      # I don't like create because it implies that a file should
-      # be written or a schema created.
-      # Here, we really just need it to return an instance of the dataset,
-      # whether it is persisted to database or file or not.
-      # Which is kind of why I like 'new'.  Maybe 'new_dataset'?
-
-      # How about 'build' - in that it sets up the space for a datset to
-      # be created, but does not actually create it at the time
-
-      # But it might be ok to create something at this point too.
-      # For datasets, it could create empty placeholder files that
-      # get overwritten when the datset it written to.  For databases,
-      # we could require that the schema be defined at build time
-      # and only defined columns end up getting persisted.
-
-      # should return a new dataset instance that points to a Directory interface
-
 
       # Public: Used to initialize a new dataset in a library.  This will
       # create a new empty dataset in directory specified by the library.
@@ -76,6 +66,12 @@ module Remi
 
       private
 
+      # Private: Builds a CanonicalInterface for a dataset with the specified name
+      # in the current Datalib.
+      #
+      # dataset_name - Name of the dataset to build the interface for.
+      #
+      # Returns a CanonicalInterface.
       def interface(dataset_name)
         Interfaces::CanonicalInterface.new(self, dataset_name)        
       end
