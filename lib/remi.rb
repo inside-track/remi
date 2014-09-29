@@ -1,6 +1,7 @@
 # Ruby Standard Library
 require 'zlib'
 require 'json'
+require 'yaml'
 require 'erb'
 require 'fileutils'
 require 'csv'
