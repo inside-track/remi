@@ -1,4 +1,4 @@
-# Core Ruby
+# Ruby Standard Library
 require 'zlib'
 require 'json'
 require 'erb'
@@ -8,12 +8,14 @@ require 'digest/md5'
 require 'tmpdir'
 require 'logger'
 require 'delegate'
+require 'forwardable'
 
 # Gems
 require 'msgpack'
 require 'launchy'
 require 'google_visualr'
 require 'configatron/core'
+
 
 # Remi
 require 'remi/version'
@@ -29,6 +31,8 @@ require 'remi/datastep'
 require 'remi/dataview'
 require 'remi/interleave'
 
+require 'remi/row.rb'
+require 'remi/row_set.rb'
 require 'remi/datalibs/canonical_datalib.rb'
 require 'remi/interfaces/canonical_interface.rb'
 

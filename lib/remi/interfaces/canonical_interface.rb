@@ -8,8 +8,6 @@ module Remi
       def initialize(datalib, dataset_name)
         @datalib = datalib
         @dataset_name = dataset_name
-
-#        create_empty_dataset unless dataset_exists?
       end
 
       def open_for_write
