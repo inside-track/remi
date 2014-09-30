@@ -51,37 +51,6 @@ describe RowSet do
     end
   end
 
-
-  describe 'by groups' do
-    before do
-      @ex_single_by_group = [
-                             ["row 1","A",true,false],
-                             ["row 2","A",false,true],
-                             ["row 3","B",true,false],
-                             ["row 4","B",false,false],
-                             ["row 5","B",false,false],
-                             ["row 6","B",false,true],
-                             ["row 7","C",true,false],
-                             ["row 8","C",false,true]
-                            ]
-    end
-
-    it 'does something' do
-      rowset = RowSet.new(by_groups: 1)
-      result = []
-      example = Marshal.load(Marshal.dump(@ex_single_by_group))
-      loop do
-        row = example.empty? ? [] : example.shift[0..1]
-        rowset.add(Row.new(row, eof: (example.length == 0)))
-        result << (rowset[0..1] + [rowset.first, rowset.last]) unless rowset.curr.row_number.nil?
-        break if rowset.curr.eof
-      end
-
-      expect(result).to eq @ex_single_by_group
-
-    end
-  end
-
   describe 'single by groups' do
     before do
       @rowset = RowSet.new(by_groups: 1)
