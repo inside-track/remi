@@ -103,7 +103,7 @@ module Remi
       parent_last = false
       @by_groups.each_with_index do |grp, idx|
         @by_first[idx] = ((self[grp] != self.prev[grp]) or parent_first)
-        @by_last[idx]  = ((self[grp] != self.next[grp]) or parent_last or self.curr.eof)
+        @by_last[idx]  = ((self[grp] != self.next[grp]) or parent_last or self.curr.last_row)
 
         parent_first = @by_first[idx]
         parent_last = @by_last[idx]

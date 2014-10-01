@@ -42,7 +42,7 @@ describe RowSet do
     end
 
     describe 'adding another row to a rowset already loaded with data' do
-      before { @rowset.add(Row.new(@test_data[3], eof: true)) }
+      before { @rowset.add(Row.new(@test_data[3], last_row: true)) }
       
       it 'changes which row is current' do
         expect(@rowset[0..2]).to eq @test_data[1]
@@ -106,8 +106,8 @@ describe RowSet do
     context 'last row, prev row different' do
       before do
         @rowset.add(Row.new(['prev', 'X']))
-        @rowset.add(Row.new(['curr', 'A'], eof: true))
-        @rowset.add(Row.new(['next', 'A'], eof: true)) # assume the last rows get repeated for some reason
+        @rowset.add(Row.new(['curr', 'A'], last_row: true))
+        @rowset.add(Row.new(['next', 'A'], last_row: true)) # assume the last rows get repeated for some reason
       end
 
       specify { expect(@rowset.first).to eq true }
@@ -117,8 +117,8 @@ describe RowSet do
     context 'last row, prev row same' do
       before do
         @rowset.add(Row.new(['prev', 'A']))
-        @rowset.add(Row.new(['curr', 'A'], eof: true))
-        @rowset.add(Row.new(['next', 'A'], eof: true)) # assume the last rows get repeated for some reason
+        @rowset.add(Row.new(['curr', 'A'], last_row: true))
+        @rowset.add(Row.new(['next', 'A'], last_row: true)) # assume the last rows get repeated for some reason
       end
 
       specify { expect(@rowset.first).to eq false }
