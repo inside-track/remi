@@ -4,6 +4,10 @@ module Remi
     def initialize(dataset_name, interface)
       @name = dataset_name
       @interface = interface
+
+      # Will also need to initialize
+      # RowSet
+      # VariableSet
     end
 
     def delete
