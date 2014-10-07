@@ -1,13 +1,15 @@
 require 'remi_spec'
 
 describe Datalib do
-  before { @work = Datalib.new :directory => { :dirname => RemiConfig.work_dirname } }
-  subject { @work }
+  describe 'forwarding to the canonical datalib' do
+    let(:datalib) { Datalib.new(dir_name: RemiConfig.work_dirname) }
+    
+    it 'sets the correct data lib type' do
+      expect(datalib.datalib_type).to eq 'Remi::Datalibs::CanonicalDatalib'
+    end
 
-  it "should create a datalib" do
-    should be_a_kind_of(Datalib)
-  end
-
-  it "should read all existing dataset metadata into memory" do
+    it 'delegates calls to the canonical data lib class' do
+      expect(datalib.dir_name).to eq RemiConfig.work_dirname
+    end
   end
 end

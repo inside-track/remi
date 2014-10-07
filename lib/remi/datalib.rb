@@ -1,61 +1,31 @@
 module Remi
-  class Datalib
+  # Public: Provides a common interface for end users to create new data libs.
+  # This is a generic Datalib class that delegates calls to more specific
+  # data lib classes.
+  #
+  # Examples
+  #
+  #   # This will create a Datalibs::CanonicalDatalib object with dir_name
+  #   Datalib.new(dir_name: RemiConfig.work_dirname)
+  class Datalib < SimpleDelegator
 
-    def initialize(args)
-      @type = :undefined
-      @options = {}
+    # Public: Gets the type of data lib
+    attr_reader :datalib_type
 
-      unless args.is_a?(Hash)
-        raise "Must pass options hash"
+    # Public: Datalib initializer.
+    #
+    # type - Symbol used to set the type of data lib to create (default: :directory).
+    # args - Passes any additional arguments onto the initializer of the specific datalib.
+    def initialize(type = :directory, **args)
+      @datalib = nil
+
+      case type
+      when :canonical, :directory
+        @datalib = Datalibs::CanonicalDatalib.new(args[:dir_name])
       end
 
-      if args.has_key?(:directory)
-        @type = :directory
-        @options = args
-        validate_directory_options()
-
-        RemiLog.sys.info "Creating directory library pointing to #{@options[:directory]}"
-      elsif args.has_key?(:transient)
-        @type = :transient
-        @options = args
-        RemiLog.sys.info "Creating transient library"
-      else
-        raise "Unknown library type #{type}"
-      end
-      
-    end
-
-
-    def return_dataset(dataset_name)
-      Dataset.new(self,dataset_name,@options)
-    end
-
-    alias method_missing return_dataset
-
-
-    def to_s
-      if @type == :directory
-        "Datalib: :#{@type} => #{@options[:directory][:dirname]}"
-      else
-        "Datalib: Undefined"
-      end
-    end
-
-
-    private
-
-    def validate_directory_options
-      unless @options[:directory].has_key?(:dirname)
-        raise "ERROR: :dirname not defined for directory library"
-      end
-
-      unless @options[:directory][:dirname].is_a?(String)
-        raise "ERROR: dirname is not a string"
-      end
-
-      unless File.directory?(@options[:directory][:dirname])
-        raise "ERROR: #{@options[:directory][:dirname]} does not exist"
-      end
+      @datalib_type = @datalib.class.name
+      super(@datalib)
     end
   end
 end
