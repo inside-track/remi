@@ -195,8 +195,25 @@ Presently, Remi only supports directory-based data libraries.  A data library
 is created by instantiating the **Datalib** class
 
 ````ruby
-mylib = Datalib.new :directory => { :dirname => "/tmp" }
+mylib = Datalib.new dir_name: "/tmp"
 ````
+
+A new (empty) dataset can be created within a library using the `build`
+method
+
+````ruby
+mylib.build(:mydata)
+````
+
+When a dataset already exists within a library, it can be referenced
+using array style accessors
+
+````ruby
+mydataset = mylib[:mydata]
+````
+
+A list of all datasets can be obtained using the `datasets` method,
+which returns an array of datasets
 
 Referencing a dataset that is contained in a library looks just like accessing
 a method
