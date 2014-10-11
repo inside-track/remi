@@ -51,6 +51,7 @@ module Remi
       delegator = VariableSetDelegator.new(self)
       delegator.instance_eval(&block)
     end
+    alias_method :define, :modify!
 
 
     # Public: Array accessor reader method for variables.
@@ -98,7 +99,7 @@ module Remi
     # Returns a hash of the variable set with variable names as keys
     # and variables as values.
     def to_hash
-      @vars
+      @vars.to_hash
     end
 
 
@@ -265,16 +266,14 @@ module Remi
 
       # Public: Creates new variable.
       #
-      # key_val - A hash containing a key that is the variable name.
-      #           The value of the hash is either another hash of variable metadata
-      #           or a variable object.
+      # arg - A hash containing a key that is the variable name.
+      #       The value of the hash is either another hash of variable metadata
+      #       or a variable object.
       #
       # Returns nothing.
-      def var(key_val)
-        key_val.each do |key, val|
-          variable = (val.is_a? Variable) ? val.dup : Variable.new(val)
-          self.to_hash.merge!(vars_from_hash({ key => variable }))
-        end
+      def var(name, meta = {})
+        variable = (meta.is_a? Variable) ? meta.dup : Variable.new(meta)
+        self.to_hash.merge!(vars_from_hash({ name => variable }))
       end
 
       # Public: Used to merge in all metadata from an existing variable.
@@ -285,7 +284,7 @@ module Remi
       def like(varset)
         raise "Expecting a VariableSet" unless varset.is_a? VariableSet
         varset.each do |name, variable|
-          var name => variable.meta
+          var name, variable
         end
         
       end

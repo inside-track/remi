@@ -27,9 +27,9 @@ describe VariableSet do
         account_id = shared_vars[:account_id]
         name       = shared_vars[:name]
         VariableSet.new do
-          var :account_id => account_id
-          var :name       => name
-          var :balance    => { :type => "currency" }
+          var :account_id, account_id
+          var :name,       name
+          var :balance,    :type => "currency"
         end
       end
 
@@ -43,10 +43,10 @@ describe VariableSet do
 
           VariableSet.new do
             like varset_origin
-            var :address => {}
+            var :address
           end
         end
-
+        
         specify { expect(varset_derived).to have_keys :account_id, :name, :balance, :address }
       end
 
@@ -56,10 +56,10 @@ describe VariableSet do
   describe "Modifying variable sets" do
     subject(:varset) do
       VariableSet.new do
-        var :account_id  => { :length => 18 }
-        var :drop_me     => { :type => "currency" }
-        var :name        => {}
-        var :drop_me_too => {}
+        var :account_id,  :length => 18
+        var :drop_me,     :type => "currency"
+        var :name
+        var :drop_me_too
       end
     end
 
@@ -91,7 +91,7 @@ describe VariableSet do
     context "can be modified in a block" do
       before do
         varset.modify! do
-          var :account_id => { :length => 21 }
+          var :account_id, :length => 21
         end
       end
 
@@ -125,16 +125,16 @@ describe VariableSet do
   describe "Ordering variables" do
     let(:varset) do
       VariableSet.new do
-        var :account_id  => { :length => 18 }
-        var :name        => {}
-        var :address     => {}
+        var :account_id, :length => 18
+        var :name
+        var :address
       end
     end
 
     context "adding a new variable" do
       before do
         varset.modify! do
-          var :premise_type => { :valid_values => ["on", "off"] }
+          var :premise_type, :valid_values => ["on", "off"]
         end
       end
 
@@ -174,8 +174,8 @@ describe VariableSet do
       let(:varset2) do
         orig_varset = varset
         VariableSet.new do
-          var :account_type => {}
-          var :name         => { :comment => "this is overwritten" }
+          var :account_type
+          var :name,        :comment => "this is overwritten"
           like orig_varset
         end
       end

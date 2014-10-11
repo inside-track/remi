@@ -148,17 +148,17 @@ account_vars[:name].index
 # Or, more commonly, in a block
 account_vars = VariableSet.new do
   # Within a block, variable metdata can be defined at the same time
-  var :account_id        => { :length => 18 } # set some metadata
-  var :name              => {}                # use default metadata
-  var :address           => address           # defined from an existing address variable
-  var :premise_type      => { :valid_values => ["On-Premise", "Off-Premise"] }
-  var :last_contact_date => { :type => "date" }
+  var :account_id,        :length => 18 # set some metadata
+  var :name                             # use default metadata
+  var :address,           address       # defined from an existing address variable
+  var :premise_type,      :valid_values => ["On-Premise", "Off-Premise"]
+  var :last_contact_date, :type => "date"
 end
 
 # Which can be useful for creating derived variable sets
 distributor_vars = VariableSet.new do
   like account_vars.drop_vars :premise_type, :last_contact_date
-  var :region_code => {}
+  var :region_code
   order :account_id, :region_code, :name, :address
 end
 
@@ -181,7 +181,7 @@ account_vars.keep_vars! :account_id, :name, :address
 account_vars.modify! do
   drop_vars :last_contact_date
   like      distributor_vars.keep_vars :region_code
-  var       :sales_rep_id => { :length => 18 }
+  var       :sales_rep_id, :length => 18
 end
 # => drops the :last_contact_date variable, imports the :region_code variable from
 #    distributor_vars, and adds a new variable called sales_rep_id
@@ -215,29 +215,9 @@ mydataset = mylib[:mydata]
 A list of all datasets can be obtained using the `datasets` method,
 which returns an array of datasets
 
-Referencing a dataset that is contained in a library looks just like accessing
-a method
-
 ````ruby
-dataset_instance = mylib.mydata
+mylib.datasets
 ````
-
-Calling `mylib.mydata` returns an instance of the dataset class with
-the name `mydata`.
-
-###### Proposed
-I originally chose this syntax because it mimicked
-SAS, which I was most familiar with.  However, I'm thinking about
-refactoring this to something that may be more natural to Ruby
-programmers and better capture the idea that a dataset is contained in
-a library.  So in the future, datasets may be accessed more like this
-
-````ruby
-dataset_instance = mylib[:mydata]
-````
-
-The rest of the examples will follow the existing method and this
-README will be updated when the code is updated.
 
 
 ### Creating data
