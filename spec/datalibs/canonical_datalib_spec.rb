@@ -34,7 +34,7 @@ describe Datalibs::CanonicalDatalib do
   it "returns an array of dataset names" do
     mylib.build(:mydata1)
     mylib.build(:mydata2)
-    expect(mylib.datasets).to match_array([:mydata1, :mydata2])
+    expect(mylib.datasets).to match_array([mylib[:mydata1], mylib[:mydata2]])
   end
 
   context "when a dataset already exists" do
@@ -55,7 +55,14 @@ describe Datalibs::CanonicalDatalib do
     it "overwrites an existing dataset using the bang version" do
       expect { mylib.build!(:mydata) }.not_to raise_error
     end
+  end
 
+  context 'deleting a dataset' do
+    before { mylib.build(:mydata) }
+    
+    it 'removes the dataset from the library' do
+      expect { mylib.delete(:mydata) }.to change { mylib.datasets.count }.by(-1)
+    end
   end
 
 end

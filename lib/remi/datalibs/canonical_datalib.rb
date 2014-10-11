@@ -10,15 +10,34 @@ module Remi
       def initialize(dir_name)
         @dir_name = dir_name
         @directory = Pathname.new(@dir_name)
+
+        @dataset_list = {}
+        build_dataset_list
       end
+
+      def build_dataset_list
+        existing_datasets = {}
+        
+        Dir[File.join(@dir_name, "*.hgz")].collect do |filename|
+          dataset_name = Pathname.new(filename).sub_ext('').basename.to_s.to_sym
+
+          if @dataset_list.has_key? dataset_name
+            existing_datasets[dataset_name] = @dataset_list[dataset_name]
+          else
+            existing_datasets[dataset_name] = Dataset.new(dataset_name, interface(dataset_name))
+          end
+        end
+
+        @dataset_list = existing_datasets
+      end
+
 
       # Public: Returns an array of datasets names as symbols.
       #
-      # Returns an array.
+      # Returns an enumator that iterates over datasets contained in library.
       def datasets
-        Dir[File.join(@dir_name, "*.hgz")].collect do |filename|
-          Pathname.new(filename).sub_ext('').basename.to_s.to_sym
-        end
+        build_dataset_list
+        @dataset_list.values
       end
 
       # Public: Returns the number of datasets currently defined in the library.
@@ -49,7 +68,7 @@ module Remi
       # Returns a Dataset.
       def build!(dataset_name)
         interface(dataset_name).create_empty_dataset
-        Dataset.new(dataset_name, interface(dataset_name))
+        @dataset_list[dataset_name] = Dataset.new(dataset_name, interface(dataset_name))
       end
 
 
@@ -60,8 +79,18 @@ module Remi
       #
       # Returns the Dataset object specified by the name or nil if one does not exist.
       def [](dataset_name)
-        return nil unless interface(dataset_name).dataset_exists?
-        Dataset.new(dataset_name, interface(dataset_name))
+        @dataset_list[dataset_name]
+      end
+
+
+      # Public: Deletes a dataset from the libary.
+      #
+      # dataset_name - The name of the dataset to delete.
+      #
+      # Returns nothing.
+      def delete(dataset_name)
+        @dataset_list[dataset_name].delete
+        @dataset_list.delete(dataset_name)
       end
 
       private
