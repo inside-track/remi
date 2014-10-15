@@ -22,6 +22,15 @@ describe VariableSet do
       end
     end
 
+    context "defining a variable set with mixed input" do
+      subject(:varset) { VariableSet.new :myvar1, { :myvar2 => { :type => 'number' } }, :myvar3 }
+
+      it { should have_keys(:myvar1, :myvar2, :myvar3 ) }
+      specify { expect(varset[:myvar1].meta[:type]).to eq 'string' }
+      specify { expect(varset[:myvar2].meta[:type]).to eq 'number' }
+      specify { expect(varset[:myvar3].meta[:type]).to eq 'string' }
+    end
+
     context "can be defined in a block" do
       let(:varset) do
         account_id = shared_vars[:account_id]

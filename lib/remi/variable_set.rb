@@ -32,9 +32,9 @@ module Remi
     #
     # vars - A hash containing variables and metadata to be included in
     #        the variable set.
-    def initialize(vars = {}, &block)
+    def initialize(*args, &block)
       @vars = {}
-      @vars = vars_from_hash(vars)
+      add_vars(*args)
 
       modify!(&block) if block_given?
     end
@@ -66,11 +66,19 @@ module Remi
     # Public: Array accessor setter method for variables.
     #
     # key      - A variable key.
-    # variable - A variable object.
+    # variable - Can be a hash representing variable metadata,
+    #            a Variable object, or a VariableWithMetadata object.
     #
     # Returns nothing.
     def []=(key, variable)
-      @vars[key] = variable
+      @vars[key] = case variable.class
+                   when VariableWithIndex
+                     variable
+                   when Variable
+                     VariableWithIndex.new(variable, next_index(key))
+                   else
+                     VariableWithIndex.new(Variable.new(variable), next_index(key))
+                   end
     end
 
     # Public: Used to determine if a variable has been defined.
@@ -161,22 +169,31 @@ module Remi
       self
     end
 
-    # Public: Converts a hash that contains keys that are variable
-    # names and values that are variable metadata (either Hash or
-    # Variable object) into a hash that contains values that are
-    # VariableWithIndex objects.
+    # Public: Adds variables to the variable set based on a list of arguments.  Each
+    # element of the list can either be a symbol or a hash.  If a symbol is given,
+    # then a variable is created withe name of the symbol and using default variable
+    # metadata.  If a hash is given, then a variable with the name of the hash
+    # key is given and the hash value is used as metadata.  Multiple keys can
+    # be provided in a single hash, and the value can either be another hash
+    # represending variable metadata or a Variable object.
     #
-    # var_hash - The hash containting variable name keys and variable metadata values.
+    # args - Each element of the list is either a symbol or hash.
     #
-    # Returns a hash.
-    def vars_from_hash(var_hash)
-      result = {}
-      var_hash.each do |name, var|
-        result[name] = VariableWithIndex.new(Variable.new(var), next_index(name))
+    # Example:
+    #   add_vars :myvar1, { :myvar2 => { :type => 'number' }, :myvar3 => Variable.new(:type => 'date') }, :myvar4
+    #
+    # Returns nothing.
+    def add_vars(*args)
+      args.each do |arg|
+        if arg.is_a?(Symbol)
+          self[arg] = {}
+        else
+          arg.each { |k,v| self[k] = v }
+        end
       end
-      
-      result
     end
+
+
 
     # Public: Loops over each variable in the variable set yielding the name
     # and VariableWithIndex.  Yielded variables are ordered by their index.
@@ -272,8 +289,7 @@ module Remi
       #
       # Returns nothing.
       def var(name, meta = {})
-        variable = (meta.is_a? Variable) ? meta.dup : Variable.new(meta)
-        self.to_hash.merge!(vars_from_hash({ name => variable }))
+        self[name] = meta
       end
 
       # Public: Used to merge in all metadata from an existing variable.
@@ -286,7 +302,6 @@ module Remi
         varset.each do |name, variable|
           var name, variable
         end
-        
       end
 
       # Public: Alias for drop_vars! form within a modify! block.
