@@ -40,18 +40,24 @@ module Remi
     end
 
 
-    # Public: Used to modify variable sets in a block.
+    # Public: Used to define or modify variable sets in a block.
     #
     # block - A block of commands used to manipulate variable set.
     #         The special set of methods available in this block can
     #         be found in the VariableSetDelegator class
     #
     # Returns nothing.
-    def modify!(&block)
+    def define(&block)
+      @self_before_instance_eval = eval "self", block.binding
+
       delegator = VariableSetDelegator.new(self)
       delegator.instance_eval(&block)
     end
-    alias_method :define, :modify!
+    alias_method :modify!, :define
+
+    def method_missing(method, *args, &block)
+      @self_before_instance_eval.send method, *args, &block
+    end
 
 
     # Public: Array accessor reader method for variables.
@@ -80,6 +86,19 @@ module Remi
                      VariableWithIndex.new(Variable.new(variable), next_index(key))
                    end
     end
+
+
+    def assign(key, variable)
+      @vars[key] = case variable.class
+                   when VariableWithIndex
+                     variable
+                   when Variable
+                     VariableWithIndex.new(variable, next_index(key))
+                   else
+                     VariableWithIndex.new(Variable.new(variable), next_index(key))
+                   end
+    end
+
 
     # Public: Used to determine if a variable has been defined.
     #

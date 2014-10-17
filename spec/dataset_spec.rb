@@ -26,15 +26,12 @@ describe Dataset do
       expect { mydataset.variable_set = VariableSet.new }.to raise_error(NoMethodError)
     end
 
-    it 'allows another dataset to inherit the variable from an existing dataset' do
-      @glerb = mydataset
+    it 'allows another dataset to inherit the variable from an existing dataset', skip: 'need to get variablesets to accept externally-defined methods' do
       another_dataset = mylib.build(:another_dataset)
-      another_dataset.define_variables do
-        like @glerb.variable_set
+      another_dataset.define_variables do |c|
+        like mydataset.variable_set
       end
-
     end
-
   end
 
 
