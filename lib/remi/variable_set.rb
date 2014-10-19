@@ -17,9 +17,11 @@ module Remi
   class VariableSet
     include Enumerable
 
+    extend Forwardable
+    def_delegators :@vars, :keys, :has_key?, :size, :include?
+
     # Public: Struct that associates an index with a Variable.
     VariableWithIndex = Struct.new(:meta, :index) do
-
       # Public: Converting to hash removes any indexes.
       #
       # Returns a hash representing the Variable metadata.
@@ -36,29 +38,19 @@ module Remi
       @vars = {}
       add_vars(*args)
 
-      modify!(&block) if block_given?
+      yield self if block_given?
     end
 
+    attr_reader :vars
 
     # Public: Used to define or modify variable sets in a block.
     #
     # block - A block of commands used to manipulate variable set.
-    #         The special set of methods available in this block can
-    #         be found in the VariableSetDelegator class
     #
     # Returns nothing.
-    def define(&block)
-      @self_before_instance_eval = eval "self", block.binding
-
-      delegator = VariableSetDelegator.new(self)
-      delegator.instance_eval(&block)
+    def modify(&block)
+      yield self
     end
-    alias_method :modify!, :define
-
-    def method_missing(method, *args, &block)
-      @self_before_instance_eval.send method, *args, &block
-    end
-
 
     # Public: Array accessor reader method for variables.
     #
@@ -80,42 +72,11 @@ module Remi
       @vars[key] = case variable.class
                    when VariableWithIndex
                      variable
-                   when Variable
+                   when VariableMeta
                      VariableWithIndex.new(variable, next_index(key))
                    else
-                     VariableWithIndex.new(Variable.new(variable), next_index(key))
+                     VariableWithIndex.new(VariableMeta.new(variable), next_index(key))
                    end
-    end
-
-
-    def assign(key, variable)
-      @vars[key] = case variable.class
-                   when VariableWithIndex
-                     variable
-                   when Variable
-                     VariableWithIndex.new(variable, next_index(key))
-                   else
-                     VariableWithIndex.new(Variable.new(variable), next_index(key))
-                   end
-    end
-
-
-    # Public: Used to determine if a variable has been defined.
-    #
-    # key - A variable key.
-    #
-    # Returns true if the variable has been defined, false otherwise.
-    def has_key?(key)
-      @vars.has_key?(key)
-    end
-
-    # Public: Used to determine if each of a set of variables have been defined.
-    #
-    # keys - A comma delimited list of variable keys to check.
-    #
-    # Returns true if all of the variables have been defined, false otherwise.
-    def has_keys?(*keys)
-      (keys - @vars.keys).empty?
     end
 
     # Public: Converts a variable object into a hash.
@@ -126,7 +87,7 @@ module Remi
     # Returns a hash of the variable set with variable names as keys
     # and variables as values.
     def to_hash
-      @vars.to_hash
+      @vars.dup
     end
 
 
@@ -256,13 +217,38 @@ module Remi
       nil
     end
 
-    # Public: The number of variables stored in this variable set.
+
+    # Public: Creates new variable.
     #
-    # Returns the the number of variables in the variable set.
-    def length
-      @vars.length
+    # arg - A hash containing a key that is the variable name.
+    #       The value of the hash is either another hash of variable metadata
+    #       or a variable object.
+    #
+    # Returns nothing.
+    def var(name, meta = {})
+      self[name] = meta
     end
 
+    # Public: Used to merge in all metadata from an existing variable.
+    #
+    # varset - A variable object.
+    #
+    # Returns nothing.
+    def like(varset)
+      raise "Expecting a VariableSet" unless varset.is_a? VariableSet
+      varset.each do |name, variable|
+        self[name] = variable
+      end
+    end
+
+    # Public: Variableset equality test.
+    #
+    # another_variableset - Another variableset object.
+    #
+    # Returns a boolean.
+    def ==(another_variableset)
+      @vars == another_variableset.vars
+    end
 
     private
 
@@ -293,63 +279,6 @@ module Remi
     # hash that can be used to create a new variable set object.
     def modify_collection(selector, *vars_list)
       @vars.send(selector) { |key| vars_list.include? key }
-    end
-
-
-    # Private: Defines methods that are accessible only within a block that
-    # is used to define a variable set.
-    class VariableSetDelegator < SimpleDelegator
-
-      # Public: Creates new variable.
-      #
-      # arg - A hash containing a key that is the variable name.
-      #       The value of the hash is either another hash of variable metadata
-      #       or a variable object.
-      #
-      # Returns nothing.
-      def var(name, meta = {})
-        self[name] = meta
-      end
-
-      # Public: Used to merge in all metadata from an existing variable.
-      #
-      # varset - A variable object.
-      #
-      # Returns nothing.
-      def like(varset)
-        raise "Expecting a VariableSet" unless varset.is_a? VariableSet
-        varset.each do |name, variable|
-          var name, variable
-        end
-      end
-
-      # Public: Alias for drop_vars! form within a modify! block.
-      #
-      # drop_list - A comma delimited list of keys to be excluded from the variable set.
-      #
-      # Examples
-      #   myvarset.modify!
-      #     drop_vars :some_var
-      #   end
-      #
-      # Returns nothing.
-      def drop_vars(*drop_list)
-        self.drop_vars!(*drop_list)
-      end
-
-      # Public: Alias for keep_vars! form within a modify! block.
-      #
-      # keep_list - A comma delimited list of keys to be retained in the variable set.
-      #
-      # Examples
-      #   myvarset.modify!
-      #     keep_vars :some_var, :some_other_var
-      #   end
-      #
-      # Returns nothing.
-      def keep_vars(*keep_list)
-        self.keep_vars!(*keep_list)
-      end
     end
   end
 end
