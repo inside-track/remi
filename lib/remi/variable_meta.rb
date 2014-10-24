@@ -34,7 +34,7 @@ module Remi
     def initialize(meta={}, &block)
       @metadata = DEFAULT.merge(meta)
 
-      yield self if block_given?
+      modify(&block) if block_given?
     end
 
     attr_reader :metadata
@@ -46,28 +46,7 @@ module Remi
     #
     # Returns nothing.
     def modify(&block)
-      yield self
-    end
-
-
-
-    # Public: Creates new metadata from a hash.
-    #
-    # key_val - A hash containing metadata that is merged into the
-    # existing metadata.
-    #
-    # Returns nothing.
-    def meta(key_val)
-      @metadata.merge!(key_val)
-    end
-
-    # Public: Used to merge in all metadata from an existing variable.
-    #
-    # var - A variable object.
-    #
-    # Returns nothing.
-    def like(var)
-       @metadata.merge!(var.to_hash)
+      Docile.dsl_eval(VariableMetaBlock.new(self), &block)
     end
 
     # Public: Converts a variable object into a hash.
@@ -141,6 +120,60 @@ module Remi
     def keep_meta!(*keep_list)
       modify_collection(:keep_if, :+, *keep_list)
       self
+    end
+
+    class VariableMetaBlock < SimpleDelegator
+
+      # Public: Creates new metadata from a hash.
+      #
+      # key_val - A hash containing metadata that is merged into the
+      # existing metadata.
+      #
+      # Returns nothing.
+      def meta(key, value)
+        self[key] = value
+      end
+
+      # Public: Used to merge in all metadata from an existing variable.
+      #
+      # var - A variable object.
+      #
+      # Returns nothing.
+      def like(var)
+        raise 'Expecting a VariableMeta' unless var.is_a? VariableMeta
+        var.each do |key, meta|
+          self[key] = meta
+        end
+      end
+
+      # Public: Alias for drop_meta! form within a modify! block.
+      #
+      # drop_list - A comma delimited list of keys to be excluded from the variable.
+      #
+      # Examples
+      #   myvar.modify!
+      #     drop_meta :some_meta
+      #   end
+      #
+      # Returns nothing.
+      def drop_meta(*drop_list)
+        self.drop_meta!(*drop_list)
+      end
+
+      # Public: Alias for keep_meta! form within a modify! block.
+      #
+      # keep_list - A comma delimited list of keys to be retained in the variable.
+      #
+      # Examples
+      #   myvar.modify!
+      #     keep_meta :some_meta, :some_other_meta
+      #   end
+      #
+      # Returns nothing.
+      def keep_meta(*keep_list)
+        self.keep_meta!(*keep_list)
+      end
+
     end
 
     private

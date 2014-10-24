@@ -3,11 +3,11 @@ require 'remi_spec'
 describe VariableMeta do
 
   subject(:example_var) do
-    VariableMeta.new do |v|
-      v.meta :label     => 'Example variable object'
-      v.meta :length    => 18
-      v.meta :regex     => /[a-zA-Z0-9]{15,18}/
-      v.meta :to_drop   => 'Not important'
+    VariableMeta.new do
+      meta :label,   'Example variable object'
+      meta :length,  18
+      meta :regex,   /[a-zA-Z0-9]{15,18}/
+      meta :to_drop, 'Not important'
     end
   end
 
@@ -22,20 +22,11 @@ describe VariableMeta do
 
     specify 'in a block, using meta method' do
       expect(
-        VariableMeta.new do |v|
-          v.meta :meta1 => 'Some metadata', :meta2 => 'Some other metadata'
-          v.meta :meta3 => 'Yet again'
+        VariableMeta.new do
+          meta :meta1, 'Some metadata'
+          meta :meta2, 'Some other metadata'
+          meta :meta3, 'Yet again'
         end
-      ).to eq refvar
-    end
-
-    specify 'in a block, using array accessors' do
-      expect(
-         VariableMeta.new do |v|
-           v[:meta1] = 'Some metadata'
-           v[:meta2] = 'Some other metadata'
-           v[:meta3] = 'Yet again'
-         end
       ).to eq refvar
     end
   end
@@ -59,9 +50,9 @@ describe VariableMeta do
 
   describe 'importing metadata' do
     let(:derived_example_var) do
-      VariableMeta.new do |v|
-        v.like example_var
-        v.meta :format => '%d'
+      VariableMeta.new do
+        like example_var
+        meta :format, '%d'
       end
     end
 
@@ -74,33 +65,53 @@ describe VariableMeta do
     end
   end
 
-  describe "modifying metadata" do
+  describe 'modifying metadata' do
 
-    shared_examples "surviving metadata" do
+    shared_examples 'surviving metadata' do
       specify { expect(subject).to include(:type, :label, :length, :regex) }
       specify { expect(subject).not_to have_key(:to_drop) }
     end
 
-    context "can be non-destructively dropped" do
+    context 'can be non-destructively dropped' do
       subject(:derived_example_var) { example_var.drop_meta :to_drop }
       specify { derived_example_var; expect(example_var).to have_key(:to_drop) }
-      it_behaves_like "surviving metadata"
+      it_behaves_like 'surviving metadata'
     end
 
-    context "can be destructively dropped" do
+    context 'can be destructively dropped' do
       before { example_var.drop_meta! :to_drop }
-      it_behaves_like "surviving metadata"
+      it_behaves_like 'surviving metadata'
     end
 
-    context "can be non-destructively kept" do
+    context 'dropped within a block' do
+      before do
+        example_var.modify do
+          drop_meta :to_drop
+        end
+      end
+
+      it_behaves_like 'surviving metadata'
+    end
+
+    context 'can be non-destructively kept' do
       subject(:derived_example_var) { example_var.keep_meta :label, :length, :regex }
       specify { derived_example_var; expect(example_var).to have_key(:to_drop) }
-      it_behaves_like "surviving metadata"
+      it_behaves_like 'surviving metadata'
     end
 
-    context "can be destructively kept" do
+    context 'can be destructively kept' do
       before { example_var.keep_meta! :label, :length, :regex }
-      it_behaves_like "surviving metadata"
+      it_behaves_like 'surviving metadata'
+    end
+
+    context 'kept within a block' do
+      before do
+        example_var.modify do
+          keep_meta :label, :length, :regex
+        end
+      end
+
+      it_behaves_like 'surviving metadata'
     end
   end
 end

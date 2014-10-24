@@ -11,14 +11,14 @@ module Remi
   #     var :account_id        => { :length => 18 } # set some metadata
   #     var :name              => {}                # use default metadata
   #     var :address           => address           # defined from an existing address variable
-  #     var :premise_type      => { :valid_values => ["On-Premise", "Off-Premise"] }
-  #     var :last_contact_date => { :type => "date" }
+  #     var :premise_type      => { :valid_values => ['On-Premise', 'Off-Premise'] }
+  #     var :last_contact_date => { :type => 'date' }
   #   end
   class VariableSet
     include Enumerable
 
     extend Forwardable
-    def_delegators :@vars, :keys, :has_key?, :size, :include?
+    def_delegators :@vars, :has_key?, :size, :include?
 
     # Public: Struct that associates an index with a Variable.
     VariableWithIndex = Struct.new(:meta, :index) do
@@ -38,7 +38,7 @@ module Remi
       @vars = {}
       add_vars(*args)
 
-      yield self if block_given?
+      modify(&block) if block_given?
     end
 
     attr_reader :vars
@@ -49,7 +49,7 @@ module Remi
     #
     # Returns nothing.
     def modify(&block)
-      yield self
+      Docile.dsl_eval(VariableSetBlock.new(self), &block)
     end
 
     # Public: Array accessor reader method for variables.
@@ -151,7 +151,7 @@ module Remi
 
     # Public: Adds variables to the variable set based on a list of arguments.  Each
     # element of the list can either be a symbol or a hash.  If a symbol is given,
-    # then a variable is created withe name of the symbol and using default variable
+    # then a variable is created with name of the symbol and using default variable
     # metadata.  If a hash is given, then a variable with the name of the hash
     # key is given and the hash value is used as metadata.  Multiple keys can
     # be provided in a single hash, and the value can either be another hash
@@ -173,21 +173,27 @@ module Remi
       end
     end
 
-
-
     # Public: Loops over each variable in the variable set yielding the name
     # and VariableWithIndex.  Yielded variables are ordered by their index.
     #
     # Examples
-    #   varset.each do |name, var|
-    #     puts "#{name}: #{var.index}"
+    #   varset.each do |key, var|
+    #     puts "#{key}: #{var.index}"
     #   end
     #
     # Yields a key/value pair.
     def each
-      @vars.sort_by { |name, var| var.index }.each do |name, var|
-        yield name, var
+      @vars.sort_by { |key, var| var.index }.each do |key, var|
+        yield key, var
       end
+    end
+
+    # Public: Returns an array of the variable set keys (i.e., the variable names 
+    # composing the set).
+    #
+    # Returns an array.
+    def keys
+      self.collect { |key, var| key }
     end
 
     # Public: Reads through all of the variables in the VariableSet and assigns each
@@ -195,9 +201,9 @@ module Remi
     #
     # Returns nothing.
     def reindex
-      new_index = 0.upto(@vars.length - 1).to_a
+      new_index = 0.upto(self.size - 1).to_a
 
-      @vars.each do |name, var|
+      self.each do |key, var|
         var.index = new_index.shift
       end
 
@@ -207,38 +213,17 @@ module Remi
     # Public: Orders variables according in the order of a supplied list of variables.
     #
     # order_ary - An array of variable names in the order that they should be stored.
+    #             Any variables that are in the set but not listed as an argument
+    #             will be moved after any listed variables.
     #
     # Examples
     #  varset.order(:name, :address, :account_id)
     #
-    # Returns nothing.
-    def order(*order_ary)
-      order_ary.each_with_index { |name, idx| @vars[name].index = idx }
-      nil
-    end
-
-
-    # Public: Creates new variable.
-    #
-    # arg - A hash containing a key that is the variable name.
-    #       The value of the hash is either another hash of variable metadata
-    #       or a variable object.
-    #
-    # Returns nothing.
-    def var(name, meta = {})
-      self[name] = meta
-    end
-
-    # Public: Used to merge in all metadata from an existing variable.
-    #
-    # varset - A variable object.
-    #
-    # Returns nothing.
-    def like(varset)
-      raise "Expecting a VariableSet" unless varset.is_a? VariableSet
-      varset.each do |name, variable|
-        self[name] = variable
-      end
+    # Returns the VariableSet object.
+    def reorder(*order_ary)
+      ordered_keys = order_ary + (self.collect { |key, var| key} - order_ary)
+      ordered_keys.each_with_index { |key, index| @vars[key].index = index }
+      self
     end
 
     # Public: Variableset equality test.
@@ -250,6 +235,8 @@ module Remi
       @vars == another_variableset.vars
     end
 
+
+
     private
 
     # Private: Gets the next index for a new variable named var.  If
@@ -259,7 +246,7 @@ module Remi
     # var - The name of the new variable.
     def next_index(var=nil)
       if @vars[var].nil? then
-        @vars.length
+        @vars.size
       else
         @vars[var].index
       end
@@ -279,6 +266,60 @@ module Remi
     # hash that can be used to create a new variable set object.
     def modify_collection(selector, *vars_list)
       @vars.send(selector) { |key| vars_list.include? key }
+    end
+
+    class VariableSetBlock < SimpleDelegator
+
+      # Public: Creates new variable.
+      #
+      # arg - A hash containing a key that is the variable name.
+      #       The value of the hash is either another hash of variable metadata
+      #       or a variable object.
+      #
+      # Returns nothing.
+      def var(key, meta = {})
+        self[key] = meta
+      end
+
+      # Public: Used to merge in all metadata from an existing variable.
+      #
+      # varset - A variable object.
+      #
+      # Returns nothing.
+      def like(varset)
+        raise 'Expecting a VariableSet' unless varset.is_a? VariableSet
+        varset.each do |key, variable|
+          self[key] = variable
+        end
+      end
+
+      # Public: Alias for drop_vars! form within a modify block.
+      #
+      # drop_list - A comma delimited list of keys to be excluded from the variable set.
+      #
+      # Examples
+      #   myvarset.modify
+      #     drop_vars :some_var
+      #   end
+      #
+      # Returns nothing.
+      def drop_vars(*drop_list)
+        self.drop_vars!(*drop_list)
+      end
+
+      # Public: Alias for keep_vars! form within a modify block.
+      #
+      # keep_list - A comma delimited list of keys to be retained in the variable set.
+      #
+      # Examples
+      #   myvarset.modify
+      #     keep_vars :some_var, :some_other_var
+      #   end
+      #
+      # Returns nothing.
+      def keep_vars(*keep_list)
+        self.keep_vars!(*keep_list)
+      end
     end
   end
 end

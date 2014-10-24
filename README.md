@@ -159,7 +159,7 @@ end
 distributor_vars = VariableSet.new do
   like account_vars.drop_vars :premise_type, :last_contact_date
   var :region_code
-  order :account_id, :region_code, :name, :address
+  reorder :account_id, :region_code, :name, :address
 end
 
 

@@ -1,4 +1,4 @@
-# Ruby Standard Library
+# Ruby Core Library
 require 'zlib'
 require 'json'
 require 'yaml'
@@ -16,6 +16,7 @@ require 'msgpack'
 require 'launchy'
 require 'google_visualr'
 require 'configatron/core'
+require 'docile'
 
 
 # Remi
