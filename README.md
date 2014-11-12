@@ -1,5 +1,8 @@
 # Remi - Ruby Extract Modify Integrate
 
+**NOTICE:** The project is still under heavy development and should not
+currently be considered for production work.  Check back soon!
+
 **Purpose:** Remi is a Ruby-based ETL suite that is built to provide
 an expressive data transformation language and facilitate the design
 and implementation of business logic.
