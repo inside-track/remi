@@ -118,8 +118,8 @@ another_id = id.keep_meta :length
 id.keep_meta! :length
 #=> all metadata components except :length (and mandatory :type) are removed
 
-# keep_meta! and drop_meta! are aliased as non-bang methods in a modify! block
-id.modify! do
+# keep_meta! and drop_meta! are aliased as non-bang methods in a modify block
+id.modify do
   meta      :length => 21
   drop_meta :regex
 end
@@ -177,8 +177,8 @@ retailer_vars = account_vars.keep_vars :account_id, :name, :address
 account_vars.keep_vars! :account_id, :name, :address
 # => account_vars, but with only the :account_id, :name, and :address variables
 
-# keep_vars! and drop_vars! are aliased as non-bang methods in a modify! block
-account_vars.modify! do
+# keep_vars! and drop_vars! are aliased as non-bang methods in a modify block
+account_vars.modify do
   drop_vars :last_contact_date
   like      distributor_vars.keep_vars :region_code
   var       :sales_rep_id, :length => 18
@@ -225,6 +225,60 @@ mylib.datasets
 The simplest currently functioning "Hello World!" example for Remi would be
 
 ````ruby
+Datastep.create mylib[:mydata] do |ds|
+  define_variables do # make define_variables be part of the Datastep DSL that calls the same method of ds
+    var :myvariable
+  end
+
+  ds[:myvariable] = 'Hello World!'
+  write_row
+end
+````
+
+So it would be nice to make ds.write_row implicit, but that may require
+preprocessing the block to determine if it's called anywhere.  A simple
+callback wouldn't work, becauase it could be hidden in a block that
+is never called.  But I guess I could implicitly write unless a special
+command was called to NOT write.
+
+````ruby
+Datastep.create mylib[:mydata] do |dsw|
+  define_variables do
+    like mylib[:other_data]
+    var :myvariable
+  end
+
+  read mylib[:other_data] do |dsr| #DSL calls Datastep.read
+    # implicit import data
+    dsw[:myvariable] = dsr[:something] + 20
+    # implicit write_row
+  end
+  # In order for the implicit import and write to work, the read method would have to
+  # know about dsw.  That may not be so difficult since they're in the same block.
+
+end
+````
+
+But maybe this really only makes sense when we've got a dataset to read too.
+
+
+
+
+
+
+````ruby
+Datastep.create mylib[:mydata] do |ds|
+  ds.define_variables do
+    var :myvariable
+  end
+
+  ds[:myvariable] = 'Hello World!'
+  ds.write_row  
+end
+````
+
+
+````ruby
 Datastep.create mylib.mydata do |ds|
   Variables.define ds do |v|
     v.create :myvariable
@@ -244,9 +298,60 @@ the dataset to write a CSV file for export or populate a database,
 assigning a variable to an array might not make much sense).  Variable
 types should be enforced through the business rules.
 
-Variables may also be associated with any amount of metadata,
-represented as a hash.  You can use the metadata any way you like.
-For example, you could use to trigger upcasing flagged variables.
+
+
+Ok, but what about multiple datasets
+````ruby
+Datastep.create mylib[:teacher], mylib[:student] do |ds|
+
+  define_variables do
+    var :id
+    var :name
+    var :type
+  end
+
+  mylib[:teacher] do
+    var :credential
+  end
+
+  mylib[:student] do
+    var :grade
+  end
+
+  ds[:id] = 1
+  ds[:name] = 'George'
+  ds[:type] = 'Student'
+  ds[:grade] = 'Freshman'
+  mylib[:student].write_row
+
+  ds[:id] = 2
+  ds[:name] = 'Alfonso'
+  ds[:type] = 'Teacher'
+  ds[:credential] = 'Ph.D'
+  mylib[:teacher].write_row
+
+  ds[:id] = 3
+  ds[:name] = 'Heisenburg'
+  ds[:type] = 'Student Teacher'
+  ds[:grade] = 'Postdoc'
+  ds[:credential] = 'Ph.D'
+  write_row
+end
+````
+This example would create two datasets.  One named 'teacher' and the other named
+'student'.  Both datasets would share a common set of variables (id, name,
+type).  The 'teacher' dataset would have an additional variable called
+'credential' and the 'student' dataset would have an additional variable called
+'grade'.  Within the Datastep block, we only need to define the value of
+variables against the first argument `ds`, but the values get applied to all
+datasets defined.  
+
+
+
+
+Variables may also be associated with any amount of metadata, represented as a
+hash.  You can use the metadata any way you like. For example, you could use to
+trigger upcasing flagged variables.
 
 ````ruby
 Datastep.create mylib.mydata do |ds|

@@ -27,16 +27,18 @@ require 'remi/helpers'
 require 'remi/log'
 require 'remi/variable_meta'
 require 'remi/variable_set'
+
+require 'remi/row.rb'
+require 'remi/row_set.rb'
+require 'remi/datalibs/canonical_datalib.rb'
+require 'remi/interfaces/canonical_interface.rb'
+
 require 'remi/dataset'
 require 'remi/datalib'
 require 'remi/datastep'
 require 'remi/dataview'
 require 'remi/interleave'
 
-require 'remi/row.rb'
-require 'remi/row_set.rb'
-require 'remi/datalibs/canonical_datalib.rb'
-require 'remi/interfaces/canonical_interface.rb'
 
 # Remi components
 require 'remi/interfaces/csv'

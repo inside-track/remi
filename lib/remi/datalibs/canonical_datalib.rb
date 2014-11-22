@@ -15,23 +15,6 @@ module Remi
         build_dataset_list
       end
 
-      def build_dataset_list
-        existing_datasets = {}
-        
-        Dir[File.join(@dir_name, "*.hgz")].collect do |filename|
-          dataset_name = Pathname.new(filename).sub_ext('').basename.to_s.to_sym
-
-          if @dataset_list.has_key? dataset_name
-            existing_datasets[dataset_name] = @dataset_list[dataset_name]
-          else
-            existing_datasets[dataset_name] = Dataset.new(dataset_name, interface(dataset_name))
-          end
-        end
-
-        @dataset_list = existing_datasets
-      end
-
-
       # Public: Returns an array of datasets names as symbols.
       #
       # Returns an enumator that iterates over datasets contained in library.
@@ -102,7 +85,26 @@ module Remi
       #
       # Returns a CanonicalInterface.
       def interface(dataset_name)
-        Interfaces::CanonicalInterface.new(self, dataset_name)        
+        Interfaces::CanonicalInterface.new(self, dataset_name)
+      end
+
+      # Private: Finds all of the datasets available in the directory.
+      #
+      # Returns the dataset list and populates instance variable.
+      def build_dataset_list
+        existing_datasets = {}
+
+        Dir[File.join(@dir_name, "*.hgz")].collect do |filename|
+          dataset_name = Pathname.new(filename).sub_ext('').basename.to_s.to_sym
+
+          if @dataset_list.has_key? dataset_name
+            existing_datasets[dataset_name] = @dataset_list[dataset_name]
+          else
+            existing_datasets[dataset_name] = Dataset.new(dataset_name, interface(dataset_name), mode: 'r')
+          end
+        end
+
+        @dataset_list = existing_datasets
       end
 
     end

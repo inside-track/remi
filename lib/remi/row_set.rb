@@ -6,15 +6,17 @@ module Remi
   # The lead and lag rows are most helpful in calculating by groups, which indicate
   # whether a row is the first, last, or interior member of a by group.
   #
-  # RowSets are indexed using integers.  A dataset is used to tie together 
+  # RowSets are indexed using integers.  A dataset is used to tie together
   # variable names with the RowSet indexes.
   class RowSet
+
+    class RowDoesNotExistError < StandardError; end
 
     # Public: Initializes a RowSet.
     #
     # lag_rows  - The number of rows to retain in memory after the current row
     #             is processed.
-    # lead_rows - The number of rows to retain in memory that preceed the 
+    # lead_rows - The number of rows to retain in memory that preceed the
     #             current row.
     # by_groups - An array that indicates which row indexes form a by group.
     def initialize(lag_rows: 1, lead_rows: 1, by_groups: [])
@@ -23,7 +25,7 @@ module Remi
       @lead_rows = lead_rows
       @lag_rows = lag_rows
       initialize_rows
-      
+
       @by_groups = Array(by_groups)
       @by_first = Array.new(@by_groups.length)
       @by_last = Array.new(@by_groups.length)
@@ -63,12 +65,12 @@ module Remi
 
     # Public: Returns the previous Row.
     def prev
-      @rows[-1]
+      lag(1)
     end
 
     # Public: Returns the next Row.
     def next
-      @rows[1]
+      lead(1)
     end
 
     # Public: Returns the Row that is n steps behind the current row.
@@ -77,6 +79,7 @@ module Remi
     #
     # Returns a Row object.
     def lag(n)
+      raise RowDoesNotExistError unless @rows.has_key? -n
       @rows[-n]
     end
 
@@ -86,6 +89,7 @@ module Remi
     #
     # Returns a Row object.
     def lead(n)
+      raise RowDoesNotExistError unless @rows.has_key? n
       @rows[n]
     end
 

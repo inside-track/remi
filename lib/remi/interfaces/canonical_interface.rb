@@ -28,7 +28,7 @@ module Remi
         @data_file = Zlib::GzipReader.new(File.open(data_file_full_path,"r"))
         @data_stream = MessagePack::Unpacker.new(@data_file)
       end
-      
+
       def header_file_full_path
         component_file_full_path('hgz')
       end
@@ -48,8 +48,8 @@ module Remi
       def write_header(header)
         @header_stream.write(header).flush
       end
-      
-      def read_row
+
+      def read_row(key_map: nil)
         # Need to read ahead by one record in order to get EOF flag
         @prev_read ||= @data_stream.read
         begin
@@ -57,7 +57,7 @@ module Remi
         rescue EOFError
           @eof_flag = true
         end
-        row = Row.new(@prev_read, last_row: @eof_flag)
+        row = Row.new(@prev_read, last_row: @eof_flag, key_map: key_map)
         @prev_read = this_read
         row
       end
@@ -67,8 +67,8 @@ module Remi
       end
 
       def close
-        @data_file.close
-        @header_file.close
+        @data_file.close unless @data_file.closed?
+        @header_file.close unless @header_file.closed?
       end
 
       def dataset_exists?
