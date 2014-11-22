@@ -1,12 +1,12 @@
 require 'remi_spec'
 
-describe Dataset do
+describe DataSet do
 
   # Reset the work directory before each test
   before { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
 
   # Test using the canonical library and interface
-  let(:mylib) { Datalib.new(dir_name: RemiConfig.work_dirname) }
+  let(:mylib) { DataLib.new(dir_name: RemiConfig.work_dirname) }
   let(:mydataset) { mylib.build(:mydataset) }
 
 

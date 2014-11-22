@@ -5,7 +5,7 @@ describe Interfaces::CanonicalInterface do
   # Reset the work directory before each test
   before { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
 
-  let(:mylib) { Datalibs::CanonicalDatalib.new(RemiConfig.work_dirname) }
+  let(:mylib) { DataLibs::CanonicalDataLib.new(RemiConfig.work_dirname) }
   let(:interface) { Interfaces::CanonicalInterface.new(mylib, 'test') }
 
   describe 'writing the header' do
@@ -29,7 +29,7 @@ describe Interfaces::CanonicalInterface do
         @header = reader.read_header
         reader.close
       end
-      
+
       it 'returns the same header that was written' do
         expect(@header).to eq @test_header
       end

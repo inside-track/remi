@@ -1,13 +1,13 @@
 module Remi
   module Interfaces
 
-    class DatasetAlreadyExists < StandardError; end
-    class UnknownDataset < StandardError; end
+    class DataSetAlreadyExists < StandardError; end
+    class UnknownDataSet < StandardError; end
 
     class CanonicalInterface
-      def initialize(datalib, dataset_name)
-        @datalib = datalib
-        @dataset_name = dataset_name
+      def initialize(data_lib, data_set_name)
+        @data_lib = data_lib
+        @data_set_name = data_set_name
 
         @prev_read = nil
         @eof_flag = false
@@ -38,7 +38,7 @@ module Remi
       end
 
       def component_file_full_path(component)
-        File.join(@datalib.dir_name,"#{@dataset_name}.#{component}")
+        File.join(@data_lib.dir_name,"#{@data_set_name}.#{component}")
       end
 
       def read_header
@@ -71,11 +71,11 @@ module Remi
         @header_file.close unless @header_file.closed?
       end
 
-      def dataset_exists?
+      def data_set_exists?
         Pathname.new(header_file_full_path).exist?
       end
 
-      def create_empty_dataset
+      def create_empty_data_set
         open_for_write
         close
       end

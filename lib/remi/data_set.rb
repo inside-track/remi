@@ -1,12 +1,14 @@
 module Remi
-  class Dataset
+
+  # Public:
+  class DataSet
     extend Forwardable
 
     def_delegators :@interface, :open_for_write, :open_for_read, :close, :delete
     def_delegators :@active_row, :row_number, :last_row
 
-    def initialize(dataset_name, interface)
-      @name = dataset_name
+    def initialize(data_set_name, interface)
+      @name = data_set_name
       @interface = interface
 
       @variable_set = VariableSet.new

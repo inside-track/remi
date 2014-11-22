@@ -11,7 +11,7 @@ module Remi
 
   # Default logging output
   RemiConfig.log.output = STDOUT
-  
+
   # Default log level
   RemiConfig.log.level = Logger::ERROR
 
@@ -21,6 +21,6 @@ module Remi
   RemiConfig.log.sys = Configatron::Dynamic.new { RemiLog.sys }
   RemiConfig.log.row = Configatron::Dynamic.new { RemiLog.row }
 
-  # Number of records to split large datasets for sorting
+  # Number of records to split large data sets for sorting
   RemiConfig.sort.split_size = 1000000
 end

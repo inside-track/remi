@@ -6,7 +6,7 @@ module Remi
   # The lead and lag rows are most helpful in calculating by groups, which indicate
   # whether a row is the first, last, or interior member of a by group.
   #
-  # RowSets are indexed using integers.  A dataset is used to tie together
+  # RowSets are indexed using integers.  A DataSet is used to tie together
   # variable names with the RowSet indexes.
   class RowSet
 

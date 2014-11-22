@@ -62,15 +62,15 @@ and go!
 
 ## Usage Overview
 
-Data in Remi is stored in *Datasets*.  A dataset is an ordered
+Data in Remi is stored in *DataSets*.  A data set is an ordered
 collection of data *records*.  Each record is a collection of variable
-name/value pairs.  Typically, datasets occupy physical space on a
+name/value pairs.  Typically, data sets occupy physical space on a
 drive, although they might eventually be abstracted to enable support
-for in-memory or in-database datasets that use a common API.  Datasets
+for in-memory or in-database data sets that use a common API.  Data sets
 are contained in a *Data Library* that may be a directory in a file
 system, a database/schema on a database server, or just some
 partitioned space in memory.  A *Datastep* is an operation on a
-dataset that can involve reading, writing, modifying variable values,
+data set that can involve reading, writing, modifying variable values,
 sorting, merging, interleaving, or aggregating.
 
 
@@ -78,7 +78,7 @@ sorting, merging, interleaving, or aggregating.
 ### Variables
 
 Variables are objects that contain metadata describing the columns of
-dataset.  They are very closely related to a hash, but include some additional
+data set.  They are very closely related to a hash, but include some additional
 functionality.
 
 ````ruby
@@ -129,10 +129,10 @@ end
 
 ### Variable Sets
 
-The VariableSet class defines an ordered collection of variables.  All datasets
+The VariableSet class defines an ordered collection of variables.  All data sets
 are composed of an internal variable set that maps to the columns of
-data in the dataset.  Variable sets can also be defined in a larger
-scope and modified and reused by other datasets.
+data in the data set.  Variable sets can also be defined in a larger
+scope and modified and reused by other data sets.
 
 
 ````ruby
@@ -189,34 +189,34 @@ end
 
 
 
-### Libraries and datasets
+### Libraries and data sets
 
 Presently, Remi only supports directory-based data libraries.  A data library
-is created by instantiating the **Datalib** class
+is created by instantiating the **DataLib** class
 
 ````ruby
-mylib = Datalib.new dir_name: "/tmp"
+mylib = DataLib.new dir_name: "/tmp"
 ````
 
-A new (empty) dataset can be created within a library using the `build`
+A new (empty) data set can be created within a library using the `build`
 method
 
 ````ruby
 mylib.build(:mydata)
 ````
 
-When a dataset already exists within a library, it can be referenced
+When a data set already exists within a library, it can be referenced
 using array style accessors
 
 ````ruby
 mydataset = mylib[:mydata]
 ````
 
-A list of all datasets can be obtained using the `datasets` method,
-which returns an array of datasets
+A list of all datasets can be obtained using the `data_sets` method,
+which returns an array of data sets
 
 ````ruby
-mylib.datasets
+mylib.data_sets
 ````
 
 
@@ -259,7 +259,7 @@ Datastep.create mylib[:mydata] do |dsw|
 end
 ````
 
-But maybe this really only makes sense when we've got a dataset to read too.
+But maybe this really only makes sense when we've got a data set to read too.
 
 
 
@@ -273,7 +273,7 @@ Datastep.create mylib[:mydata] do |ds|
   end
 
   ds[:myvariable] = 'Hello World!'
-  ds.write_row  
+  ds.write_row
 end
 ````
 
@@ -288,19 +288,19 @@ Datastep.create mylib.mydata do |ds|
 end
 ````
 
-This code creates a dataset called `mydata` in the `mylib` library
-(defined in the previous section).  The dataset contains a single
+This code creates a data set called `mydata` in the `mylib` library
+(defined in the previous section).  The data set contains a single
 variable called `myvariable` with the string value "Hello World!".
 Remi does not enforce variable types.  We could just have easily set
 `myvariable` to the number `18` or even assigned it to be an array or
 hash or any other valid Ruby object (of course, when it comes to using
-the dataset to write a CSV file for export or populate a database,
+the data set to write a CSV file for export or populate a database,
 assigning a variable to an array might not make much sense).  Variable
 types should be enforced through the business rules.
 
 
 
-Ok, but what about multiple datasets
+Ok, but what about multiple data sets
 ````ruby
 Datastep.create mylib[:teacher], mylib[:student] do |ds|
 
@@ -338,13 +338,13 @@ Datastep.create mylib[:teacher], mylib[:student] do |ds|
   write_row
 end
 ````
-This example would create two datasets.  One named 'teacher' and the other named
-'student'.  Both datasets would share a common set of variables (id, name,
-type).  The 'teacher' dataset would have an additional variable called
-'credential' and the 'student' dataset would have an additional variable called
+This example would create two data sets.  One named 'teacher' and the other named
+'student'.  Both data sets would share a common set of variables (id, name,
+type).  The 'teacher' data set would have an additional variable called
+'credential' and the 'student' data set would have an additional variable called
 'grade'.  Within the Datastep block, we only need to define the value of
 variables against the first argument `ds`, but the values get applied to all
-datasets defined.  
+data sets defined.
 
 
 
@@ -403,7 +403,7 @@ end
 
 ### Viewing data
 
-Any dataset can be browsed by calling a data view.  This uses the
+Any data set can be browsed by calling a data view.  This uses the
 Google Chart Tools to visual data (via
 [GoogleVisualr](https://github.com/winston/google_visualr)).  It
 launches a browser window that shows the data.  Currently it's pretty
@@ -419,13 +419,13 @@ Dataview.view mylib.mydata
 It would be great if we could support some kind of paging to the data view so
 we wouldn't have to require the user to make sure their data is <1,000 records.
 It might also be nice if we could somehow make the webpage sample random records
-from a given dataset.
+from a given data set.
 
 ### Reading data
 
 Suppose I already have a data set called `have` that exists in library
 `mylib` and has a variable called `:active` that stores either "Y" or
-"N".  If we wanted to read that dataset and transform it so that we
+"N".  If we wanted to read that data set and transform it so that we
 have all the same variables in `have` plus a new variable called
 `:active_print` that maps "Y" and "N" to "Yes" and "No", we could do this
 
@@ -446,7 +446,7 @@ have all the same variables in `have` plus a new variable called
 ````
 
 In the variable definition block we've used the `import` method to inherit
-all variables from the `mylib.have` dataset.  The `import` method accepts
+all variables from the `mylib.have` data set.  The `import` method accepts
 `keep` and `drop` arguments to flexibly specify the variables to be imported.
 Use `keep` to include only the specified variables
 
@@ -472,9 +472,9 @@ give the same result.
 ### Importing from CSV
 
 Remi provides an interface that makes it easy to load data from CSV
-files into Remi datasets.  There are currently two ways to import: one
+files into Remi data sets.  There are currently two ways to import: one
 is with trusted headers headers and the other is with custom headers.
-When using trusted headers, dataset variables are created that have
+When using trusted headers, data set variables are created that have
 the same name as the header column headers in the CSV file.  This is
 convenient for quick-and-dirty work.  But in production environments
 we may not want to trust the names in the headers, and instead rely on
@@ -514,8 +514,8 @@ can optionally retain only specified variables.
 
 ### Interleaving and stacking
 
-Assuming that two or more datasets are all sorted by the same
-variables, those datasets can be interleaved resulting in a dataset
+Assuming that two or more data sets are all sorted by the same
+variables, those data sets can be interleaved resulting in a data set
 that is also sorted by the same variables
 
 ````ruby
@@ -525,15 +525,15 @@ Datastep.create mylib.mydata do |ds_out|
     v.import mylib.ds_in2
   end
 
-  Dataset.interleave mylib.ds_in1, mylib.ds_in2, by: [:var1, :var2] do |ds_interleave|
+  DataSet.interleave mylib.ds_in1, mylib.ds_in2, by: [:var1, :var2] do |ds_interleave|
     ds_out.read_row_from ds_interleave
     ds_out.write_row
   end
 end
 ````
 
-Alternatively, if the `by` option is omitted, the resulting dataset just contains
-datasets `ds_in1` and `ds_in2` stacked in the order given.
+Alternatively, if the `by` option is omitted, the resulting data set just contains
+data sets `ds_in1` and `ds_in2` stacked in the order given.
 
 ###### Proposed
 
@@ -542,19 +542,19 @@ would be obvious from context whether it's a straight read, interleave, or stack
 
 ### Sorting
 
-Sorting is pretty straightforward: just specify input and output datasets and
+Sorting is pretty straightforward: just specify input and output data sets and
 an ordered list of variables that should be used to sort:
 
 ````ruby
 Datastep.sort mylib.mydata_unsorted, out: mylib.mydata_sorted, by: [:last_name,:first_name]
 ````
 
-By default, Remi uses an external sort algorithm for any datasets
-larger than 100,000 rows.  For these large datasets, Remi will split the dataset into
+By default, Remi uses an external sort algorithm for any data sets
+larger than 100,000 rows.  For these large data sets, Remi will split the data set into
 100,000 row chunks, sort each chunk in memory, and then use the interleave method
-to combine all of the sorted chunks into the final dataset.  The interleave
+to combine all of the sorted chunks into the final data set.  The interleave
 method is currently very inefficient and needs some significant improvement, so
-sorting large datasets is pretty sluggish right now.
+sorting large data sets is pretty sluggish right now.
 
 ###### Proposed
 
@@ -595,7 +595,7 @@ end
 The example above shows how by-groups can be used to aggregate data.
 By-groups are very useful in many other situations, but are a little
 cumbersome for simple aggregation (especially if we don't want to go
-through the trouble of sorting a dataset).  Therefore, we plan on
+through the trouble of sorting a data set).  Therefore, we plan on
 developing a simple aggregator syntax.
 
 ###### Proposed
@@ -637,11 +637,11 @@ Datastep.aggregate mylib.have, out:mylib.aggregated do |a|
   a.by :var1
   # Define aggregation functions
   a.functions do |f|
-    # :amount is a variables in the mylib.have dataset
+    # :amount is a variables in the mylib.have data set
     f.define :amount_sum_of_square, :amount, :SumSqaure
     f.define :amount_mean, :amount, :Mean
   end
-  # Dataset is output at the end of the block
+  # DataSet is output at the end of the block
 end
 ````
 
@@ -664,7 +664,7 @@ Datastep.create mylib.merged do |ds_out|
   # Merge assumes ds_left and ds_right are sorted by the by variables
   Datastep.merge mylib.ds_left, mylib.ds_right, by: [:var1, :var2] do |ds_merge|
     ds_out.read_row_from ds_merge
-    # Perform a left join by selecting all records in the left dataset
+    # Perform a left join by selecting all records in the left data set
     ds_out.write_record if ds_merge.in(:ds_left)
   end
 end
