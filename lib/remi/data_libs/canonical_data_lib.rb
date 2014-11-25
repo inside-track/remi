@@ -1,5 +1,8 @@
 module Remi
   module DataLibs
+
+    # Public: The canonical data library is a collection of data sets created using
+    # the canonical interface on the local filesystem.
     class CanonicalDataLib
 
       attr_accessor :dir_name

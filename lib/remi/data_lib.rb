@@ -1,5 +1,5 @@
 module Remi
-  # Public: Provides a common interface for end users to create new data libs.
+  # Public: Provides a common interface for developers to create new data libs.
   # This is a generic DataLib class that delegates calls to more specific
   # data lib classes.
   #

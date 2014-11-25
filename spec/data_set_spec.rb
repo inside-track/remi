@@ -96,4 +96,9 @@ describe DataSet do
       mydataset.close
     end
   end
+
+  describe 'reading data with by groups' do
+    it 'should do something', skip: 'TODO' do
+    end
+  end
 end

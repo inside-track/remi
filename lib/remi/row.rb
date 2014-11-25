@@ -31,10 +31,25 @@ module Remi
       @key_map = key_map
     end
 
+    # Public: Array accessor method to get a particular value from the row.
+    #
+    # key - A name or integer used to get the value of a particular element of the row.
+    #       If a key_map is given, a name (symbol) is required.  Otherwise, the
+    #       key must be an integer.
+    #
+    # Returns the value of the row element.
     def [](key)
       key_map? ? get_row_by_map(key) : get_row_by_idx(key)
     end
 
+    # Public: Array accessor method to set a particular row element value.
+    #
+    # key   - A name or integer used to get the value of a particular element of the row.
+    #         If a key_map is given, a name (symbol) is required.  Otherwise, the
+    #         key must be an integer.
+    # value - The value of the row element to be set.
+    #
+    # Returns the new value of the row element.
     def []=(key, value)
       key_map? ? set_row_by_map(key, value) : set_row_by_idx(key, value)
     end
