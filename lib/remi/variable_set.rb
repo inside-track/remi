@@ -20,7 +20,7 @@ module Remi
     extend Forwardable
     def_delegators :@vars, :has_key?, :size, :include?
 
-    # Public: Struct that associates an index with a Variable.
+    # Public: Struct that associates an index with a VariableMeta instance.
     VariableWithIndex = Struct.new(:meta, :index) do
       # Public: Converting to hash removes any indexes.
       #
@@ -79,7 +79,7 @@ module Remi
                    end
     end
 
-    # Public: Converts a variable object into a hash.
+    # Public: Converts a VariableSet instance into a hash.
     #
     # Examples
     #   varset.to_hash.each { |k,v| puts k,v }
@@ -89,9 +89,6 @@ module Remi
     def to_hash
       @vars.dup
     end
-
-
-
 
     # Public: Creates a copy of a variable set including all variables
     # except those specified in the drop list.
@@ -188,7 +185,7 @@ module Remi
       end
     end
 
-    # Public: Returns an array of the variable set keys (i.e., the variable names 
+    # Public: Returns an array of the variable set keys (i.e., the variable names
     # composing the set).
     #
     # Returns an array.

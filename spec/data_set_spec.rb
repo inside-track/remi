@@ -69,7 +69,7 @@ describe DataSet do
     end
   end
 
-  describe 'reading data from rows' do
+  describe 'reading data from a pre-existing dataset' do
     before do
       @data_array = [ ['Row1', 1], ['Row2', 2] ]
 
@@ -82,6 +82,12 @@ describe DataSet do
       end
 
       mydataset.close
+    end
+
+    it 'reads the header data when it is first opened' do
+      newlib = DataLib.new(dir_name: RemiConfig.work_dirname)
+      newdataset = newlib[:mydataset]
+      expect(newdataset.variable_set.to_yaml).to eq mydataset.variable_set.to_yaml
     end
 
     it 'reads the data that has been written' do

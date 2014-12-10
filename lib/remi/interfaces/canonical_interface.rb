@@ -27,9 +27,18 @@ module Remi
       #
       # Returns nothing.
       def open_for_write
+        open_header_for_write
+        open_data_for_write
+      end
+
+      # Public: Opens the header file for writing.
+      def open_header_for_write
         @header_file = Zlib::GzipWriter.new(File.open(header_file_full_path,"w"))
         @header_stream = MessagePack::Packer.new(@header_file)
+      end
 
+      # Public: Oens the data file for writing.
+      def open_data_for_write
         @data_file = Zlib::GzipWriter.new(File.open(data_file_full_path,"w"))
         @data_stream = MessagePack::Packer.new(@data_file)
       end
@@ -38,9 +47,18 @@ module Remi
       #
       # Returns nothing.
       def open_for_read
+        open_header_for_read
+        open_data_for_read
+      end
+
+      # Public: Opens the header file for reading.
+      def open_header_for_read
         @header_file = Zlib::GzipReader.new(File.open(header_file_full_path,"r"))
         @header_stream = MessagePack::Unpacker.new(@header_file)
+      end
 
+      # Public: Opens the data file for reading.
+      def open_data_for_read
         @data_file = Zlib::GzipReader.new(File.open(data_file_full_path,"r"))
         @data_stream = MessagePack::Unpacker.new(@data_file)
       end
@@ -60,15 +78,21 @@ module Remi
         File.join(@data_lib.dir_name,"#{@data_set_name}.#{component}")
       end
 
-      # Public: Converts all of the header information to a hash.
-      def read_header
-        symbolize_keys(@header_stream.read)
+      # Public: Read the data set metadata.
+      def read_metadata
+        open_header_for_read
+        metadata = YAML.load(@header_stream.read)
+        close_header_file
+
+        metadata
       end
 
-      # Public: Writes all of the header information to the header file.
-      def write_header(header)
-        @header_stream.write(header).flush
+      # Public: Write the data set metadata.
+      def write_metadata(variable_set: nil)
+        metadata = { :variable_set => variable_set }
+        @header_stream.write(metadata.to_yaml).flush
       end
+
 
       # Public: Reads a row from the file into the active row.
       #
@@ -102,8 +126,18 @@ module Remi
       #
       # Returns nothing.
       def close
-        @data_file.close unless @data_file.closed?
+        close_header_file
+        close_data_file
+      end
+
+      # Public closes the header file.
+      def close_header_file
         @header_file.close unless @header_file.closed?
+      end
+
+      # Public closes the data file.
+      def close_data_file
+        @data_file.close unless @data_file.closed?
       end
 
       # Public: Returns true if the file representing the data set exists.

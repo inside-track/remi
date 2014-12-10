@@ -103,7 +103,9 @@ module Remi
           if @data_set_list.has_key? data_set_name
             existing_data_sets[data_set_name] = @data_set_list[data_set_name]
           else
-            existing_data_sets[data_set_name] = DataSet.new(data_set_name, interface(data_set_name))
+            ds = DataSet.new(data_set_name, interface(data_set_name))
+            existing_data_sets[data_set_name] = ds
+            ds.read_data_set_metadata
           end
         end
 

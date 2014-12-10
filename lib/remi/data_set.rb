@@ -54,6 +54,7 @@ module Remi
       @lag_offset = 1
 
       @interface.open_for_write
+      @metadata_written = false
       @row_set = RowSet.new(lag_rows: lag_rows, lead_rows: 0)
     end
 
@@ -135,10 +136,20 @@ module Remi
       @row_set.lead(n)
     end
 
+
+    def read_data_set_metadata
+      metadata = @interface.read_metadata
+      @variable_set = metadata[:variable_set]
+    end
+
+
     # Public: Writes the active row to the data source.
     #
     # Returns nothing.
     def write_row
+      @interface.write_metadata(variable_set: @variable_set) unless @metadata_written
+      @metadata_written = true
+
       @row_set.add(Row.new(@active_row.to_a, key_map: @variable_set))
       @interface.write_row(@active_row)
     end

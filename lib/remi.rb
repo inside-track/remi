@@ -1,4 +1,4 @@
-# Ruby Core Library
+# Ruby Standard Library
 require 'zlib'
 require 'json'
 require 'yaml'
