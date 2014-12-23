@@ -10,10 +10,10 @@ describe Interfaces::CanonicalInterface do
 
   describe 'writing the header' do
     before do
-      @test_header = { some: "kind of header", with: "stuff" }
+      @header_variable_set = VariableSet.new :myvar1, :myvar2
       writer = interface
       writer.open_for_write
-      writer.write_header(@test_header)
+      writer.write_metadata(variable_set: @header_variable_set)
       writer.close
     end
 
@@ -26,12 +26,14 @@ describe Interfaces::CanonicalInterface do
       before do
         reader = interface
         reader.open_for_read
-        @header = reader.read_header
+        @header = reader.read_metadata
         reader.close
       end
 
       it 'returns the same header that was written' do
-        expect(@header).to eq @test_header
+        puts @header_variable_set
+        puts @header
+        expect(@header[:variable_set]).to eq @header_variable_set
       end
 
     end

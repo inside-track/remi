@@ -8,7 +8,7 @@ describe RowSet do
       @test_data[i-3] = [i, i*2, i*3]
     end
   end
-  
+
   it 'can add a single row to the rowset' do
     expect { RowSet.new.add(Row.new([1,2,3])) }.not_to raise_error
   end
@@ -43,11 +43,11 @@ describe RowSet do
 
     describe 'adding another row to a rowset already loaded with data' do
       before { @rowset.add(Row.new(@test_data[3], last_row: true)) }
-      
+
       it 'changes which row is current' do
         expect(@rowset[0..2]).to eq @test_data[1]
       end
-      
+
     end
   end
 
@@ -67,11 +67,11 @@ describe RowSet do
             @rowset.add(Row.new(['curr', 'A']))
             @rowset.add(Row.new(['next', gnext]))
           end
-          
+
           it 'returns correct first flag' do
             expect(@rowset.first).to eq (gprev != 'A')
           end
-          
+
           it 'returns correct last flag' do
             expect(@rowset.last).to eq (gnext != 'A')
           end
@@ -144,21 +144,21 @@ describe RowSet do
                 @rowset.add(Row.new(['curr', 'A', 'a']))
                 @rowset.add(Row.new(['next', gnext, snext]))
               end
-          
+
               it 'returns correct first flag for group' do
-                expect(@rowset.first(0)).to eq (gprev != 'A')
+                expect(@rowset.first(1)).to eq (gprev != 'A')
               end
 
               it 'returns correct first flag for subgroup' do
-                expect(@rowset.first(1)).to eq (sprev != 'a' || gprev != 'A')
+                expect(@rowset.first(2)).to eq (sprev != 'a' || gprev != 'A')
               end
-          
+
               it 'returns correct last flag for group' do
-                expect(@rowset.last(0)).to eq (gnext != 'A')
+                expect(@rowset.last(1)).to eq (gnext != 'A')
               end
 
               it 'returns correct last flag for subgroup' do
-                expect(@rowset.last(1)).to eq (snext != 'a' || gnext != 'A')
+                expect(@rowset.last(2)).to eq (snext != 'a' || gnext != 'A')
               end
             end
           end

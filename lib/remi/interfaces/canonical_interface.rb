@@ -78,7 +78,7 @@ module Remi
         File.join(@data_lib.dir_name,"#{@data_set_name}.#{component}")
       end
 
-      # Public: Read the data set metadata.
+      # Public: Reads and returns the data set metadata.
       def read_metadata
         open_header_for_read
         metadata = YAML.load(@header_stream.read)
