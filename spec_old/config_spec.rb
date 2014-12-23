@@ -26,7 +26,7 @@ describe "Remi configuration" do
     expect(RemiConfig.nest.deeper.c).to eq "Deeper Nesting C"
   end
 
-  it "should only define the user library once", skip: "TODO" do
+  it "should only define the user library once", :future => true do
     first_use  = RemiConfig.libs.user.lib
     second_use = RemiConfig.libs.user.lib
     expect(first_use.object_id).to eq second_use.object_id

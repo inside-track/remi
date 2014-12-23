@@ -4,9 +4,81 @@ So, I think that a lot of the classes and modules I'm building have gotten out
 of hand and it's time to refactor and simplify.
 
 * Datalib - not functional enough and might be too SASy.  I originally thought
-  of these just like SAS datasets, which are simultaneously a dataset catalog
+  of these just like SAS libraries, which are simultaneously a dataset catalog
   and an interface (to files, or databases, etc).  It would probably be simplest
   to separate these out into independent functionality.
+
+  What is a Library (what should a library be)? - A library is a collection
+  of datasets sharing a common interface.
+
+  Can a dataset exist outside of a library?
+
+  Two classes
+    1. The datalib class is just a collection of datasets (ugh, so I
+       really may need a RemiCollection module that would work for
+       variables, variable sets and datalibs).
+    2. The interface class defines how data is extracted from
+       the source and loaded into the dataset model.
+
+  But maybe I need an interface for datalibs (e.g., so I can get a list
+  of all existing datasets from a source directory or database) and
+  a dataset interface (so it can read data from the source.
+
+  So really, a datalib is just a collection of datasets.
+
+  Maybe I could skip the datalib construction for now and build
+  datasets that have an interface.
+
+  ````
+    # Dataset files will be created in the ~/work directory
+    # with the account prefix (account.rgz, account.hgz)
+    account_interface = DatasetInterface.new(:directory, "~/work/account")
+    account_ds = Dataset.new(account_interface)
+
+    # Could also have in-memory interfaces
+    account_interface = DatasetIntervace.new(:in_mem)
+
+    # Or database interfaces
+    account_interface = DatasetInterface.new(:database, { :connection => db_connection, :schema => "mystuff", :table => "account" } )
+
+
+    # Libraries could potentially make these simpler
+    # BUILD ON THIS <- LIBs should just be a way to make the interface described above simpler.
+    worklib = Datalib.new(:directory, "~/work")
+    account_interface = worklib.interface[:account]
+    worklib[:account] = 
+
+  ````
+
+  If a datalib is just a collection of datsets, then I don't really need anything special.
+  Just use a hash or an array or whatever.
+
+  Although I really hate the idea of having to name my dataset twice (once
+  as a variable, second as a file name prefix).  So I really do need to
+  borrow from my current datalib method in some way (probably need to
+  support both ways)
+
+
+  mylib = Datalib.new(:directory, "~/work")
+  # or
+  mylib = DirectoryDatalib.new("~/work")
+
+  mylib = Datalib.new(:database, { :connection => db_connection, :schema => "mystuff" } )
+  mylib = DatabaseDatalib.new(:connection => db_connection, :schema => "mystuff")
+
+  # Must explicitly specify new datasets?
+  mylib.new(:mydata)
+  ds = mylib[:mydata]
+  # or
+  ds = mylib.mydata
+
+  # But if a dataset already exists in an interface, no need to declare that it's new
+
+
+  # DATALIBS NEED TO SPECIFY ALL ASPECTS OF READING DATA FROM THE SOURCE!
+
+
+
 
 * Dataset - Seems like this could easily be split into several different objects.
   * All of the file-specific information should be split off into a datalib/interface

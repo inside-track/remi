@@ -66,7 +66,7 @@ module Remi
         return
       end
 
-      worklib = Datalib.new :directory => {:dirname => RemiConfig.work_dirname}
+      worklib = DataLib.new :directory => {:dirname => RemiConfig.work_dirname}
 
       split_datasets = []
       rows = []

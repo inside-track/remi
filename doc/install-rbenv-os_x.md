@@ -26,7 +26,8 @@ Restart the shell and then install the rubies
 
 Install rbenv-bundler
 
-    git clone git://github.com/carsomyr/rbenv-bundler.git /usr/local/var/rbenv/plugins/bundler
+    brew install rbenv-bundler
+    rbenv bundler on
 
 Install bundler
 

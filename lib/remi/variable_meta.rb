@@ -6,17 +6,21 @@ module Remi
   #
   # Examples
   #
-  #   var_simple = Variable.new :length => 18, :label => "SalesForce Id"
+  #   var_simple = VariableMeta.new :length => 18, :label => "SalesForce Id"
   #
-  #   var_w_regex_validation = Variable.define do
-  #     like var_simple
-  #     meta :regex  => /[a-zA-Z0-9]{15,18}/
+  #   var_w_regex_validation = VariableMeta.define do |v|
+  #     v.like var_simple
+  #     v.meta :regex  => /[a-zA-Z0-9]{15,18}/
   #   end
   #
   #   var_simple_again = var_w_regex_validation.drop_meta :regex
   #   var_simple_again = var_w_regex_validation.keep_meta :length, :label
-  class Variable
+  class VariableMeta
     include Enumerable
+
+    extend Forwardable
+    def_delegators :@metadata, :keys, :each, :has_key?, :[], :[]=, :include?
+
 
     # Required metadata default values
     DEFAULT = { :type => "string" }
@@ -30,69 +34,26 @@ module Remi
     def initialize(meta={}, &block)
       @metadata = DEFAULT.merge(meta)
 
-      modify!(&block) if block_given?
+      modify(&block) if block_given?
     end
+
+    attr_reader :metadata
 
 
     # Public: Used to modify variable metadata in a block.
     #
     # block - A block of commands used to manipulate variable metadata.
-    #         The special set of methods available in this block can
-    #         be found in the VariableDelegator class
     #
     # Returns nothing.
-    def modify!(&block)
-      delegator = VariableDelegator.new(self)
-      delegator.instance_eval(&block)
-    end
-
-
-    # Public: Array accessor reader method for metadata.
-    #
-    # key - A metadata key.
-    #
-    # Returns the value of the metadata.
-    def [](key)
-      @metadata[key]
-    end
-
-    # Public: Array accessor setter method for metadata.
-    #
-    # key   - A metadata key.
-    # value - Metadata indicated by key is set to value.
-    #
-    # Returns nothing.
-    def []=(key, value)
-      @metadata[key] = value
-    end
-
-    # Public: Used to determine if a metadata key has been defined.
-    #
-    # key - A metadata key.
-    #
-    # Returns true if the metadata key has been defined, false otherwise.
-    def has_key?(key)
-      @metadata.has_key?(key)
-    end
-
-    # Public: Used to determine if each of a set of metadata keys have been defined.
-    #
-    # keys - A comma delimited list of keys to check.
-    #
-    # Returns true if all of the keys have been defined, false otherwise.
-    def has_keys?(*keys)
-      (keys - @metadata.keys).empty?
+    def modify(&block)
+      Docile.dsl_eval(VariableMetaBlock.new(self), &block)
     end
 
     # Public: Converts a variable object into a hash.
     #
-    # Examples
-    #   var.to_hash[:some_meta] = "I am meta"
-    #   var.to_hash.each { |k,v| puts k,v }
-    #
     # Returns a hash of the variable metadata.
     def to_hash
-      @metadata
+      @metadata.dup
     end
 
     # Public: Variable equality test.
@@ -101,13 +62,8 @@ module Remi
     #
     # Returns a boolean indicating whether two variables have the same metadata.
     def ==(another_variable)
-      self.to_hash == another_variable.to_hash
+      @metadata == another_variable.metadata
     end
-
-
-
-
-
 
 
 
@@ -166,37 +122,7 @@ module Remi
       self
     end
 
-
-
-    private
-
-    # Private: Generic method used to add or remove metadata from a variable object.
-    #
-    # selector            - Hash method used to select the metadata
-    #                       keys.  If a destructive method is used
-    #                       like :delete_if or :keep_if, then the
-    #                       metadata of self object is modified.  If a
-    #                       non-destructive method like :reject or
-    #                       :select is used, then a new metadata hash
-    #                       is returned.
-    # mandatory_join_sign - Symbol used to indicate whether the
-    #                       mandatory keys should be included (:+) or
-    #                       excluded (:-) from the supplied list of
-    #                       keys in meta_list.
-    # meta_list           - A list of metadata keys to add or remove.
-    #
-    # Returns a hash, which is either the object's metadata hash or a new metadata
-    # hash that can be used to create a new variable object.
-    def modify_collection(selector, mandatory_join_sign, *meta_list)
-      trimmed_meta_list = meta_list.flatten.send(mandatory_join_sign, MANDATORY_KEYS).uniq
-      @metadata.send(selector) { |key| trimmed_meta_list.include? key }
-    end
-
-
-
-    # Private: Defines methods that are accessible only within a block that
-    # is used to define a variable.
-    class VariableDelegator < SimpleDelegator
+    class VariableMetaBlock < SimpleDelegator
 
       # Public: Creates new metadata from a hash.
       #
@@ -204,8 +130,8 @@ module Remi
       # existing metadata.
       #
       # Returns nothing.
-      def meta(key_val)
-        self.to_hash.merge!(key_val)
+      def meta(key, value)
+        self[key] = value
       end
 
       # Public: Used to merge in all metadata from an existing variable.
@@ -214,7 +140,10 @@ module Remi
       #
       # Returns nothing.
       def like(var)
-         self.to_hash.merge!(var.to_hash)
+        raise 'Expecting a VariableMeta' unless var.is_a? VariableMeta
+        var.each do |key, meta|
+          self[key] = meta
+        end
       end
 
       # Public: Alias for drop_meta! form within a modify! block.
@@ -244,6 +173,32 @@ module Remi
       def keep_meta(*keep_list)
         self.keep_meta!(*keep_list)
       end
+
     end
+
+    private
+
+      # Private: Generic method used to add or remove metadata from a variable object.
+      #
+      # selector            - Hash method used to select the metadata
+      #                       keys.  If a destructive method is used
+      #                       like :delete_if or :keep_if, then the
+      #                       metadata of self object is modified.  If a
+      #                       non-destructive method like :reject or
+      #                       :select is used, then a new metadata hash
+      #                       is returned.
+      # mandatory_join_sign - Symbol used to indicate whether the
+      #                       mandatory keys should be included (:+) or
+      #                       excluded (:-) from the supplied list of
+      #                       keys in meta_list.
+      # meta_list           - A list of metadata keys to add or remove.
+      #
+      # Returns a hash, which is either the object's metadata hash or a new metadata
+      # hash that can be used to create a new variable object.
+      def modify_collection(selector, mandatory_join_sign, *meta_list)
+        trimmed_meta_list = meta_list.flatten.send(mandatory_join_sign, MANDATORY_KEYS).uniq
+        @metadata.send(selector) { |key| trimmed_meta_list.include? key }
+      end
+
   end
 end

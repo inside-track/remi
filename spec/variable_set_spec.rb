@@ -2,186 +2,197 @@ require 'remi_spec'
 
 describe VariableSet do
 
-  # Pre-define some dummy shared variables to be used in variable sets
+  # Pre-define some variables to be used in variableset tests
   let(:shared_vars) do
     {
-      :account_id => (Variable.new :length => 18, :label => "Account Id"),
-      :name       => (Variable.new :length => 80, :label => "Account Name"),
+      :account_id => (VariableMeta.new :length => 18, :label => 'Account Id'),
+      :name       => (VariableMeta.new :length => 80, :label => 'Account Name')
     }
   end
 
-  describe "A variable set is a collection of variables" do
+  subject(:example_set) { VariableSet.new :account_id => shared_vars[:account_id], :name => shared_vars[:name], :balance => { :type => 'currency' } }
 
-    context "can be created in one line" do
-      subject(:varset) { VariableSet.new :account_id => shared_vars[:account_id], :name => shared_vars[:name] }
-
-      it { should have_keys(:account_id, :name) }
-
-      context "using an array accessor to return a variable" do
-        specify { expect(subject[:name].meta).to eq shared_vars[:name] }
-      end
+  describe 'equivalent ways to define a variable set' do
+    specify 'directly using an array accesor' do
+      testset = VariableSet.new 
+      testset[:account_id] = shared_vars[:account_id]
+      testset[:name]       = shared_vars[:name]
+      testset[:balance]    = { :type => 'currency' }
+      expect(testset).to eq example_set
     end
 
-    context "can be defined in a block" do
-      let(:varset) do
-        account_id = shared_vars[:account_id]
-        name       = shared_vars[:name]
+    specify 'in a block, using the var method' do
+      expect(
         VariableSet.new do
-          var :account_id => account_id
-          var :name       => name
-          var :balance    => { :type => "currency" }
+          var :account_id, shared_vars[:account_id]
+          var :name,       shared_vars[:name]
+          var :balance,    { :type => 'currency' }
         end
-      end
-
-      specify { expect(varset).to have_keys :account_id, :name, :balance }
-      specify { expect(varset[:name].meta).to be_a Variable }
-      specify { expect(varset[:balance].meta).to be_a Variable }
-
-      context "can be derived from other variable sets" do
-        let(:varset_derived) do
-          varset_origin = varset
-
-          VariableSet.new do
-            like varset_origin
-            var :address => {}
-          end
-        end
-
-        specify { expect(varset_derived).to have_keys :account_id, :name, :balance, :address }
-      end
-
+      ).to eq example_set
     end
   end
 
-  describe "Modifying variable sets" do
-    subject(:varset) do
+  it 'returns a variable when referenced using an array accessor' do
+    expect(example_set[:name].meta).to eq shared_vars[:name]
+  end
+
+  it 'has all of the keys defined' do
+    expect(example_set.keys).to match_array([:name, :account_id, :balance])
+  end
+
+  describe 'importing variable sets' do
+    let(:derived_set) do
       VariableSet.new do
-        var :account_id  => { :length => 18 }
-        var :drop_me     => { :type => "currency" }
-        var :name        => {}
-        var :drop_me_too => {}
+        like example_set
+        var :group
       end
     end
 
-    shared_examples "surviving variables" do
-      specify { expect(subject).to have_keys(:account_id, :name) }
-      specify { expect(subject).not_to have_keys(:drop_me, :drop_me_too) }
+    it 'has the original set of variables' do
+      expect(derived_set).to include(*example_set.keys)
     end
 
-    context "can be non-destructively dropped" do
-      subject(:varset_derived) { varset.drop_vars :drop_me, :drop_me_too }
-      it_behaves_like "surviving variables"
+    it 'has the new variable too' do
+      expect(derived_set).to include(:group)
+    end
+  end
+
+  describe 'modifying variable sets' do
+    subject(:original_set) do
+      VariableSet.new do
+        like example_set
+        var :to_drop
+        var :to_also_drop
+      end
     end
 
-    context "can be destructively dropped" do
-      before { varset.drop_vars! :drop_me, :drop_me_too }
-      it_behaves_like "surviving variables"
+    shared_examples 'surviving variables' do
+      specify { expect(subject).to include(:account_id, :name, :balance) }
+      specify { expect(subject).not_to include(:to_drop, :to_also_drop) }
     end
 
-    context "can be non-destructively kept" do
-      subject(:varset_derived) { varset.keep_vars :account_id, :name }
-      it_behaves_like "surviving variables"
+    context 'non-destructively dropped' do
+      subject(:modified_set) { original_set.drop_vars :to_drop, :to_also_drop }
+      specify { modified_set; expect(original_set).to include(:to_drop, :to_also_drop) }
+      it_behaves_like 'surviving variables'
     end
 
-    context "can be destructively kept" do
-      before { varset.keep_vars! :account_id, :name }
-      it_behaves_like "surviving variables"
+    context 'destructively dropped' do
+      before { original_set.drop_vars! :to_drop, :to_also_drop }
+      it_behaves_like 'surviving variables'
     end
 
-    context "can be modified in a block" do
+    context 'dropped within a block' do
       before do
-        varset.modify! do
-          var :account_id => { :length => 21 }
+        original_set.modify do
+          drop_vars :to_drop, :to_also_drop
         end
       end
 
-      specify { expect(varset[:account_id].meta[:length]).to eq 21 }
+      it_behaves_like 'surviving variables'
+    end
 
-      context "with drop method specified without a bang" do
-        before do
-          varset.modify! do
-            drop_vars :drop_me, :drop_me_too
-          end
+    context 'non-destructively kept' do
+      subject(:modified_set) { original_set.keep_vars :account_id, :name, :balance }
+      specify { modified_set; expect(original_set).to include(:to_drop, :to_also_drop) }
+      it_behaves_like 'surviving variables'
+    end
+
+    context 'destructively kept' do
+      before { original_set.keep_vars! :account_id, :name, :balance }
+      it_behaves_like 'surviving variables'
+    end
+
+    context 'kept within a block' do
+      before do
+        original_set.modify do
+          keep_vars :account_id, :name, :balance
         end
-
-        it_behaves_like "surviving variables"
       end
 
-      context "with keep method specified without a bang" do
-        before do
-          varset.modify! do
-            keep_vars :account_id, :name
-          end
-        end
+      it_behaves_like 'surviving variables'
+    end
 
-        it_behaves_like "surviving variables"
+    context 'modifying metadata within a block' do
+      it 'does not change variable indexes when the variable already exists' do
+        expect {
+          original_set.modify do
+            var :account_id, label: 'Some new label'
+          end
+        }.not_to change {
+          original_set.collect { |k, v| [k, v.index] }
+        }
+      end
+
+      it 'adds a new variable when the variable does not already exist' do
+        expect {
+          original_set.modify do
+            var :new_field
+          end
+        }.to change {
+          original_set.size
+        }.by(1)
       end
 
     end
 
   end
 
+  describe 'how variables are ordered' do
+    it 'loops through variables in the indexed order' do
+      index_order = example_set.collect { |name, var| var.index }
+      expect(index_order).to eq 0.upto(example_set.size-1).to_a
+    end
 
-  describe "Ordering variables" do
-    let(:varset) do
-      VariableSet.new do
-        var :account_id  => { :length => 18 }
-        var :name        => {}
-        var :address     => {}
+    context 'keeping/dropping variables' do
+      it 're-indexes remaining variables on drop' do
+        expect { example_set.drop_vars!(:name) }.to change { example_set[:balance].index }.from(2).to(1)
+      end
+
+      it 're-indexes remaining variables on keep' do
+        expect { example_set.keep_vars!(:name) }.to change { example_set[:name].index }.from(1).to(0)
       end
     end
 
-    context "adding a new variable" do
-      before do
-        varset.modify! do
-          var :premise_type => { :valid_values => ["on", "off"] }
-        end
-      end
-
-      it "should have the right index" do
-        expect(varset[:premise_type].index).to eq 3
-      end
-    end
-
-    context "keeping/dropping variables" do
-      it "should re-index remaining variables on drop" do
-        expect { varset.drop_vars!(:name) }.to change { varset[:address].index }.from(2).to(1)
-      end
-
-      it "should re-index remaining variables on keep" do
-        expect { varset.keep_vars!(:name) }.to change { varset[:name].index }.from(1).to(0)
-      end
-    end
-
-    context "reordering variables" do
-      before do
-        varset.modify! do
-          order :name, :address, :account_id
-        end
-      end
-
-      it "should change the indexes of reordered variables" do
-        expect([:account_id, :name, :address].collect { |name| varset[name].index }).to eq [2,0,1]
-      end
-      
-      it "should loop through variables in the indexed order" do
-        index_order = varset.collect { |name, var| var.index }
-        expect(index_order).to eq 0.upto(varset.length-1).to_a
-      end
-    end
-
-    context "combining variablesets" do
-      let(:varset2) do
-        orig_varset = varset
+    context 'reordering variables sets' do
+      let(:original_set) do
         VariableSet.new do
-          var :account_type => {}
-          var :name         => { :comment => "this is overwritten" }
-          like orig_varset
+          var :var1
+          var :var2
+          var :var3
+          var :var4
         end
       end
 
-      it "should contain the combination of variables in the right order" do
-        expect([:account_type, :name, :account_id, :address].collect { |name| varset2[name].index }).to eq [0,1,2,3]
+      let(:reorder_set) { original_set.reorder :var3, :var2 }
+
+      it 'should reorder the variables' do
+        expect { reorder_set }.to change { original_set.collect { |name, v| name }}
+          .from([:var1, :var2, :var3, :var4])
+          .to(  [:var3, :var2, :var1, :var4])
+      end
+
+      it 'reindexing should not change the indexes on a reordered set' do
+        expect { reorder_set.reindex }.not_to change { reorder_set.collect { |name, v| name }}
+      end
+
+    end
+
+    context 'combining variablesets' do
+      let(:derived_set) do
+        VariableSet.new do |v|
+          var :account_type
+          var :name,        comment: 'this is overwritten'
+          like example_set
+        end
+      end
+
+      it 'contains the combination of variables in the right order' do
+        expect([:account_type, :name, :account_id, :balance].collect { |name| derived_set[name].index }).to eq [0,1,2,3]
+      end
+
+      it 'overwrites metadata with the last one defined' do
+        expect(derived_set[:name].meta).not_to include(:comment)
       end
     end
   end
