@@ -103,8 +103,54 @@ describe DataSet do
     end
   end
 
+  # We've done more exhaustive by-group testing in row_set_spec.  Here we just
+  # need to make sure the interaction with data_sets works.
   describe 'reading data with by groups' do
-    it 'should do something', skip: 'TODO' do
+
+    let(:groupset) { mylib.build(:groupset) }
+    before do
+      groupset.define_variables do
+        var :group1
+        var :group2
+        var :expected_first1
+        var :expected_last1
+        var :expected_first2
+        var :expected_last2
+      end
+
+      @data_array = [
+        ['A','X',true,false,true,true],
+        ['A','Y',false,false,true,false],
+        ['A','Y',false,true,false,true],
+        ['B','Y',true,true,true,true]
+      ]
+
+      groupset.open_for_write
+
+      @data_array.each do |row|
+        groupset.variable_set.each do |key, var|
+          groupset[key] = row[var.index]
+        end
+        groupset.write_row
+      end
+
+      groupset.close
+
+      groupset.open_for_read(by_groups: [:group1, :group2])
+    end
+
+    after { groupset.close }
+
+    it 'gives the expected first/last indicators' do
+      while !groupset.last_row
+        groupset.read_row
+        expect(groupset.first).to eq groupset[:expected_first1]
+        expect(groupset.last).to eq groupset[:expected_last1]
+        expect(groupset.first(:group1)).to eq groupset[:expected_first1]
+        expect(groupset.last(:group1)).to eq groupset[:expected_last1]
+        expect(groupset.first(:group2)).to eq groupset[:expected_first2]
+        expect(groupset.last(:group2)).to eq groupset[:expected_last2]
+      end
     end
   end
 end

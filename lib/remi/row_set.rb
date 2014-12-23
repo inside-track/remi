@@ -12,6 +12,16 @@ module Remi
 
     class RowDoesNotExistError < StandardError; end
 
+    # Public: Gets the number of lag rows in use.
+    attr_reader :lag_rows
+
+    # Public: Gets the number of lead rows in use.
+    attr_reader :lead_rows
+
+    # Public: Gets the key map in use.
+    attr_reader :key_map
+
+
     # Public: Initializes a RowSet.
     #
     # lag_rows  - The number of rows to retain in memory after the current row
@@ -19,16 +29,18 @@ module Remi
     # lead_rows - The number of rows to retain in memory that preceed the
     #             current row.
     # by_groups - An array that indicates which row indexes form a by group.
-    def initialize(lag_rows: 1, lead_rows: 1, by_groups: [])
-
+    # key_map   - Provides a mapping between named keys and the index of the row array.
+    #             Must return the index via key_map[:key].index (like a VariableWithIndex).
+    def initialize(lag_rows: 1, lead_rows: 1, by_groups: [], key_map: nil)
       @rows = {}
       @lead_rows = lead_rows
       @lag_rows = lag_rows
+      @key_map = key_map
       initialize_rows
 
       @by_groups = Array(by_groups)
-      @by_first = Array.new(@by_groups.length)
-      @by_last = Array.new(@by_groups.length)
+      @by_first = {}
+      @by_last = {}
       @has_by_groups = @by_groups.length > 0
     end
 
@@ -51,12 +63,15 @@ module Remi
 
     # Public: Array accessor for the current row of the RowSet.
     #
-    # idx - The index of the current Row.
+    # key - A name or integer used to get the value of a particular element of the row.
+    #       If a key_map is given, a name (symbol) is required.  Otherwise, the
+    #       key must be an integer.
     #
     # Returns the value of the current Row at the index given.
-    def [](idx)
-      @rows[0][idx]
+    def [](key)
+      @rows[0][key]
     end
+
 
     # Public: Returns the current Row.
     def curr
@@ -105,35 +120,35 @@ module Remi
     def update_by_groups
       parent_first = false
       parent_last = false
-      @by_groups.each_with_index do |grp, idx|
-        @by_first[idx] = ((self[grp] != self.prev[grp]) or parent_first)
-        @by_last[idx]  = ((self[grp] != self.next[grp]) or parent_last or self.curr.last_row)
+      @by_groups.each do |grp|
+        @by_first[grp] = ((self[grp] != self.prev[grp]) or parent_first)
+        @by_last[grp]  = ((self[grp] != self.next[grp]) or parent_last or self.curr.last_row)
 
-        parent_first = @by_first[idx]
-        parent_last = @by_last[idx]
+        parent_first = @by_first[grp]
+        parent_last = @by_last[grp]
       end
     end
 
     # Public: Used to determine if the given index is the first in a group
     # of similar values.
     #
-    # idx - Index of the Row object to check to see if it is the first in a group.
-    #       (default: 0)
+    # key - The name (or index) of the Row object to check to see if it is first in a group.
+    #       (default: uses the first by group specified).
     #
     # Returns a boolean.
-    def first(idx=0)
-      @by_first[idx]
+    def first(key = nil)
+      @by_first[key || @by_groups[0]]
     end
 
     # Public: Used to determine if the given index is the last in a group
     # of similar values.
     #
-    # idx - Index of the Row object to check to see if it is the last in a group.
-    #       (default: 0)
+    # key - The name (or index) of the Row object to check to see if it is last in a group.
+    #       (default: uses the first by group specified).
     #
     # Returns a boolean.
-    def last(idx=0)
-      @by_last[idx]
+    def last(key = nil)
+      @by_last[key || @by_groups[0]]
     end
 
 
@@ -143,9 +158,13 @@ module Remi
     # Row objects.
     def initialize_rows
       (-@lag_rows).upto(@lead_rows).each do |i|
-        @rows[i] = Row.new(Array.new)
+        @rows[i] = Row.new(Array.new, key_map: @key_map)
       end
     end
 
+    # Private: Returns true if a key map is present.
+    def key_map?
+      !@key_map.nil?
+    end
   end
 end

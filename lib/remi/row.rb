@@ -16,6 +16,9 @@ module Remi
     # Public: Gets/sets the row number.
     attr_accessor :row_number
 
+    # Public: Gets the key_map in use.
+    attr_reader :key_map
+
     # Public: Initialize a new row.
     #
     # row        - An array of data representing the row.
@@ -25,10 +28,17 @@ module Remi
     # key_map    - Provides a mapping between named keys and the index of the row array.
     #              Must return the index via key_map[:key].index (like a VariableWithIndex).
     def initialize(row = [], last_row: false, row_number: nil, key_map: nil)
-      @row = row
-      @last_row = last_row
-      @row_number = row_number
-      @key_map = key_map
+      if row.is_a? Row
+        @row = row.to_a
+        @last_row = last_row || row.last_row
+        @row_number = row_number || row.row_number
+        @key_map = key_map || row.key_map
+      else
+        @row = row
+        @last_row = last_row
+        @row_number = row_number
+        @key_map = key_map
+      end
     end
 
     # Public: Array accessor method to get a particular value from the row.

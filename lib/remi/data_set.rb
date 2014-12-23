@@ -39,7 +39,7 @@ module Remi
       @by_groups = by_groups
 
       @interface.open_for_read
-      @row_set = RowSet.new(lag_rows: lag_rows, lead_rows: lead_rows, by_groups: by_groups)
+      @row_set = RowSet.new(lag_rows: lag_rows, lead_rows: lead_rows, by_groups: by_groups, key_map: @variable_set)
     end
 
     # Public: Opens a dataset for write access.
@@ -137,9 +137,19 @@ module Remi
     end
 
 
-    def read_data_set_metadata
-      metadata = @interface.read_metadata
-      @variable_set = metadata[:variable_set]
+    def first(key = nil)
+      @row_set.first(key)
+    end
+
+    def last(key = nil)
+      @row_set.last(key)
+    end
+
+    # Public: Converts the active row to an array.
+    #
+    # Returns an array.
+    def row_to_a
+      @active_row.to_a
     end
 
 
@@ -158,9 +168,45 @@ module Remi
     #
     # Returns nothing.
     def read_row
-      @active_row = @interface.read_row(key_map: @variable_set)
-      @row_set.add(@active_row)
+      load_row_set
+      @active_row = Row.new(@row_set.curr)
     end
 
+    # Public: Reads the data set metadata from the interface.
+    #
+    # Returns nothing.
+    def read_data_set_metadata
+      metadata = @interface.read_metadata
+      @variable_set = metadata[:variable_set]
+    end
+
+
+
+
+    private
+
+    # Private: Loads a row record from the interface into the row_set.  If the
+    # row_set includes lead rows, it will pre-load the row_set until the
+    # current row is defined.
+    #
+    # Returns nothing.
+    def load_row_set
+      loop do
+        @row_set.add(get_row_from_interface)
+        break unless @row_set.curr.row_number.nil?
+      end
+    end
+
+    # Private: Gets a row from the interface.  If the last record from the interface
+    # has already been read, start loading the row_set with nil records.
+    #
+    # Returns a Row.
+    def get_row_from_interface
+      if @row_set.lead(@row_set.lead_rows).last_row
+        Row.new(Array.new(@active_row.length), last_row: true, key_map: @variable_set)
+      else
+        @interface.read_row(key_map: @variable_set)
+      end
+    end
   end
 end
