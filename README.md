@@ -400,6 +400,96 @@ Datastep.create mylib.mydata do |ds|
 end
 ````
 
+###### Refined proposal
+
+I want to build a datastep language that facilitates writing tests.  How
+can I do that best?
+
+The bare DataStep methods I've previously been imaging obviously cannot
+be tested very well in isolation.  Since they're entirely procedural, they
+would have to be wrapped up in something else to even be part of a test.
+
+I'm wondering if it's going to make sense at this point to start defining
+DataStep child classes that inherit from a parent DataStep class, similar
+to models in Rails.  My biggest hesitation with this is that I'm having
+trouble thinking of what an instance of the DataStep class represents.
+It seems like each class would almost always just have one instance
+of the class at any single point of time.
+
+On the other hand, putting the datastep logic in a class would allow for
+defining mixin classes that might have some advantages.
+
+Maybe it's time to build a minimalist datastepper method, wrap the whole
+thing in a gem and try building out a project or two.  That could help
+with deciding the right direction at this point.
+
+````ruby
+# DataStep.create opens datasets for writing, closes them on exit.
+DataStep.create mylib.build(:myfact), mylib.build(:mydim) do |ds_myfact, ds_mydim|
+
+  ds_myfact.define_variables do
+    var :fact_id
+    var :dim_key
+    var :degenerate_dim
+    var :measure
+  end
+
+  ds_mydim.define_variables do
+    var :dim_key
+    var :attribute
+  end
+
+
+  DataStep.read mylib[:flatdata] do |dsr|
+    ds_myfact[:fact_id] = [dsr[:order_number], dsr[:line_number]].join('-')
+    ds_myfact.copy_values dsr
+    ds_mydim.copy_values dsr
+
+    ds_myfact.write_row
+    ds_mydim.write_row
+  end
+
+end
+
+
+
+class BuildFactDimStep < DataStepper do
+  output :ds_myfact, mylib.build(:myfact)
+  output :ds_duplicated_dim, mylib.build(:myduplicateddim), temp: true # temp triggers dataset to be deleted at the end of the run, unless a debug flag is set.
+  output :ds_mydim, mylib.build(:mydim)
+
+  input :ds_flatdata, mylib[:flatdata]
+
+  ds_myfact.define_variables do
+    var :fact_id
+    var :dim_key
+    var :degenerate_dim
+    var :measure
+  end
+
+  ds_duplicated_dim.define_varaibles do
+    var :dim_key
+    var :attribute
+  end
+
+  ds_mydim.define_variables do
+    like ds_duplicated_dim
+  end
+
+  def fact_id(ds, order_number: :order_number, line_number: :line_number)
+    [ds[order_number], ds[line_number]].join('-')
+  end
+
+  data_step read: ds_flatdata, write: ds_myfact, ds_duplicated_dim do
+    ds_myfact[:fact_id] = fact_id(ds_flatdata)
+    ds_myfact.map_values_from ds_flatdata, drop: [:fact_id] #ignore the 'fact_id' column on input (recalculated above)
+    ds_duplicated_dim.map_values_from ds_flatdata, map: { :dumbname => :attribute}
+  end
+
+end
+
+````
+
 
 ### Viewing data
 
