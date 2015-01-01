@@ -1,10 +1,67 @@
 module Remi
 
-  # Public: Methods in the Datastep module are meant to perform transformation
-  # operatons on Dataset objects.
-  module Datastep
+  # Public: Methods in the DataStep module are meant to perform transformation
+  # operatons on DataSet objects.
+  module DataStep
     extend self
 
+
+    # Used to create data in data sets.  Each data set listed as an argument
+    # is opened for writing at the beginning of the block and is closed
+    # at the end.
+    #
+    # data_set - An argument array of data sets that will be created.
+    #
+    # Yields a DataSet object that is ready for write.
+    #
+    # Examples
+    #   DataStep.create mydataset do |ds|
+    #     # ... variable definitions and transforms ...
+    #     ds.write_row
+    #   end
+    #
+    # Returns nothing.
+    def create(*data_set)
+      raise "DataStep.create called, no block given" unless block_given?
+
+      data_set.each do |ds|
+        RemiLog.sys.debug "Creating DataSet #{ds.name}"
+        ds.open_for_write
+      end
+
+      begin
+        yield *data_set
+      ensure
+        data_set.each do |ds|
+          ds.close
+        end
+      end
+    end
+
+
+    # Reads a data_set.
+    #
+    # data_set - The data_set instance to be read.
+    # by - An ordered array of variable name that define a by-group (default: [])
+    #
+    # Returns nothing.
+    def read(data_set, by: [])
+      RemiLog.sys.debug "Reading Dataset **#{data_set.name}**"
+
+      data_set.open_for_read(by_groups: Array(by))
+
+      begin
+        while !data_set.last_row
+          data_set.read_row
+          yield data_set
+        end
+      ensure
+        data_set.close
+      end
+    end
+
+
+=begin
     # Used to create data in datasets.  Each dataset listed as an argument
     # is opened for writing at the beginning of the block and is closed
     # at the end.
@@ -146,6 +203,6 @@ module Remi
 
     def merge
     end
-
+=end
   end
 end

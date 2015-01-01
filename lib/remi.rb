@@ -35,7 +35,7 @@ require 'remi/interfaces/canonical_interface.rb'
 
 require 'remi/data_set'
 require 'remi/data_lib'
-require 'remi/datastep'
+require 'remi/data_step'
 require 'remi/dataview'
 require 'remi/interleave'
 

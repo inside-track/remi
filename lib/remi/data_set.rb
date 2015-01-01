@@ -26,6 +26,9 @@ module Remi
     # Public: Gets the VariableSet associated with this DataSet.
     attr_reader :variable_set
 
+    # Public: Gets the name of the dataset.
+    attr_reader :name
+
     # Public: Opens a dataset for read access.
     #
     # lead_rows - Maximum number of rows to read ahead.
