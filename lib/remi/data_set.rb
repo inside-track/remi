@@ -9,6 +9,8 @@ module Remi
     def_delegators :@interface, :open_for_write, :open_for_read, :close, :delete
     def_delegators :@active_row, :row_number, :last_row
 
+    class UnknownByGroupVariableError < StandardError; end
+
     # Public: DataSet initializer.
     #
     # data_set_name - The name (symbol) associated with the data set.
@@ -36,10 +38,11 @@ module Remi
       @lead_rows = lead_rows
       @lag_rows = lag_rows
       @lag_offset = 0
-      @by_groups = by_groups
+      @by_groups = Array(by_groups)
 
+      validate_by_group_variables unless @by_groups.empty?
       @interface.open_for_read
-      @row_set = RowSet.new(lag_rows: lag_rows, lead_rows: lead_rows, by_groups: by_groups, key_map: @variable_set)
+      @row_set = RowSet.new(lag_rows: lag_rows, lead_rows: lead_rows, by_groups: Array(by_groups), key_map: @variable_set)
     end
 
     # Public: Opens a dataset for write access.
@@ -207,6 +210,12 @@ module Remi
       else
         @interface.read_row(key_map: @variable_set)
       end
+    end
+
+
+    # Private: Validates whether the given by group variables exist.
+    def validate_by_group_variables
+      raise UnknownByGroupVariableError, "Unknown by-group variable #{@by_groups - @variable_set.keys}" unless (@by_groups - @variable_set.keys).empty?
     end
   end
 end

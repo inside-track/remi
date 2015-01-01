@@ -135,21 +135,26 @@ describe DataSet do
       end
 
       groupset.close
-
-      groupset.open_for_read(by_groups: [:group1, :group2])
     end
 
-    after { groupset.close }
+    it 'fails when given bad by group variables' do
+      expect { groupset.open_for_read(by_groups: :invalid) }.to raise_error Remi::DataSet::UnknownByGroupVariableError
+    end
 
-    it 'gives the expected first/last indicators' do
-      while !groupset.last_row
-        groupset.read_row
-        expect(groupset.first).to eq groupset[:expected_first1]
-        expect(groupset.last).to eq groupset[:expected_last1]
-        expect(groupset.first(:group1)).to eq groupset[:expected_first1]
-        expect(groupset.last(:group1)).to eq groupset[:expected_last1]
-        expect(groupset.first(:group2)).to eq groupset[:expected_first2]
-        expect(groupset.last(:group2)).to eq groupset[:expected_last2]
+    context 'open for reading with by groups' do
+      before { groupset.open_for_read(by_groups: [:group1, :group2]) }
+      after { groupset.close }
+
+      it 'gives the expected first/last indicators' do
+        while !groupset.last_row
+          groupset.read_row
+          expect(groupset.first).to eq groupset[:expected_first1]
+          expect(groupset.last).to eq groupset[:expected_last1]
+          expect(groupset.first(:group1)).to eq groupset[:expected_first1]
+          expect(groupset.last(:group1)).to eq groupset[:expected_last1]
+          expect(groupset.first(:group2)).to eq groupset[:expected_first2]
+          expect(groupset.last(:group2)).to eq groupset[:expected_last2]
+        end
       end
     end
   end
