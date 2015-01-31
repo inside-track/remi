@@ -21,18 +21,18 @@ module Remi
     #   end
     #
     # Returns nothing.
-    def create(*data_set)
+    def create(*data_sets)
       raise "DataStep.create called, no block given" unless block_given?
 
-      data_set.each do |ds|
+      data_sets.each do |ds|
         RemiLog.sys.debug "Creating DataSet #{ds.name}"
         ds.open_for_write
       end
 
       begin
-        yield *data_set
+        yield *data_sets
       ensure
-        data_set.each do |ds|
+        data_sets.each do |ds|
           ds.close
         end
       end
