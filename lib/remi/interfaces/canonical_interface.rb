@@ -23,6 +23,12 @@ module Remi
         @eof_flag = false
       end
 
+      # Public: Gets the header file object
+      attr_reader :header_file
+
+      # Public: Gets the data file object
+      attr_reader :data_file
+
       # Public: Opens the file for writing.
       #
       # Returns nothing.

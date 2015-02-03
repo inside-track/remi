@@ -29,6 +29,9 @@ module Remi
     # Public: Gets the name of the dataset.
     attr_reader :name
 
+    # Public: Gets the interface used to create the data set.
+    attr_reader :interface
+
     # Public: Opens a dataset for read access.
     #
     # lead_rows - Maximum number of rows to read ahead.

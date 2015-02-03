@@ -59,73 +59,76 @@ describe DataStep do
   context 'writing to multiple data sets' do
     before do
       DataStep.create mylib.build(:ds1), mylib.build(:ds2) do |ds1,ds2|
-        #        ds = DataStep.conjoined(ds1,ds2)
-        ds = ConjoinedDataSet.new(ds1,ds2)
+        ds = DataSetAccessor.union(ds1,ds2)
 
         ds.define_variables do
-          var :common_var
+          var :common_same
         end
 
         ds1.define_variables do
-          var :different_var
-          var :ds1_var
+          var :common_different
+          var :ds1_only
         end
 
         ds2.define_variables do
-          like ds1, drop: :ds1_var
-          var :ds2_var
+          like ds1, drop: :ds1_only
+          var :ds2_only
         end
 
-        ds[:common_var] = "same"
-        ds1[:different_var] = "version 1"
-        ds2[:different_var] = "version 2"
-        ds[:ds1_var] = "only in 1"
-        ds[:ds2_var] = "only in 2"
+        ds.define_variables # need to redefine accessor variables
+
+        ds[:common_same] = 'common same'
+        ds1[:common_different] = 'different ds1'
+        ds2[:common_different] = 'different ds2'
+        ds[:ds1_only] = 'ds1 only'
+        ds[:ds2_only] = 'ds2 only'
 
         ds.write_row
       end
     end
 
-    it 'creates multiple datasets' do
-      # How do I write an expectation that a data set exists?  May need to
-      # extend the library function.
+    it 'creates multiple data sets' do
+      expect(mylib.data_sets.collect { |ds| ds.name }).to match [:ds1, :ds2]
+      mylib.data_sets.each do |ds|
+        expect(File.exist?(ds.interface.data_file.path)).to be_truthy
+      end
     end
 
     it 'writes the same data to common variables' do
-      common_var_1 = nil
-      common_var_2 = nil
+      common_1 = 1
+      common_2 = 2
 
       DataStep.read mylib[:ds1] do |ds|
-        common_var_1 = ds[:common_var]
+        common_1 = ds[:common_same]
       end
 
       DataStep.read mylib[:ds2] do |ds|
-        common_var_2 = ds[:common_var]
+        common_2 = ds[:common_same]
       end
 
-      expect(common_var_1).to eq common_var_2
+      expect(common_1).to eq common_2
     end
 
     it 'can write different data to common variables' do
-      different_var_1 = nil
-      different_var_2 = nil
+      different_1 = nil
+      different_2 = nil
 
       DataStep.read mylib[:ds1] do |ds|
-        different_var_1 = ds[:different_var]
+        different_1 = ds[:common_different]
       end
 
       DataStep.read mylib[:ds2] do |ds|
-        different_var_2 = ds[:different_var]
+        different_2 = ds[:common_different]
       end
 
-      expect(different_var_1).not_to eq different_var_2
+      expect(different_1).not_to eq different_2
     end
 
     it 'can write to variables specific to a data set' do
-      expect(mylib[:ds1]).to have_variable(:ds1_var)
-      expect(mylib[:ds1]).not_to have_variable(:ds2_var)
-      expect(mylib[:ds2]).to have_variable(:ds2_var)
-      expect(mylib[:ds2]).not_to have_variable(:ds1_var)
+      expect(mylib[:ds1].variable_set).to have_key(:ds1_only)
+      expect(mylib[:ds1].variable_set).not_to have_key(:ds2_only)
+      expect(mylib[:ds2].variable_set).to have_key(:ds2_only)
+      expect(mylib[:ds2].variable_set).not_to have_key(:ds1_only)
     end
   end
 
