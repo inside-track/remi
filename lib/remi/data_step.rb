@@ -61,60 +61,82 @@ module Remi
     end
 
 
-=begin
-    # Used to create data in datasets.  Each dataset listed as an argument
-    # is opened for writing at the beginning of the block and is closed
-    # at the end.
-    #
-    # dataset - An argument array of datasets that will be created.
-    #
-    # Yields a dataset object that is ready for write.
-    #
-    # Examples
-    #   Datastep.create mydataset do |ds|
-    #     # ... variable definitions and transforms ...
-    #     ds.write_row
-    #   end
-    #
-    # Returns nothing.
-    def create(*dataset)
-      raise "datastep called, no block given" unless block_given?
 
-      dataset.each do |ds|
-        RemiLog.sys.debug "Creating Dataset #{ds.name}"
-        ds.open_for_write
+    def interleave(*data_sets, by: [])
+      by_groups = Array(by)
+
+      by_group_values = lambda { |ds| by_groups == [] ? [0] : by_groups.map { |key| ds[key] } }
+
+
+      # Create a shell dataset to hold a row for the result of the interleave
+      worklib = DataLib.new(:shell)
+
+      data_sets.each do |ds|
+        ds.open_for_read(by_groups: by_groups)
       end
 
-      yield *dataset
-    ensure
-      dataset.each do |ds|
-        ds.close_and_write_header
-      end
-    end
-
-
-    # Reads a dataset.
-    #
-    # dataset - The dataset instance to be read.
-    # by - An ordered array of variable name that define a by-group (default: [])
-    #
-    # Returns nothing.
-    def read(dataset, by: [])
-      RemiLog.sys.debug "Reading Dataset **#{dataset.name}**"
-
-      dataset.open_for_read
-      dataset.initialize_by_groups(Array(by)) if Array(by).length > 0
-
-      begin
-        while dataset.read_row
-          yield dataset
+      # Create variables needed to hold the result of the interleave
+      dsi = worklib.build(:dsi)
+      dsi.define_variables do
+        data_sets.each do |ds|
+          var :__ORIGIN_NAME__
+          var :__ORIGIN_ID__
+          like ds
         end
-      rescue EOFError
+      end
+      dsi.open_for_read
+
+      # Array to help figure out which data set to read from next
+      next_data_set = []
+      data_sets.each do |ds|
+        ds.read_row
+        next_data_set << [ds, by_group_values.call(ds)]
+      end
+
+      while next_data_set.size != 0 do
+
+        # Determine the next data set to read
+        next_data_set.sort! do |a,b|
+          result = nil
+          a[1].zip(b[1]).each do |va, vb|
+            result = (va <=> vb)
+            break unless result == 0
+          end
+          result
+        end
+
+
+        # Read the next data set until the end of the by group
+        ds = next_data_set.shift[0]
+        first_read = true
+        loop do
+          ds.read_row unless first_read
+          first_read = false
+
+          dsi.read_row
+          dsi[:__ORIGIN_NAME__] = ds.name
+          dsi[:__ORIGIN_ID__] = ds.object_id
+          dsi[] = ds
+
+          yield dsi
+
+          break if ds.last || ds.last_row
+        end
+
+        # Read the next row of the data set just read to determine which set to read next
+        unless ds.last_row
+          ds.read_row
+          next_data_set << [ds, by_group_values.call(ds)]
+        end
       end
 
     ensure
-      dataset.close
+      data_sets.each do |ds|
+        ds.close
+      end
     end
+
+=begin
 
 
     def sort(in_ds, out: nil, by: [], in_memory: false, split_size: RemiConfig.sort.split_size)

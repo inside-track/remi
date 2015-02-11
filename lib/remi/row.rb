@@ -19,6 +19,8 @@ module Remi
     # Public: Gets the key_map in use.
     attr_reader :key_map
 
+    class UnknownVariableKeyError < StandardError; end
+
     # Public: Initialize a new row.
     #
     # row        - An array of data representing the row.
@@ -82,6 +84,8 @@ module Remi
 
     # Private: Uses the key map to get the value of a cell.
     def get_row_by_map(key)
+      raise UnknownVariableKeyError, "#{key} not defined" unless @key_map.has_key? key
+
       @row[@key_map[key].index]
     end
 
@@ -92,6 +96,8 @@ module Remi
 
     # Private: Uses the key map to get the value of a cell.
     def set_row_by_map(key, value)
+      raise UnknownVariableKeyError, "#{key} not defined" unless @key_map.has_key? key
+
       @row[@key_map[key].index] = value
     end
 

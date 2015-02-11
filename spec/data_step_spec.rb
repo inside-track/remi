@@ -50,7 +50,7 @@ describe DataStep do
 
     it 'can make use of by groups' do
       DataStep.read mylib[:mydataset], by: [:attribute1, :attribute2] do |ds|
-        expect(ds.first).to eq(ds[:expected_first1]), "expected(attribute1): #{ds[:expected_first1]} \ngot: #{ds.first} \non data row #{ds.row_number}"
+        expect(ds.first).to eq(ds[:expected_first2]), "expected(attribute1): #{ds[:expected_first2]} \ngot: #{ds.first} \non data row #{ds.row_number}"
         expect(ds.first(:attribute2)).to eq(ds[:expected_first2]), "expected(attribute2): #{ds[:expected_first2]} \ngot: #{ds.first(:attribute2)} \non data row #{ds.row_number}"
       end
     end
@@ -132,12 +132,196 @@ describe DataStep do
     end
   end
 
-  context 'sorting data sets', skip: 'TODO' do
-    it 'does something' do
+
+  describe 'interleaving data sets' do
+    let(:ds1) { mylib.build(:ds1) }
+    let(:ds2) { mylib.build(:ds2) }
+    let(:ds3) { mylib.build(:ds3) }
+
+    let(:ds1_data) { [] }
+    let(:ds2_data) { [] }
+    let(:ds3_data) { [] }
+
+    before do
+      ds1.define_variables :grp1, :grp2, :val
+      ds2.define_variables :grp1, :grp2, :ds2_only, :val
+      ds3.define_variables :grp1, :grp2, :val, :ds3_only
+    end
+
+
+    shared_context "data sets to interleave" do
+      before do
+        DataStep.create ds1 do |ds|
+          ds1_data.each do |row|
+            ds[:grp1, :grp2, :val] = row
+            ds.write_row
+          end
+        end
+
+        DataStep.create ds2 do |ds|
+          ds2_data.each do |row|
+            ds[:grp1, :grp2, :ds2_only, :val] = row
+            ds.write_row
+          end
+        end
+
+        DataStep.create ds3 do |ds|
+          ds3_data.each do |row|
+            ds[:grp1, :grp2, :val, :ds3_only] = row
+            ds.write_row
+          end
+        end
+      end
+    end
+
+    context 'interleave of two datasets' do
+      let(:ds1_data) {
+        [
+          ['a', 'a', 1],
+          ['c', 'c', 3]
+        ]
+      }
+
+      let(:ds2_data) {
+        [
+          ['b', 'b', 'ds2', 2]
+        ]
+      }
+
+      include_context 'data sets to interleave'
+
+      it 'interleaves the rows when by groups are set' do
+        expected_result =
+          [
+            ['a', 'a', 1, nil],
+            ['b', 'b', 2, 'ds2'],
+            ['c', 'c', 3, nil]
+          ]
+
+        result = []
+        DataStep.interleave ds1, ds2, by: :grp1 do |dsi|
+          result << dsi[:grp1, :grp2, :val, :ds2_only]
+        end
+        expect(result).to eq expected_result
+      end
+
+      it 'interleaves the rows when by groups are not set' do
+        expected_result =
+          [
+            ['a', 'a', 1, nil],
+            ['c', 'c', 3, nil],
+            ['b', 'b', 2, 'ds2']
+          ]
+
+        result = []
+        DataStep.interleave ds1, ds2 do |dsi|
+          result << dsi[:grp1, :grp2, :val, :ds2_only]
+        end
+        expect(result).to eq expected_result
+      end
+
+      it 'interleaves the rows when by groups are not set by the order listed' do
+        expected_result =
+          [
+            ['b', 'b', 2, 'ds2'],
+            ['a', 'a', 1, nil],
+            ['c', 'c', 3, nil]
+          ]
+
+        result = []
+        DataStep.interleave ds2, ds1 do |dsi|
+          result << dsi[:grp1, :grp2, :val, :ds2_only]
+        end
+        expect(result).to eq expected_result
+      end
+    end
+
+    context 'interleave of two datasets with two by groups' do
+      let(:ds1_data) {
+        [
+          ['B', 'a', 1],
+          ['B', 'c', 3],
+          ['C', 'b', 5]
+        ]
+      }
+
+      let(:ds2_data) {
+        [
+          ['A', 'a', 'ds2', 0],
+          ['B', 'b', 'ds2', 2],
+          ['C', 'a', 'ds2', 4]
+        ]
+      }
+
+      include_context 'data sets to interleave'
+
+      it 'interleaves the rows when by groups are set' do
+        expected_result =
+          [
+            ['A', 'a', 0, 'ds2'],
+            ['B', 'a', 1, nil],
+            ['B', 'b', 2, 'ds2'],
+            ['B', 'c', 3, nil],
+            ['C', 'a', 4, 'ds2'],
+            ['C', 'b', 5, nil]
+          ]
+
+        result = []
+        DataStep.interleave ds1, ds2, by: [:grp1, :grp2] do |dsi|
+          result << dsi[:grp1, :grp2, :val, :ds2_only]
+        end
+        expect(result).to eq expected_result
+      end
+    end
+
+    context 'interleave of three datasets with one by group' do
+      let(:ds1_data) {
+        [
+          ['A', 'a', 1],
+          ['C', 'c', 4],
+          ['D', 'd', 5]
+        ]
+      }
+
+      let(:ds2_data) {
+        [
+          ['E', 'a', 'ds2', 6],
+          ['F', 'b', 'ds2', 7]
+        ]
+      }
+
+      let(:ds3_data) {
+        [
+          ['B', 'b', 2, 'ds3'],
+          ['B', 'a', 3, 'ds3']
+        ]
+      }
+
+      include_context 'data sets to interleave'
+
+      it 'interleaves the rows when by groups are set' do
+        expected_result =
+          [
+            ['A', 'a', 1, nil],
+            ['B', 'b', 2, 'ds3'],
+            ['B', 'a', 3, 'ds3'],
+            ['C', 'c', 4, nil],
+            ['D', 'd', 5, nil],
+            ['E', 'a', 6, 'ds2'],
+            ['F', 'b', 7, 'ds2']
+          ]
+
+        result = []
+        DataStep.interleave ds1, ds2, ds3, by: :grp1 do |dsi|
+          result << dsi[:grp1, :grp2, :val] + [dsi[:ds2_only] || dsi[:ds3_only]]
+        end
+        expect(result).to eq expected_result
+      end
     end
   end
 
-  context 'interleaving data sets', skip: 'TODO' do
+
+  context 'sorting data sets', skip: 'TODO' do
     it 'does something' do
     end
   end

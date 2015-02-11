@@ -22,6 +22,8 @@ module Remi
       case type
       when :canonical, :directory
         @data_lib = DataLibs::CanonicalDataLib.new(args[:dir_name])
+      when :shell
+        @data_lib = DataLibs::ShellDataLib.new
       end
 
       @data_lib_type = @data_lib.class.name

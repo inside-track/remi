@@ -33,6 +33,7 @@ module Remi
       #
       # Returns nothing.
       def open_for_write
+        @eof_flag = false
         open_header_for_write
         open_data_for_write
       end
@@ -53,6 +54,7 @@ module Remi
       #
       # Returns nothing.
       def open_for_read
+        @eof_flag = false
         open_header_for_read
         open_data_for_read
       end

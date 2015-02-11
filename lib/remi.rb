@@ -33,12 +33,14 @@ require 'remi/row_set.rb'
 require 'remi/data_libs/canonical_data_lib.rb'
 require 'remi/interfaces/canonical_interface.rb'
 
+require 'remi/data_libs/shell_data_lib.rb'
+require 'remi/interfaces/shell_interface.rb'
+
 require 'remi/data_set'
 require 'remi/data_set_accessor'
 require 'remi/data_lib'
 require 'remi/data_step'
 require 'remi/dataview'
-require 'remi/interleave'
 
 
 # Remi components
