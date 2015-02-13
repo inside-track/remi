@@ -31,8 +31,6 @@ describe Interfaces::CanonicalInterface do
       end
 
       it 'returns the same header that was written' do
-        puts @header_variable_set
-        puts @header
         expect(@header[:variable_set]).to eq @header_variable_set
       end
 

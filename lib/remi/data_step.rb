@@ -68,8 +68,8 @@ module Remi
       by_group_values = lambda { |ds| by_groups == [] ? [0] : by_groups.map { |key| ds[key] } }
 
 
-      # Create a shell dataset to hold a row for the result of the interleave
-      worklib = DataLib.new(:shell)
+      # Create a basic dataset to hold a row for the result of the interleave
+      worklib = DataLib.new(:basic)
 
       data_sets.each do |ds|
         ds.open_for_read(by_groups: by_groups)

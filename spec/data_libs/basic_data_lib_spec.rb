@@ -1,15 +1,8 @@
 require 'remi_spec'
 
-describe DataLibs::CanonicalDataLib do
+describe DataLibs::BasicDataLib do
 
-  # Reset the work directory before each test
-  before { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
-
-  let(:mylib) { DataLibs::CanonicalDataLib.new(RemiConfig.work_dirname) }
-
-  it "is a directory data lib object" do
-    expect(mylib).to be_a(DataLibs::CanonicalDataLib)
-  end
+  let(:mylib) { DataLibs::BasicDataLib.new }
 
   it "is initially empty" do
     expect(mylib.length).to eq 0
