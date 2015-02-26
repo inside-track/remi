@@ -133,22 +133,22 @@ module Remi
     # of similar values.
     #
     # key - The name (or index) of the Row object to check to see if it is first in a group.
-    #       (default: uses the first by group specified).
+    #       (default: uses the finest-grained by group specified).
     #
     # Returns a boolean.
     def first(key = nil)
-      @by_first[key || @by_groups[0]]
+      @by_first[key || @by_groups.last]
     end
 
     # Public: Used to determine if the given index is the last in a group
     # of similar values.
     #
     # key - The name (or index) of the Row object to check to see if it is last in a group.
-    #       (default: uses the first by group specified).
+    #       (default: uses the finest_grain by group specified).
     #
     # Returns a boolean.
     def last(key = nil)
-      @by_last[key || @by_groups[0]]
+      @by_last[key || @by_groups.last]
     end
 
 

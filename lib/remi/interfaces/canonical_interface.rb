@@ -1,66 +1,43 @@
 module Remi
   module Interfaces
 
-    class DataSetAlreadyExists < StandardError; end
-    class UnknownDataSet < StandardError; end
-
     # Public: The canonical interface is an interface with a file on the local system.
     # Data is written to the file by serializing the row objects using MessagePack and
     # then compressed to save space and IO.  Each data set is a collection of two files.
     # One is a header that stores all of the metadata about a data set and the other
     # is a detail file that stores all of the data.
-    class CanonicalInterface
+    class CanonicalInterface < BasicInterface
 
       # Public: Initializes a CanonicalInterface.
       #
       # data_lib      - An instance of a DataLib object that this data set belongs to.
       # data_set_name - The name of the data set, which translates to the name of the file created.
       def initialize(data_lib, data_set_name)
-        @data_lib = data_lib
-        @data_set_name = data_set_name
-
-        @prev_read = nil
-        @eof_flag = false
+        super(data_lib, data_set_name)
       end
+
+      # Public: Gets the header file object
+      attr_reader :header_file
+
+      # Public: Gets the data file object
+      attr_reader :data_file
 
       # Public: Opens the file for writing.
       #
       # Returns nothing.
       def open_for_write
+        self.eof_flag = false
         open_header_for_write
         open_data_for_write
-      end
-
-      # Public: Opens the header file for writing.
-      def open_header_for_write
-        @header_file = Zlib::GzipWriter.new(File.open(header_file_full_path,"w"))
-        @header_stream = MessagePack::Packer.new(@header_file)
-      end
-
-      # Public: Oens the data file for writing.
-      def open_data_for_write
-        @data_file = Zlib::GzipWriter.new(File.open(data_file_full_path,"w"))
-        @data_stream = MessagePack::Packer.new(@data_file)
       end
 
       # Public: Opens the file for reading.
       #
       # Returns nothing.
       def open_for_read
+        self.eof_flag = false
         open_header_for_read
         open_data_for_read
-      end
-
-      # Public: Opens the header file for reading.
-      def open_header_for_read
-        @header_file = Zlib::GzipReader.new(File.open(header_file_full_path,"r"))
-        @header_stream = MessagePack::Unpacker.new(@header_file)
-      end
-
-      # Public: Opens the data file for reading.
-      def open_data_for_read
-        @data_file = Zlib::GzipReader.new(File.open(data_file_full_path,"r"))
-        @data_stream = MessagePack::Unpacker.new(@data_file)
       end
 
       # Public: Returns the full path to the header file.
@@ -73,10 +50,6 @@ module Remi
         component_file_full_path('rgz')
       end
 
-      # Public: Returns the full path to either the header or data file.
-      def component_file_full_path(component)
-        File.join(@data_lib.dir_name,"#{@data_set_name}.#{component}")
-      end
 
       # Public: Reads and returns the data set metadata.
       def read_metadata
@@ -106,9 +79,9 @@ module Remi
         begin
           this_read = @data_stream.read
         rescue EOFError
-          @eof_flag = true
+          self.eof_flag = true
         end
-        row = Row.new(@prev_read, last_row: @eof_flag, key_map: key_map)
+        row = Row.new(@prev_read, last_row: eof_flag, key_map: key_map)
         @prev_read = this_read
         row
       end
@@ -128,16 +101,6 @@ module Remi
       def close
         close_header_file
         close_data_file
-      end
-
-      # Public closes the header file.
-      def close_header_file
-        @header_file.close unless @header_file.closed?
-      end
-
-      # Public closes the data file.
-      def close_data_file
-        @data_file.close unless @data_file.closed?
       end
 
       # Public: Returns true if the file representing the data set exists.
@@ -160,6 +123,51 @@ module Remi
         File.delete(header_file_full_path)
         File.delete(data_file_full_path)
       end
+
+
+
+
+      private
+
+      # Private: Opens the header file for writing.
+      def open_header_for_write
+        @header_file = Zlib::GzipWriter.new(File.open(header_file_full_path,"w"))
+        @header_stream = MessagePack::Packer.new(@header_file)
+      end
+
+      # Private: Opens the data file for writing.
+      def open_data_for_write
+        @data_file = Zlib::GzipWriter.new(File.open(data_file_full_path,"w"))
+        @data_stream = MessagePack::Packer.new(@data_file)
+      end
+
+      # Private: Opens the header file for reading.
+      def open_header_for_read
+        @header_file = Zlib::GzipReader.new(File.open(header_file_full_path,"r"))
+        @header_stream = MessagePack::Unpacker.new(@header_file)
+      end
+
+      # Private: Opens the data file for reading.
+      def open_data_for_read
+        @data_file = Zlib::GzipReader.new(File.open(data_file_full_path,"r"))
+        @data_stream = MessagePack::Unpacker.new(@data_file)
+      end
+
+      # Private: Returns the full path to either the header or data file.
+      def component_file_full_path(component)
+        File.join(@data_lib.dir_name,"#{@data_set_name}.#{component}")
+      end
+
+      # Private: Closes the header file.
+      def close_header_file
+        @header_file.close unless @header_file.closed?
+      end
+
+      # Private: Closes the data file.
+      def close_data_file
+        @data_file.close unless @data_file.closed?
+      end
+
     end
   end
 end

@@ -9,6 +9,8 @@ module Remi
     def_delegators :@interface, :open_for_write, :open_for_read, :close, :delete
     def_delegators :@active_row, :row_number, :last_row
 
+    class UnknownByGroupVariableError < StandardError; end
+
     # Public: DataSet initializer.
     #
     # data_set_name - The name (symbol) associated with the data set.
@@ -24,6 +26,12 @@ module Remi
     # Public: Gets the VariableSet associated with this DataSet.
     attr_reader :variable_set
 
+    # Public: Gets the name of the dataset.
+    attr_reader :name
+
+    # Public: Gets the interface used to create the data set.
+    attr_reader :interface
+
     # Public: Opens a dataset for read access.
     #
     # lead_rows - Maximum number of rows to read ahead.
@@ -36,10 +44,12 @@ module Remi
       @lead_rows = lead_rows
       @lag_rows = lag_rows
       @lag_offset = 0
-      @by_groups = by_groups
+      @by_groups = Array(by_groups)
+      @active_row = Row.new(key_map: @variable_set)
 
+      validate_by_group_variables unless @by_groups.empty?
       @interface.open_for_read
-      @row_set = RowSet.new(lag_rows: lag_rows, lead_rows: lead_rows, by_groups: by_groups, key_map: @variable_set)
+      @row_set = RowSet.new(lag_rows: lag_rows, lead_rows: lead_rows, by_groups: Array(by_groups), key_map: @variable_set)
     end
 
     # Public: Opens a dataset for write access.
@@ -52,6 +62,7 @@ module Remi
       @lead_rows = 0
       @lag_rows = lag_rows
       @lag_offset = 1
+      @active_row = Row.new(key_map: @variable_set)
 
       @interface.open_for_write
       @metadata_written = false
@@ -76,28 +87,41 @@ module Remi
     # block - A block that has access to the VariableSet modify methods.
     #
     # Returns nothing.
-    def define_variables(vars = [], &block)
-      @variable_set.add_vars(vars)
+    def define_variables(*vars, &block)
+      @variable_set.add_vars(*vars)
       @variable_set.modify(&block) if block_given?
     end
 
     # Public: Array accessor setter method for the values of a dataset variable.
     #
-    # key   - The name (symbol) of the variable.
-    # value - The new value of the variable.
+    # keys  - The names (symbols) of the variable.
+    # value - The new value of the variable.  If a data set is given as the value,
+    #         then the values are set to the values of the shared keys.
     #
-    # Returns the value set.
-    def []=(key, value)
-      @active_row[key] = value
+    # Returns the value.
+    def []=(*keys, value)
+      if value.is_a?(DataSet)
+        value.variable_set.keys.each do |target_key|
+          @active_row[target_key] = value[target_key] if (@variable_set.has_key?(target_key) && (keys.size == 0 || keys.include?(target_key)))
+        end
+      elsif value.is_a?(Array)
+        (keys.size > 0 ? keys : @variable_set.keys).each do |key|
+          @active_row[key] = value.shift
+        end
+      else
+        @active_row[*keys] = value
+      end
     end
 
     # Public: Array accessor that gets the value of the variable.
     #
-    # key - The name (symbol) of the variable.
+    # keys - The names (symbol) of the variable.
     #
-    # Returns the value of the variable.
-    def [](key)
-      @active_row[key]
+    # Returns the value of the variable or an array of values if multiple keys are used as an argument.
+    def [](*keys)
+      return @active_row[*keys] if keys.size == 1
+      return @variable_set.collect { |k| @active_row[k] } if keys.size == 0
+      keys.collect { |k| @active_row[k] }
     end
 
     # Public: Used to get values from the row that is N rows prior to
@@ -207,6 +231,12 @@ module Remi
       else
         @interface.read_row(key_map: @variable_set)
       end
+    end
+
+
+    # Private: Validates whether the given by group variables exist.
+    def validate_by_group_variables
+      raise UnknownByGroupVariableError, "Unknown by-group variable #{@by_groups - @variable_set.keys}" unless (@by_groups - @variable_set.keys).empty?
     end
   end
 end

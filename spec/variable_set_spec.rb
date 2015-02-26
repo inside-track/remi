@@ -14,7 +14,7 @@ describe VariableSet do
 
   describe 'equivalent ways to define a variable set' do
     specify 'directly using an array accesor' do
-      testset = VariableSet.new 
+      testset = VariableSet.new
       testset[:account_id] = shared_vars[:account_id]
       testset[:name]       = shared_vars[:name]
       testset[:balance]    = { :type => 'currency' }
@@ -41,19 +41,45 @@ describe VariableSet do
   end
 
   describe 'importing variable sets' do
-    let(:derived_set) do
-      VariableSet.new do
-        like example_set
-        var :group
+    context 'without modifying the source variable set' do
+      let(:derived_set) do
+        VariableSet.new do
+          like example_set
+          var :group
+        end
+      end
+
+      it 'has the original set of variables' do
+        expect(derived_set).to include(*example_set.keys)
+      end
+
+      it 'has the new variable too' do
+        expect(derived_set).to include(:group)
       end
     end
 
-    it 'has the original set of variables' do
-      expect(derived_set).to include(*example_set.keys)
+    context 'with a keep modifier' do
+      let(:derived_set) do
+        VariableSet.new do
+          like example_set, keep: [:account_id, :name]
+        end
+      end
+
+      it 'has only the kept variables' do
+        expect(derived_set).to include(:account_id, :name)
+      end
     end
 
-    it 'has the new variable too' do
-      expect(derived_set).to include(:group)
+    context 'with a drop modifier' do
+      let(:derived_set) do
+        VariableSet.new do
+          like example_set, drop: :name
+        end
+      end
+
+      it 'has only the kept variables' do
+        expect(derived_set).not_to include(:name)
+      end
     end
   end
 
@@ -197,5 +223,3 @@ describe VariableSet do
     end
   end
 end
-
-

@@ -135,22 +135,63 @@ describe DataSet do
       end
 
       groupset.close
-
-      groupset.open_for_read(by_groups: [:group1, :group2])
     end
 
-    after { groupset.close }
+    it 'fails when given bad by group variables' do
+      expect { groupset.open_for_read(by_groups: :invalid) }.to raise_error Remi::DataSet::UnknownByGroupVariableError
+    end
 
-    it 'gives the expected first/last indicators' do
-      while !groupset.last_row
-        groupset.read_row
-        expect(groupset.first).to eq groupset[:expected_first1]
-        expect(groupset.last).to eq groupset[:expected_last1]
-        expect(groupset.first(:group1)).to eq groupset[:expected_first1]
-        expect(groupset.last(:group1)).to eq groupset[:expected_last1]
-        expect(groupset.first(:group2)).to eq groupset[:expected_first2]
-        expect(groupset.last(:group2)).to eq groupset[:expected_last2]
+    context 'open for reading with by groups' do
+      before { groupset.open_for_read(by_groups: [:group1, :group2]) }
+      after { groupset.close }
+
+      it 'gives the expected first/last indicators' do
+        while !groupset.last_row
+          groupset.read_row
+          expect(groupset.first).to eq groupset[:expected_first2]
+          expect(groupset.last).to eq groupset[:expected_last2]
+          expect(groupset.first(:group1)).to eq groupset[:expected_first1]
+          expect(groupset.last(:group1)).to eq groupset[:expected_last1]
+          expect(groupset.first(:group2)).to eq groupset[:expected_first2]
+          expect(groupset.last(:group2)).to eq groupset[:expected_last2]
+        end
       end
+    end
+  end
+
+  describe 'setting the value of a row with a data set as an argument' do
+    let(:ds1) { mylib.build(:ds1) }
+    let(:ds2) { mylib.build(:ds2) }
+
+    before do
+      ds1.define_variables :var1, :var2, :var3, :var_ds1
+      ds2.define_variables :var1, :var2, :var3, :var_ds2
+
+      ds1[:var1] = 'ds1 var1'
+      ds1[:var2] = 'ds1 var2'
+      ds1[:var3] = 'ds1 var3'
+      ds1[:var_ds1] = 'ds1 var_ds1'
+
+      ds2[:var1] = 'ds2 var1'
+      ds2[:var2] = 'ds2 var2'
+      ds2[:var3] = 'ds2 var3'
+      ds2[:var_ds2] = 'ds2 var_ds2'
+    end
+
+    it '[]= assigns all common variables' do
+      expect { ds1[] = ds2 }.to change { ds1[:var1, :var2] }.to(ds2[:var1, :var2])
+    end
+
+    it '[:key1]= assigns only specified keys' do
+      expect { ds1[:var1] = ds2 }.to change { ds1[:var1, :var2] }.to([ds2[:var1], ds1[:var2]])
+    end
+
+    it '[:key1,:key2]= assigns only specified keys' do
+      expect { ds1[:var1,:var3] = ds2 }.to change { ds1[:var1, :var2, :var3] }.to([ds2[:var1], ds1[:var2], ds2[:var3]])
+    end
+
+    it 'does not change variable if they are not in the target set' do
+      expect { ds1[:var_ds1] = ds2 }.not_to change { ds1.row_to_a }
     end
   end
 end

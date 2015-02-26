@@ -283,10 +283,12 @@ module Remi
       # varset - A variable object.
       #
       # Returns nothing.
-      def like(varset)
-        raise 'Expecting a VariableSet' unless varset.is_a? VariableSet
-        varset.each do |key, variable|
-          self[key] = variable
+      def like(obj, keep: nil, drop: nil)
+        raise 'Expecting a DataSet or VariableSet' unless [VariableSet, DataSet].include? obj.class
+        variable_set = obj.is_a?(DataSet) ? obj.variable_set : obj
+
+        variable_set.each do |key, variable|
+          self[key] = variable unless (keep && !(Array(keep).include? key)) || (drop && (Array(drop).include? key))
         end
       end
 
