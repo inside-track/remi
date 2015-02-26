@@ -39,10 +39,14 @@ module Remi
     end
 
 
-    # Reads a data_set.
+    # Public: Used to read a data_set.
     #
     # data_set - The data_set instance to be read.
-    # by - An ordered array of variable name that define a by-group (default: [])
+    # by - An ordered array of variable names that define a by-group (default: [])
+    #
+    # Examples
+    #
+    #  Example goes here
     #
     # Returns nothing.
     def read(data_set, by: [])
@@ -61,7 +65,16 @@ module Remi
     end
 
 
-
+    # Public: Used to interleave multiple data sets.
+    #
+    # *data_sets - An array list of datasets to interleave.
+    # by         - An optional array of the by-group variable names to use to interleave the datasets.
+    #              If no by-group is given, data sets are stacked in the order given.
+    # Examples
+    #
+    #  Example goes here
+    #
+    # Returns nothing.
     def interleave(*data_sets, by: [])
       by_groups = Array(by)
 
@@ -136,95 +149,123 @@ module Remi
       end
     end
 
-=begin
 
 
-    def sort(in_ds, out: nil, by: [], in_memory: false, split_size: RemiConfig.sort.split_size)
+    # Public: Used to sort data sets.
+    #
+    # in_ds      - The input dataset to be sorted.
+    # by         - An array of variable names that form the by-group to be sorted.
+    # in_memory  - Force the sort to happen in-memory (default: false).
+    # split_size - The maximum number of rows allowed in memory for sorting (default: RemiConfig.sort.split_size).
+    #
+    # Examples
+    #
+    #  DataStep.sort unsorted_ds, out: sorted_ds, by: [:grp1, :grp2]
+    #
+    # Returns nothing.
+    def sort(in_ds, out:, by:, in_memory: false, split_size: RemiConfig.sort.split_size)
       if in_memory
-        sort_in_memory(in_ds, out: out, by: by)
-        return
-      end
-
-      worklib = DataLib.new :directory => {:dirname => RemiConfig.work_dirname}
-
-      split_datasets = []
-      rows = []
-      Datastep.read in_ds do |in_ds|
-        if (in_ds._N_ - 1) % split_size == 0
-          rows = []
-        end
-
-        rows << in_ds.row
-
-
-        if in_ds._N_ % split_size == 0 || in_ds.next_EOF
-          split_datasets << worklib.send("split_#{split_datasets.length}".to_sym)
-
-          Datastep.create split_datasets[-1] do |split_ds|
-            Variables.define split_ds do |v|
-              v.import in_ds
-            end
-
-            rows.each do |row|
-              split_ds.row = row
-              split_ds.write_row
-            end
-          end
-        end
-      end
-
-
-      sorted_datasets = []
-      split_datasets.each_with_index do |ds,i|
-        sorted_datasets << worklib.send("split_sort_#{i}".to_sym)
-        sort_in_memory(ds, out: sorted_datasets[-1], by: by)
-      end
-
-
-      Datastep.create out do |ds|
-        Variables.define ds do |v|
-          v.import in_ds
-        end
-
-        Datastep.interleave *sorted_datasets, by: by do |dsi|
-          ds.read_row_from dsi
-          ds.write_row
-        end
+        DataStepHelper.sort_in_memory(in_ds, out: out, by: by)
+      else
+        DataStepHelper.sort_external(in_ds, out: out, by: by, split_size: split_size)
       end
     end
 
 
-    def sort_in_memory(in_ds, out: nil, by: [])
-      out_ds = out
-      sort_keys = Array(by)
-      Datastep.create out_ds do |out_ds|
-        Variables.define out_ds do |v|
-          v.import in_ds
+    # Private: Class holding methods helpful to data step operations but are
+    # not intended to be used by external methods or classes.
+    class DataStepHelper
+
+      # Private: Accepts an array with a row and a sort key and writes a
+      # a data set sorted by the sort keys.
+      #
+      # rows_with_sort_key - Expects an array with two elements.  The first element
+      #                      is an array of keys that define the sort order.  The second
+      #                      is an array of row values.
+      # variable_set       - The variable set to use for the output data set.
+      # out_ds             - The output data set to write.
+      #
+      # Returns nothing.
+      def self.sort_rows_and_write_dataset(rows_with_sort_key, variable_set:, out_ds:)
+        DataStep.create out_ds do |out_ds|
+          out_ds.define_variables do
+            like variable_set
+          end
+
+          rows_with_sort_key.sort! do |a,b|
+            result = nil
+            a[0].zip(b[0]).each do |va,vb|
+              result = (va <=> vb)
+              break unless result == 0
+            end
+            result
+          end
+
+          rows_with_sort_key.each do |row_with_sort_key|
+            out_ds[] = row_with_sort_key[1]
+            out_ds.write_row
+          end
         end
+      end
+
+      # Private: Sorts a data set in memory.
+      #
+      # in_ds - Input data set to sort.
+      # out   - Output data set to write.
+      # by    - Data set is sorted by these keys (array of variable names).
+      #
+      # Returns nothing.
+      def self.sort_in_memory(in_ds, out:, by:)
+        sort_keys = Array(by)
 
         rows_with_sort_key = []
-        Datastep.read in_ds do |in_ds|
-          rows_with_sort_key << [sort_keys.map { |key| in_ds[key] }, in_ds.row]
+        DataStep.read in_ds do |in_ds|
+          rows_with_sort_key << [sort_keys.map { |key| in_ds[key] }, in_ds[]]
         end
 
-        rows_with_sort_key.sort! do |a,b|
-          result = nil
-          a[0].zip(b[0]).each do |va,vb|
-            result = (va <=> vb)
-            break unless result == 0
+        sort_rows_and_write_dataset(rows_with_sort_key, variable_set: in_ds.variable_set, out_ds: out)
+
+        nil
+      end
+
+      # Private: Sorts a data set using an external sort algorithm.
+      #
+      # in_ds      - Input data set to sort.
+      # out        - Output data set to write.
+      # by         - Data set is sorted by these keys (array of variable names).
+      # split_size - The maximum number of rows to hold in memory for sorting.
+      #
+      # Returns nothing.
+      def self.sort_external(in_ds, out:, by:, split_size: RemiConfig.sort.split_size)
+        sort_keys = Array(by)
+        out_ds = out
+
+        worklib = DataLib.new(dir_name: RemiConfig.system_work_dirname)
+
+        split_datasets = []
+        rows_with_sort_key = []
+        DataStep.read in_ds do |in_ds|
+          rows_with_sort_key = [] if (in_ds.row_number - 1) % split_size == 0
+
+          rows_with_sort_key << [sort_keys.map { |key| in_ds[key] }, in_ds[]]
+
+          if in_ds.row_number % split_size == 0 || in_ds.last_row
+            split_datasets << worklib.build("#{out_ds.name}-#{split_datasets.size}".to_sym)
+            sort_rows_and_write_dataset(rows_with_sort_key, variable_set: in_ds.variable_set, out_ds: split_datasets.last)
           end
-          result
         end
 
-        rows_with_sort_key.each do |row_with_sort_key|
-          out_ds.row = row_with_sort_key[1]
-          out_ds.write_row
+        DataStep.create out_ds do |out_ds|
+          out_ds.define_variables do
+            like in_ds
+          end
+
+          DataStep.interleave *split_datasets, by: sort_keys do |dsi|
+            out_ds[] = dsi
+            out_ds.write_row
+          end
         end
       end
     end
-
-    def merge
-    end
-=end
   end
 end

@@ -105,7 +105,7 @@ module Remi
           @active_row[target_key] = value[target_key] if (@variable_set.has_key?(target_key) && (keys.size == 0 || keys.include?(target_key)))
         end
       elsif value.is_a?(Array)
-        keys.each do |key|
+        (keys.size > 0 ? keys : @variable_set.keys).each do |key|
           @active_row[key] = value.shift
         end
       else
@@ -120,6 +120,7 @@ module Remi
     # Returns the value of the variable or an array of values if multiple keys are used as an argument.
     def [](*keys)
       return @active_row[*keys] if keys.size == 1
+      return @variable_set.collect { |k| @active_row[k] } if keys.size == 0
       keys.collect { |k| @active_row[k] }
     end
 

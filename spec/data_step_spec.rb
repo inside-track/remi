@@ -321,9 +321,83 @@ describe DataStep do
   end
 
 
-  context 'sorting data sets', skip: 'TODO' do
-    it 'does something' do
+  context 'sorting data sets' do
+    let(:unsorted_ds) { mylib.build(:unsorted_ds) }
+    let(:unsorted_data) {
+      [
+        ['C', 'c', 4],
+        ['A', 'a', 1],
+        ['B', 'b', 3],
+        ['F', 'b', 7],
+        ['D', 'd', 5],
+        ['B', 'a', 2],
+        ['E', 'a', 6]
+      ]
+    }
+
+    let(:sorted_data) {
+      [
+        ['A', 'a', 1],
+        ['B', 'a', 2],
+        ['B', 'b', 3],
+        ['C', 'c', 4],
+        ['D', 'd', 5],
+        ['E', 'a', 6],
+        ['F', 'b', 7]
+      ]
+    }
+
+    before do
+      DataStep.create unsorted_ds do |ds|
+        ds.define_variables :grp1, :grp2, :val
+
+        unsorted_data.each do |row|
+          ds[:grp1, :grp2, :val] = row
+          ds.write_row
+        end
+      end
     end
+
+
+    context 'in memory' do
+      it 'sorts using a single by-group variable' do
+        DataStep.sort unsorted_ds, out: mylib.build(:sorted_ds), by: :grp1, in_memory: true
+
+        result = []
+        DataStep.read mylib[:sorted_ds] do |ds|
+          result << ds[:grp1]
+        end
+
+        expect(result).to eq sorted_data.collect { |a| a[0] }
+      end
+
+      it 'sorts using multiple by-group variables' do
+        DataStep.sort unsorted_ds, out: mylib.build(:sorted_ds), by: [:grp1, :grp2], in_memory: true
+
+        result = []
+        DataStep.read mylib[:sorted_ds] do |ds|
+          result << ds[:grp1, :grp2, :val]
+        end
+
+        expect(result).to eq sorted_data
+      end
+    end
+
+    context 'external sort' do
+      it 'sorts using multiple by-group variables' do
+        DataStep.sort unsorted_ds, out: mylib.build(:sorted_ds), by: [:grp1, :grp2], split_size: 3
+
+        result = []
+        DataStep.read mylib[:sorted_ds] do |ds|
+          result << ds[:grp1, :grp2, :val]
+        end
+
+        expect(result).to eq sorted_data
+      end
+    end
+
+
+
   end
 
   context 'merging data sets', skip: 'TODO' do
