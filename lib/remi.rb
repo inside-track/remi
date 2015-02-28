@@ -37,6 +37,9 @@ require 'remi/interfaces/basic_interface.rb'
 require 'remi/data_libs/canonical_data_lib.rb'
 require 'remi/interfaces/canonical_interface.rb'
 
+require 'remi/data_libs/delimited_text_data_lib.rb'
+require 'remi/interfaces/delimited_text_interface.rb'
+
 require 'remi/data_set'
 require 'remi/data_set_accessor'
 require 'remi/data_lib'

@@ -10,7 +10,7 @@ module Remi
       # Public: Initialiazes a CanonicalDataLib.
       #
       # dir_name - The directory name that the canonical data lib points to.
-      def initialize(dir_name)
+      def initialize(dir_name: dir_name)
         super
 
         @dir_name = dir_name

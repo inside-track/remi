@@ -2,7 +2,11 @@ require 'remi_spec'
 
 describe DataLibs::BasicDataLib do
 
-  let(:mylib) { DataLibs::BasicDataLib.new }
+  let(:mylib) { DataLib.new(:basic) }
+
+  it "is a basic data lib object" do
+    expect(mylib.data_lib_type).to eq DataLibs::BasicDataLib.name
+  end
 
   it "is initially empty" do
     expect(mylib.length).to eq 0

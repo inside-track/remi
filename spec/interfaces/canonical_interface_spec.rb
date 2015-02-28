@@ -5,7 +5,7 @@ describe Interfaces::CanonicalInterface do
   # Reset the work directory before each test
   before { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
 
-  let(:mylib) { DataLibs::CanonicalDataLib.new(RemiConfig.work_dirname) }
+  let(:mylib) { DataLibs::CanonicalDataLib.new(dir_name: RemiConfig.work_dirname) }
   let(:interface) { Interfaces::CanonicalInterface.new(mylib, 'test') }
 
   describe 'writing the header' do

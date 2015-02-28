@@ -1,14 +1,15 @@
 require 'remi_spec'
 
-describe DataLibs::CanonicalDataLib do
+describe DataLibs::DelimitedTextDataLib do
 
   # Reset the work directory before each test
-  before { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
+  let(:workdir) { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
 
-  let(:mylib) { DataLib.new(dir_name: RemiConfig.work_dirname) }
+  #  let(:mylib) { DataLibs::DelimitedTextDataLib.new(RemiConfig.work_dirname) }
+  let(:mylib) { DataLib.new(:delimited_text, dir_name: RemiConfig.work_dirname) }
 
-  it "is a canonical data lib object" do
-    expect(mylib.data_lib_type).to eq DataLibs::CanonicalDataLib.name
+  it "is a delimited text data lib object" do
+    expect(mylib.data_lib_type).to eq DataLibs::DelimitedTextDataLib.name
   end
 
   it "is initially empty" do
@@ -18,6 +19,34 @@ describe DataLibs::CanonicalDataLib do
   it "returns nil when accessing a non-existent data set" do
     expect(mylib[:mydata]).to be_nil
   end
+
+  context 'detecting text files' do
+    let(:dummy_files) { ['keep-test1.csv', 'keep-test2.csv', 'drop-test3.csv', 'drop-test4.txt'] }
+
+    before do
+      dummy_files.each do |f|
+        FileUtils.touch("#{workdir}/#{f}")
+      end
+    end
+
+    it 'contains some files' do
+      expect(mylib.data_sets.size).to_not be 0
+    end
+    it 'contains all files by default' do
+      expect(mylib.data_sets.collect { |ds| ds.name }).to match_array dummy_files.collect { |f| f.to_sym }
+    end
+
+    it 'contains only files matching a pattern' do
+      pattern = /\Akeep-.*\.csv/
+      keeplib = DataLib.new(:delimited_text, dir_name: workdir, file_pattern: pattern)
+      expect(keeplib.data_sets.collect { |ds| ds.name.to_s}).to match dummy_files.select { |f| f.match(pattern) }
+    end
+  end
+
+end
+
+
+=begin
 
   context "building a new data set" do
     let(:mydata) { mylib.build(:mydata) }
@@ -62,3 +91,4 @@ describe DataLibs::CanonicalDataLib do
   end
 
 end
+=end
