@@ -17,10 +17,12 @@
   * [x] documentation system
   * [x] works as a gem
   * [x] configurable logging - user and debug
-  * [ ] syntax review and refactor
-  * [ ] datalib enhancements - in-memory, create/delete
+  * [x] syntax review and refactor
+  * [x] datalib enhancements - in-memory, create/delete
+  * [ ] review of settings
+  * [ ] Remi as a gem
 
-* **0.3.0** - Merge/aggregation
+* **0.3.0** - Merge/aggregation (slightly louder public release)
   * [ ] aggregator
   * [ ] merge
   * [ ] syntax review and refactor
