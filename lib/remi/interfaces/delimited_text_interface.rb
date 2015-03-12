@@ -40,20 +40,9 @@ module Remi
       end
 
 
-      # Public: Reads and returns the data set metadata (if :headers and :headers_as_variables are specified).
+      # Public: Reads and returns the data set metadata
       def read_metadata
-        return VariableSet.new unless @data_lib.csv_opt[:headers] && @data_lib.header_as_variables
-
-        open_data_for_read
-        first_row = @data_file.readline
-        headers = @data_file.headers
-        close_data_file
-
-        VariableSet.new do
-          headers.each do |header|
-            var header.to_sym
-          end
-        end
+        { :variable_set => read_variable_set }
       end
 
       # Public: Write the delimited text header.
@@ -152,6 +141,23 @@ module Remi
       # Private: Closes the data file.
       def close_data_file
         @data_file.close unless @data_file.closed?
+      end
+
+      # Private: Reads the header row of the delimted text file and returns a variable set.
+      #  (if :headers and :headers_as_variables are specified).
+      def read_variable_set
+        return VariableSet.new unless @data_lib.csv_opt[:headers] && @data_lib.header_as_variables
+
+        open_data_for_read
+        first_row = @data_file.readline
+        headers = @data_file.headers
+        close_data_file
+
+        VariableSet.new do
+          headers.each do |header|
+            var header.to_sym
+          end
+        end
       end
 
     end

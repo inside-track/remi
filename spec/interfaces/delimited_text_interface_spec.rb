@@ -3,8 +3,7 @@ require 'remi_spec'
 describe Interfaces::DelimitedTextInterface do
 
   # Reset the work directory before each test
-#  before { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
-  before { RemiConfig.work_dirname = "#{ENV['HOME']}/Desktop/work" }
+  before { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
 
   let(:dir_path) { RemiConfig.work_dirname }
 
