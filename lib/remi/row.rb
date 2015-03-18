@@ -84,9 +84,12 @@ module Remi
 
     # Private: Uses the key map to get the value of a cell.
     def get_row_by_map(key)
-      raise UnknownVariableKeyError, "#{key} not defined" unless @key_map.has_key? key
-
-      @row[@key_map[key].index]
+      begin
+        @row[@key_map[key].index]
+      rescue => err
+        raise UnknownVariableKeyError, "#{key} not defined" unless @key_map.has_key? key
+        raise err
+      end
     end
 
     # Private: Uses an index to get the value of a cell.
@@ -96,9 +99,12 @@ module Remi
 
     # Private: Uses the key map to get the value of a cell.
     def set_row_by_map(key, value)
-      raise UnknownVariableKeyError, "#{key} not defined" unless @key_map.has_key? key
-
-      @row[@key_map[key].index] = value
+      begin
+        @row[@key_map[key].index] = value
+      rescue => err
+        raise UnknownVariableKeyError, "#{key} not defined" unless @key_map.has_key? key
+        raise err
+      end
     end
 
     # Private: Uses an index to get the value of a cell.
