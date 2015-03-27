@@ -51,7 +51,7 @@ describe Interfaces::DelimitedTextInterface do
         }
 
         before do
-          @variable_set = interface.read_metadata
+          @variable_set = interface.read_metadata[:variable_set]
           interface.open_for_read
         end
 
@@ -59,7 +59,7 @@ describe Interfaces::DelimitedTextInterface do
 
 
         it 'reads the header into a variable set' do
-          expect(interface.read_metadata).to include(:csvattr, :csvvalue)
+          expect(interface.read_metadata[:variable_set]).to include(:csvattr, :csvvalue)
         end
 
         it 'reads the first row of data' do
@@ -89,11 +89,11 @@ describe Interfaces::DelimitedTextInterface do
         }
 
         it 'returns an empty variable set for metadata' do
-          expect(interface.read_metadata.size).to eq 0
+          expect(interface.read_metadata[:variable_set].size).to eq 0
         end
 
         it 'fails to load rows using the header' do
-          variable_set = interface.read_metadata
+          variable_set = interface.read_metadata[:variable_set]
 
           interface.open_for_read
           row = interface.read_row(key_map: variable_set)
@@ -138,7 +138,7 @@ describe Interfaces::DelimitedTextInterface do
       end
 
       it 'returns an empty variable set for metadata' do
-        expect(interface.read_metadata.size).to eq 0
+        expect(interface.read_metadata[:variable_set].size).to eq 0
       end
 
       it 'uses csv_opt in the variable_set metadata to load colums' do
@@ -183,12 +183,12 @@ describe Interfaces::DelimitedTextInterface do
       include_context 'a file is written'
 
       it 'writes a header using the labels in all variables in the set' do
-        variable_set = interface.read_metadata
+        variable_set = interface.read_metadata[:variable_set]
         expect(variable_set.keys).to eq [:myattr, :myvalue]
       end
 
       it 'writes data to the file' do
-        variable_set = interface.read_metadata
+        variable_set = interface.read_metadata[:variable_set]
 
         interface.open_for_read
         row = interface.read_row(key_map: variable_set)
@@ -211,7 +211,7 @@ describe Interfaces::DelimitedTextInterface do
       include_context 'a file is written'
 
       it 'doesn\'t write a header' do
-        variable_set = interface.read_metadata
+        variable_set = interface.read_metadata[:variable_set]
         expect(variable_set.size).to eq 0
       end
 
