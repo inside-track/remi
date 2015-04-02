@@ -24,8 +24,8 @@ myself.  I really want to stick with using the native Ruby options,
 but I don't think I can get away with it if I can't get around this
 issue.
 
-2 - Using Remi to read a CSV takes 4x as long as reading the CSV in absence of Remi.
-Also, creating an output data set from an input data set takes 5-6x longer than
+2 - Using Remi to read a CSV takes 2x as long as reading the CSV in absence of Remi.
+Also, creating an output data set from an input data set takes 10x longer than
 it does to just read the data set.  I believe that both of these are a consequence
 of a poor job of copying data into a row set.  I'll have to drill into those parts
 of the code to determine what's causing this bottleneck.
@@ -33,15 +33,15 @@ of the code to determine what's causing this bottleneck.
 
 REMI:
   small:
-    remi_read_csv: 81.0 <- problems moving data from CSV into Remi
-    native_read_csv: 22.5 <- 2x slower than Kettle - can we speed this up?
-    split_read_csv: 4.22 <- Simple CSV parsing is much faster (but probably not realistic)
-    remi_read_csv_and_write_ds: 187
-    remi_read_generated_ds: 10.1
-    remi_read_and_write_generated_ds: 87.4 <- problems with writer?
-    remi_read_and_write_generated_ds_separated: 122 <- So I don't have a thrashing problem
-    remi_read_and_write_generated_ds_first_row: 15.6 <- So I've definitely got a performance problem with copying array/row data into a row
-    remi_read_and_write_generated_ds_no_write: 56.0
+    remi_read_csv: 49 <- problems moving data from CSV into Remi
+    native_read_csv: 24 <- 2x slower than Kettle - can we speed this up?
+    split_read_csv: 4.7 <- Simple CSV parsing is much faster (but probably not realistic)
+    remi_read_csv_and_write_ds: 128
+    remi_read_generated_ds: 6.1
+    remi_read_and_write_generated_ds: 79 <- problems moving data from reader to writer?
+    remi_read_and_write_generated_ds_separated: 122 <- This increased moving data
+    remi_read_and_write_generated_ds_first_row: 20.6 <- So I've definitely got a performance problem with the writer
+    remi_read_and_write_generated_ds_no_write: 14
   large:
     remi_read_csv:
     native_read_csv:
@@ -147,6 +147,8 @@ class RemiBench
     data = args.shift
 
     @test_data = case data
+                 when 'nano'
+                   :'nano_rad.csv'
                  when 'tiny'
                    :'tiny_rad.csv'
                  when 'small'
@@ -251,7 +253,6 @@ class RemiBench
 
     DataStep.read worklib[:rad] do |ds|
       result[:lines] += 1
-      puts "#{ds[]}" if ds.last_row
     end
 
     result
@@ -328,16 +329,226 @@ class RemiBench
       like worklib[:rad]
     end
 
+    var_keys = worklib[:rad].variable_set.keys
+
     DataStep.create worklib[:rad2] do |outds|
       DataStep.read worklib[:rad] do |ds|
         result[:lines] += 1
-        outds[] = ds
+
+#        baseline - no reading variables - 23s/M (vs 11s/M for read only)
+#        outds[] = ds # 480%
+#        var_keys.each { |v| outds[v] = ds[v] } # 290%
+#        outds[:rad_key] = 1 # 12%
+#        var_keys.each { |v| ds[v] } # 102%
+#        var_keys.each { |v| outds[v] = 1 } # 170%
+#        var_keys.each { |v| } # 14%
+#        var_keys.each { |v| ds.active_row } # 16%
+#        var_keys.each { |v| ds.active_row[v] } # 71%
+#        var_keys.each { |v| ds.active_row[*v] } # 71%
+
+#        var_keys.each { |v| v } # 10%
+        # the brunt of the problem appears to be this
+        # so maybe the problem is that I am trying to work with every single column
+        # not really - kettle doesn't have that problem
+        var_keys.each { |v| ds[v] }
+
+
+        outds.write_row if result[:lines] == 1
       end
     end
     result
   end
 
+  def simple_loop
+    result = {}
+    result[:lines] = 0
 
+    dummy_array = [nil]*25
+
+    dummy_hash = Hash.new
+    rad_vars.to_hash.each { |k,v| dummy_hash[k] = nil }
+
+    dummy_row = Row.new([nil]*25, key_map: rad_vars) # row is about as fast as hash
+
+    rad_vars_keys = rad_vars.keys
+    array_iter = 0.upto(24).to_a
+
+    100000.times do
+      result[:lines] += 1 # 0.1s/M
+      # dummy_array.each { |v| v } # 1.4s/M
+      # dummy_hash.each { |v| } # 2.6s/M
+      # dummy_row.each { |v| v } # 2.2s/M
+      # dummy_hash.each { |k, v| } # 1.8s/M # woah, faster when it gets both key and value?
+
+      # I think these all suck because they're doing a sort each time they're called.
+      #   - I could possibly improve via memoization.
+      # rad_vars.each { |v| } #11s/M
+      # rad_vars.each_with_index { |v,i| } #13s/M
+      # rad_vars.keys.each { |v| } #15s/M
+
+      # rad_vars_keys.each { |v| } # 1.4s/M
+      # rad_vars_keys.each { |v| dummy_row[v] } # 7.1s/M # YEP!  Row access is MUCH slower than hash or array access
+      # rad_vars_keys.each { |v| dummy_hash[v] } # 2.3s/M
+      # array_iter.each { |v| dummy_array[v] } # 1.7s/M
+
+
+
+      # Doing something about access times
+      # rad_vars_keys.each { |v| dummy_row[v] } # 6.5s/M # baseline
+      # rad_vars_keys.each { |v| dummy_row.get_row_by_map(v) } # 4.7s/M # - so I wonder if there's a way I could permanently set the object to always choose this on initialization!?!?!?!?
+      # rad_vars_keys.each { |v| dummy_row.get_row_by_map_simple(v) } # 4.4s/M # - no difference
+      rad_vars_keys.each { |v| dummy_row[v] } # 4.7s/M after using singleton method
+
+
+    end
+#    puts dummy_row_as_hash.to_yaml
+
+
+    result
+  end
+
+
+  def io_test
+    result = {}
+    result[:lines] = 0
+
+    reader = Interfaces::CanonicalInterface.new(worklib, 'rad')
+
+    header = reader.read_metadata
+
+    reader.open_for_read
+    loop do
+      result[:lines] += 1
+      # reader.read_row(key_map: rad_vars) # 7.3s/M (vs 11s/M within context of data set - due to row set maint?)
+      # reader.read_row_light(key_map: rad_vars) # 5.2s/M without creating row object
+      # reader.read_row_light # 4.1s/M - so just passing the key_map with every iteration seems to incurr a cost - I should probably figure a way to avoid passing it
+      # reader.read_row_memoize(key_map: rad_vars) # 5.5s/M - So avoiding creating a new row object with every line could help out tremendously!
+      # break
+
+      # Post row refactoring
+      # reader.read_row(key_map: rad_vars) #12s/M
+      # reader.read_row_nil #4.0s/M - baseline for for doing nothing but reading the data
+      # reader.read_row_key_map_arg(key_map: rad_vars) # 5.1s/M - so just passing the argument adds 25%!
+      # reader.read_row_key_map_arg_save_row(key_map: rad_vars) #5.3s/M !!!!! Holy shit awesome! - So I just need to memoize the key map on open and stop creating a row object each step
+      # reader.read_row_memoized_key_map #4.1s/M
+      reader.read_row # 4.2s/M
+
+      break if reader.eof_flag
+    end
+    reader.close
+
+    result
+  end
+
+
+  def row_clear_test
+    result = {}
+    result[:lines] = 0
+
+    row_array = [nil]*25
+    row = Row.new(row_array, key_map: rad_vars)
+
+#      var :rad_key, csv_opt: { col: 1 }
+#      var :distributor_key, csv_opt: { col: 2 }
+#      var :retailer_key, csv_opt: { col: 3 }
+
+
+#    puts rad_vars[:rad_key, :distributor_key, :item_key, :physical_cases]
+
+#    puts [:rad_key, :distributor_key, :item_key, :physical_cases].collect { |k| rad_vars[k].index }
+
+    0.upto(1000000) do
+      result[:lines] += 1
+      # row = Row.new(row_array, key_map: rad_vars) # 1.9s/M - before removing key_map tests (via define_singleton)
+      # row = Row.new(row_array, key_map: rad_vars) # 6.8s/M
+      # row.clear # 0.18s/M
+      # row.set_array(row_array) # 0.15s/M
+      # row.clear; row.set_array(row_array) # 0.22s/M
+      # [nil] * 25 # 0.6s/M
+      # Array.new(25) # 0.52s/M
+      # row_array.dup # 0.3s/M
+      # row_array.clone # 0.3s/M
+      # row.clear_with_nils # 0.71s/M
+      # row.clear_with_nils_via_dup # 0.41s/M
+#      row.set_by_array(nil,row_array)
+    end
+
+    result
+  end
+
+
+
+  def hash_clear_test
+    result = {}
+    result[:lines] = 0
+
+    h = Hash.new(one: 1, two: 2, three: 3, four: 4, five: 5) #1.2s/M
+
+    0.upto(1000000) do
+      result[:lines] += 1
+      #      Hash.new(one: 1, two: 2, three: 3, four: 4, five: 5) #1.2s/M
+      # 0.3 s/M
+      h.clear
+      h[:one] = 1
+      h[:two] = 2
+      h[:three] = 3
+      h[:four] = 4
+      h[:five] = 5
+
+    end
+
+    result
+  end
+
+
+  # 0.3s/M
+  def array_rotate
+    result = {}
+
+    off_set_map = {
+      -2 => 1,
+      -1 => 2,
+      0  => 3,
+      1  => 4,
+      2  => 5
+    }
+
+    a = [1,2,3,4,5]
+    0.upto(1000000) do
+      a.rotate
+
+      a[off_set_map[0]]
+    end
+
+    result
+  end
+
+  # 0.6s/M - so doing a hash rotate really isn't that bad
+  # but when get get up to 100M rows, just rotating the rowset would cost an
+  # extra 30 seconds to do it with a hash than to do it with an array
+  def hash_rotate
+    result = {}
+
+    h = {
+      -2 => 1,
+      -1 => 2,
+      0  => 3,
+      1  => 4,
+      2  => 5
+    }
+
+    0.upto(1000000) do
+      h[:x] = h[-2]
+      (-2).upto(1) do |i|
+        h[i] = h[i+1]
+
+        h[0]
+      end
+      h[2] = h[:x]
+    end
+
+    result
+  end
 
   def pan_benchmark(pan_file: , pan_params: {})
     result = {}

@@ -42,7 +42,15 @@ module Remi
 
       # Public: Reads and returns the data set metadata
       def read_metadata
-        { :variable_set => read_variable_set }
+        metadata = { :variable_set => read_variable_set }
+        set_key_map metadata[:variable_set]
+
+        metadata
+      end
+
+      # Public: Sets and returns the key map to use during read/write.
+      def set_key_map(key_map)
+        @key_map = key_map
       end
 
       # Public: Write the delimited text header.
@@ -56,32 +64,29 @@ module Remi
       #           the active row.
       #
       # Returns a Row instance.
-      def read_row(key_map: nil)
+      def read_row
+        @row ||= Row.new([nil] * @key_map.size, key_map: @key_map)
+
         # Need to read ahead by one record in order to get EOF flag
         @prev_read ||= @data_stream.readline
 
         self.eof_flag = @data_stream.eof?
+        @row.last_row = self.eof_flag
+
         this_read = @data_stream.readline
 
         if @data_lib.csv_opt[:headers] && @data_lib.header_as_variables
-          row_array = @prev_read
+          row_array = @prev_read.fields
         else
-          varidx_to_col = []
-          key_map.each do |v,m|
-            if m.meta.has_key?(:csv_opt) && m.meta[:csv_opt].has_key?(:col)
-              col = m.meta[:csv_opt][:col] - 1
-              varidx_to_col[m.index] = col if col < @prev_read.size
-            end
+          row_array = @key_map.map.with_index do |v,i|
+            variable_idx_to_csv_col(@prev_read.size)[i] && @prev_read[variable_idx_to_csv_col(@prev_read.size)[i]]
           end
-
-          row_array = key_map.map.with_index { |v,i| varidx_to_col[i] && @prev_read[varidx_to_col[i]] }
         end
 
-
-        row = Row.new(row_array, last_row: eof_flag, key_map: key_map)
+        @row.set_values(row_array)
         @prev_read = this_read
 
-        row
+        @row
       end
 
       # Public: Writes a row to the data file.
@@ -158,6 +163,24 @@ module Remi
             var header.to_sym
           end
         end
+      end
+
+      # Private: Used to map an index to a column of a delimited text file.
+      #
+      # csv_size - The size of the csv row
+      #
+      # Returns an array.
+      def variable_idx_to_csv_col(csv_size)
+        return @varidx_to_col if @varidx_to_col
+
+        @varidx_to_col = []
+        @key_map.each do |v,m|
+          if m.meta.has_key?(:csv_opt) && m.meta[:csv_opt].has_key?(:col)
+            col = m.meta[:csv_opt][:col] - 1
+            @varidx_to_col[m.index] = col if col < csv_size
+          end
+        end
+        @varidx_to_col
       end
 
     end

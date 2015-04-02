@@ -8,7 +8,7 @@ module Remi
   #   Row.new([1,2,3], last_row: true, row_number: 8)
   class Row
     extend Forwardable
-    def_delegators :@row, :each, :length
+    def_delegators :@row, :each
 
     # Public: Gets/sets the end of file flag.
     attr_accessor :last_row
@@ -30,18 +30,14 @@ module Remi
     # key_map    - Provides a mapping between named keys and the index of the row array.
     #              Must return the index via key_map[:key].index (like a VariableWithIndex).
     def initialize(row = [], last_row: false, row_number: nil, key_map: nil)
-      if row.is_a? Row
-        @row = row.to_a
-        @last_row = last_row || row.last_row
-        @row_number = row_number || row.row_number
-        @key_map = key_map || row.key_map
-      else
-        @row = row
-        @last_row = last_row
-        @row_number = row_number
-        @key_map = key_map
-      end
+      @last_row = last_row
+      @row_number = row_number
+      @key_map = key_map
+      @row = row.empty? ? nilified_row : row.to_a
+
+      initialize_accessor
     end
+
 
     # Public: Array accessor method to get a particular value from the row.
     #
@@ -51,7 +47,7 @@ module Remi
     #
     # Returns the value of the row element.
     def [](key)
-      key_map? ? get_row_by_map(key) : get_row_by_idx(key)
+      raise 'This method is intended to be defined as a singleton method'
     end
 
     # Public: Array accessor method to set a particular row element value.
@@ -63,23 +59,81 @@ module Remi
     #
     # Returns the new value of the row element.
     def []=(key, value)
-      key_map? ? set_row_by_map(key, value) : set_row_by_idx(key, value)
+      raise 'This method is intended to be defined as a singleton method'
     end
 
+
+    # Public: Copies the data and parameters of a row into this row object.
+    # Paramters include last_row and row_number but NOT key_map.
+    #
+    # row - The row object to be copied
+    #
+    # Returns nothing.
+    def copy(row)
+      @row = row.to_a
+      @last_row = row.last_row
+      @row_number = row.row_number
+    end
 
     # Public: Returns the array portion of the row.
     #
     # Returns an array.
     def to_a
-      Array.new @row
+      Array.new @row || nilified_row
+    end
+
+    # Public: Returns the size/length of the row.
+    #
+    # Returns an integer.
+    def size
+      @size ||= (@key_map || @row || []).size
+    end
+    alias length size
+
+    # Public: Clears the row object by setting all elements to nil.
+    #
+    # Returns the row object.
+    def clear
+      @row = nilified_row
+      self
     end
 
 
+    # Public: Set the values of the row using an array.
+    # Warning! No checks are performed to ensure that the size of the
+    # given array conforms to the key_map.  If not correct, unexpected results
+    # may arise.
+    #
+    # Returns the row array.
+    def set_values(array)
+      @row = array
+    end
+
+    # Public: Returns true if the row is empty (contains no values).
+    #
+    # Returns a boolean.
+    def empty?
+      @row.empty?
+    end
+
     private
 
-    # Private: Returns true if a key map is present.
-    def key_map?
-      !@key_map.nil?
+    # Private: Defines whether to use the index or keymap version of the
+    # accessor methods.
+    def initialize_accessor
+      if @key_map
+        self.define_singleton_method(:[], method(:get_row_by_map))
+        self.define_singleton_method(:[]=, method(:set_row_by_map))
+      else
+        self.define_singleton_method(:[], method(:get_row_by_idx))
+        self.define_singleton_method(:[]=, method(:set_row_by_idx))
+      end
+    end
+
+    # Private: Returns a new empty array object that can be used to initialize
+    # a row.
+    def nilified_row
+      (@nilified_row ||= Array.new(size)).dup
     end
 
     # Private: Uses the key map to get the value of a cell.

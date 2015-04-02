@@ -57,8 +57,15 @@ module Remi
         metadata = YAML.load(@header_stream.read)
         close_header_file
 
+        set_key_map metadata[:variable_set]
         metadata
       end
+
+      # Public: Sets and returns the key map to use during read/write.
+      def set_key_map(key_map)
+        @key_map = key_map
+      end
+
 
       # Public: Write the data set metadata.
       def write_metadata(variable_set: nil)
@@ -69,22 +76,24 @@ module Remi
 
       # Public: Reads a row from the file into the active row.
       #
-      # key_map - Uses the specified key_map (VariableSet) when creating
-      #           the active row.
-      #
       # Returns a Row instance.
-      def read_row(key_map: nil)
-        # Need to read ahead by one record in order to get EOF flag
+      def read_row
         @prev_read ||= @data_stream.read
+        @row ||= Row.new(@prev_read, key_map: @key_map)
+
         begin
           this_read = @data_stream.read
         rescue EOFError
           self.eof_flag = true
+          @row.last_row = true
         end
-        row = Row.new(@prev_read, last_row: eof_flag, key_map: key_map)
+
+        @row.set_values(@prev_read)
         @prev_read = this_read
-        row
+
+        @row
       end
+
 
       # Public: Writes a row to the data file.
       #

@@ -4,6 +4,7 @@ describe Interfaces::CanonicalInterface do
 
   # Reset the work directory before each test
   before { RemiConfig.work_dirname = Dir.mktmpdir("Remi-work-", Dir.tmpdir) }
+#P  before { RemiConfig.work_dirname = '/Users/gnilrets/Desktop/work' }
 
   let(:mylib) { DataLibs::CanonicalDataLib.new(dir_name: RemiConfig.work_dirname) }
   let(:interface) { Interfaces::CanonicalInterface.new(mylib, 'test') }
@@ -40,7 +41,7 @@ describe Interfaces::CanonicalInterface do
 
   describe 'writing rows' do
     before do
-      @test_data = [ [1,2,3], [4,5,6], [7,8,9] ]
+      @test_data = [ [1,'happy little string',3], [4,'5',6], [7,'8',9] ]
 
       writer = interface
       writer.open_for_write
@@ -62,17 +63,18 @@ describe Interfaces::CanonicalInterface do
 
         @result_data = []
         @test_data.each do
-          @result_data << reader.read_row
+          row = reader.read_row
+          @result_data << { row_data: row.to_a, last_row: row.last_row }
         end
         reader.close
       end
 
       it 'gives back the same data that was written' do
-        expect(@result_data.collect { |r| r.to_a }).to eq @test_data
+        expect(@result_data.collect { |r| r[:row_data] }).to eq @test_data
       end
 
       it 'has the correct eof flags' do
-        expect(@result_data.collect { |r| r.last_row }).to eq ([false] * (@test_data.length - 1) + [true])
+        expect(@result_data.collect { |r| r[:last_row] }).to eq ([false] * (@test_data.length - 1) + [true])
       end
     end
   end

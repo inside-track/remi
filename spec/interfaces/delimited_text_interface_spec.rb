@@ -23,11 +23,6 @@ describe Interfaces::DelimitedTextInterface do
 
   context 'with an existing delimited file' do
 
-    shared_examples_for 'reading the csv data' do
-
-    end
-
-
     context 'with a header record' do
       before do
         File.write(test_file_path, <<-EOF.unindent
@@ -51,7 +46,7 @@ describe Interfaces::DelimitedTextInterface do
         }
 
         before do
-          @variable_set = interface.read_metadata[:variable_set]
+          interface.read_metadata
           interface.open_for_read
         end
 
@@ -63,14 +58,14 @@ describe Interfaces::DelimitedTextInterface do
         end
 
         it 'reads the first row of data' do
-          row = interface.read_row(key_map: @variable_set)
+          row = interface.read_row
           expect([row[:csvattr], row[:csvvalue]]).to eq ['Alpha', '1']
         end
 
         it 'reads the correct number of source data rows' do
           values = []
           loop do
-            values << interface.read_row(key_map: @variable_set)[:csvvalue]
+            values << interface.read_row[:csvvalue]
             break if interface.eof_flag
           end
           expect(values).to eq ['1', '2', '3']
@@ -96,7 +91,7 @@ describe Interfaces::DelimitedTextInterface do
           variable_set = interface.read_metadata[:variable_set]
 
           interface.open_for_read
-          row = interface.read_row(key_map: variable_set)
+          row = interface.read_row
           interface.close
 
           expect { row[:csvattr] }.to raise_error(Row::UnknownVariableKeyError)
@@ -110,7 +105,8 @@ describe Interfaces::DelimitedTextInterface do
           end
 
           interface.open_for_read
-          row = interface.read_row(key_map: variable_set)
+          interface.set_key_map(variable_set)
+          row = interface.read_row
           interface.close
 
           expect([row[:myvalue], row[:mydummy], row[:myattr]]).to eq ['1', nil, 'Alpha']
@@ -149,7 +145,8 @@ describe Interfaces::DelimitedTextInterface do
         end
 
         interface.open_for_read
-        row = interface.read_row(key_map: variable_set)
+        interface.set_key_map variable_set
+        row = interface.read_row
         interface.close
 
         expect([row[:myvalue], row[:mydummy], row[:myattr]]).to eq ['1', nil, 'Alpha']
@@ -191,7 +188,7 @@ describe Interfaces::DelimitedTextInterface do
         variable_set = interface.read_metadata[:variable_set]
 
         interface.open_for_read
-        row = interface.read_row(key_map: variable_set)
+        row = interface.read_row
         interface.close
 
         expect([row[:myattr], row[:myvalue]]).to eq ['Alpha', '1']
@@ -217,7 +214,8 @@ describe Interfaces::DelimitedTextInterface do
 
       it 'writes data to the file' do
         interface.open_for_read
-        row = interface.read_row(key_map: @variable_set)
+        interface.set_key_map @variable_set
+        row = interface.read_row
         interface.close
 
         expect([row[:myattr], row[:myvalue]]).to eq ['Alpha', '1']
