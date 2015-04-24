@@ -186,7 +186,7 @@ module Remi
       @interface.write_metadata(variable_set: @variable_set) unless @metadata_written
       @metadata_written = true
 
-      @row_set.add(Row.new(@active_row.to_a, key_map: @variable_set))
+      @row_set.add(@active_row)
       @interface.write_row(@active_row)
     end
 

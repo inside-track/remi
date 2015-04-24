@@ -38,9 +38,9 @@ REMI:
     split_read_csv: 4.7 <- Simple CSV parsing is much faster (but probably not realistic)
     remi_read_csv_and_write_ds: 128
     remi_read_generated_ds: 6.1
-    remi_read_and_write_generated_ds: 79 <- problems moving data from reader to writer?
-    remi_read_and_write_generated_ds_separated: 122 <- This increased moving data
-    remi_read_and_write_generated_ds_first_row: 20.6 <- So I've definitely got a performance problem with the writer
+    remi_read_and_write_generated_ds: 59 <- problems moving data from reader to writer?
+    remi_read_and_write_generated_ds_separated: 94 <- This increased moving data
+    remi_read_and_write_generated_ds_first_row: 15 <- I don't understand why this is so bad.  At worst I thought it would be 2x read, not 3x.
     remi_read_and_write_generated_ds_no_write: 14
   large:
     remi_read_csv:
