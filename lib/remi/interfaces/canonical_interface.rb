@@ -26,6 +26,7 @@ module Remi
       #
       # Returns nothing.
       def open_for_write
+        @mode = :write
         self.eof_flag = false
         open_header_for_write
         open_data_for_write
@@ -35,6 +36,7 @@ module Remi
       #
       # Returns nothing.
       def open_for_read
+        @mode = :read
         self.eof_flag = false
         open_header_for_read
         open_data_for_read
@@ -101,7 +103,10 @@ module Remi
       #
       # Returns nothing.
       def write_row(row)
-        @data_stream.write(row.to_a).flush
+        @counter ||= 0
+        @counter += 1
+        @data_stream.write(row.to_a)
+        @data_stream.flush if @counter % 10000 == 0
       end
 
       # Public: Closes the header and data files.
@@ -174,6 +179,7 @@ module Remi
 
       # Private: Closes the data file.
       def close_data_file
+        @data_stream.flush if @mode == :write
         @data_file.close unless @data_file.closed?
       end
 

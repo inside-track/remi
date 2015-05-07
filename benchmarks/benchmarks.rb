@@ -33,15 +33,15 @@ of the code to determine what's causing this bottleneck.
 
 REMI:
   small:
-    remi_read_csv: 49 <- problems moving data from CSV into Remi
-    native_read_csv: 24 <- 2x slower than Kettle - can we speed this up?
-    split_read_csv: 4.7 <- Simple CSV parsing is much faster (but probably not realistic)
-    remi_read_csv_and_write_ds: 128
-    remi_read_generated_ds: 6.1
-    remi_read_and_write_generated_ds: 59 <- problems moving data from reader to writer?
-    remi_read_and_write_generated_ds_separated: 94 <- This increased moving data
-    remi_read_and_write_generated_ds_first_row: 15 <- I don't understand why this is so bad.  At worst I thought it would be 2x read, not 3x.
-    remi_read_and_write_generated_ds_no_write: 14
+    remi_read_csv: 42 <- problems moving data from CSV into Remi
+    native_read_csv: 21 <- 2x slower than Kettle - can we speed this up?
+    split_read_csv: 4.1 <- Simple CSV parsing is much faster (but probably not realistic)
+    remi_read_csv_and_write_ds: 88
+    remi_read_generated_ds: 5.3
+    remi_read_and_write_generated_ds: 46 <- problems moving data from reader to writer?
+    remi_read_and_write_generated_ds_separated: 72 <- This increased moving data
+    remi_read_and_write_generated_ds_first_row: 8.3 <- Marked improvement
+    remi_read_and_write_generated_ds_no_write: 13
   large:
     remi_read_csv:
     native_read_csv:
@@ -313,10 +313,11 @@ class RemiBench
       DataStep.read worklib[:rad] do |ds|
         result[:lines] += 1
         outds[] = ds if result[:lines] == 1
-        puts "#{outds[]}" if result[:lines] == 1
+        puts "#{outds[]}" if result[:lines] < 1
         outds.write_row
       end
     end
+
     result
   end
 
