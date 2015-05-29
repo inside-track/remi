@@ -1,7 +1,33 @@
 # Remi - Ruby Extract Modify Integrate
 
-**NOTICE:** The project is still under heavy development and should not
-currently be considered for production work.  Check back soon!
+**NOTICE:** I've decided to call it quits on this project.  It's been
+almost a year and half working on this project.  Remi is in a
+reasonably functional state.  One could use it perform many types of
+basic data manipulations (the one I was planning but didn't get to was
+a sorted merge, but it could still be added with a few hours effort).
+However, I can't seem to get the performance to within an acceptable
+range.  The base CSV reader that Ruby uses is already twice as slow as
+another open source ETL tool (PDI's Kettle), and adding all of the
+Remi stuff on top of that is going to make it even slower in many
+practical applications.
+
+One of the original goals of Remi was to provide an ETL suite for
+"medium" data.  That is, data that is too large to fit into memory,
+but not so large it needs to be distributed over a cluster.  Remi
+was probably too late by a few years to fill this niche because some
+of the "big" data tools are now being optimized for this type of data
+(see Apache Spark) and Remi was never envisioned to compete with that
+kind of scalability.
+
+So a year and a half wasted?  Hardly.  This has been an excellent
+project to work on while learning the ins and outs of Ruby and object
+oriented programming concepts.  I've already adapted what I've learned
+working on Remi to other domains that are currently being used to run
+production systems at my work.  Additionally, I still think that the
+"Business rule driven development" vision has some promise and I will
+work toward implementing it, albeit with a different core ETL tool.
+
+Anyway....  so long, and thanks for all the fish.
 
 **Purpose:** Remi is a Ruby-based ETL suite that is built to provide
 an expressive data transformation language and facilitate the design
