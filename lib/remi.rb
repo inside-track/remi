@@ -45,7 +45,3 @@ require 'remi/data_set_accessor'
 require 'remi/data_lib'
 require 'remi/data_step'
 require 'remi/dataview'
-
-
-# Remi components
-require 'remi/interfaces/csv'

@@ -60,6 +60,11 @@ module Remi
         { :variable_set => nil }
       end
 
+      # Public: Sets the key map to use during read/write.
+      def set_key_map(key_map)
+        @key_map = key_map
+      end
+
       # Public: Write the data set metadata to the data source.
       def write_metadata(variable_set: nil)
       end
@@ -72,8 +77,9 @@ module Remi
       #           the active row.
       #
       # Returns a Row instance.
-      def read_row(key_map: nil)
-        Row.new([nil]*key_map.size, last_row: false, key_map: key_map)
+      def read_row
+        @row ||= Row.new([nil]*@key_map.size, last_row: false, key_map: @key_map)
+        @row.clear
       end
 
       # Public: Writes a row to the data source.  For the basic

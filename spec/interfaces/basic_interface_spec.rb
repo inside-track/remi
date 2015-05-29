@@ -24,7 +24,8 @@ describe Interfaces::BasicInterface do
 
   describe 'reading a row' do
     it 'gives back an empty row' do
-      expect(interface.read_row(key_map: VariableSet.new(:a, :b))).to be_a(Row)
+      interface.set_key_map VariableSet.new(:a, :b)
+      expect(interface.read_row).to be_a(Row)
     end
   end
 

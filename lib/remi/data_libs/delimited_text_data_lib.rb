@@ -77,7 +77,7 @@ module Remi
       #
       # Returns a DelimitedTextInterface.
       def interface(data_set_name)
-        Interfaces::BasicInterface.new(self, data_set_name)
+        Interfaces::DelimitedTextInterface.new(self, data_set_name)
       end
     end
   end

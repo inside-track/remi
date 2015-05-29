@@ -20,7 +20,7 @@ module Remi
       @interface = interface
 
       @variable_set = VariableSet.new
-      @active_row = Row.new(key_map: @variable_set)
+      @active_row = Row.new(key_map: @variable_set).clear
     end
 
     # Public: Gets the VariableSet associated with this DataSet.
@@ -66,7 +66,7 @@ module Remi
 
       @interface.open_for_write
       @metadata_written = false
-      @row_set = RowSet.new(lag_rows: lag_rows, lead_rows: 0)
+      @row_set = RowSet.new(lag_rows: lag_rows, lead_rows: 0, key_map: @variable_set)
     end
 
     # Public: Returns true if the dataset is open for reading.
@@ -90,6 +90,8 @@ module Remi
     def define_variables(*vars, &block)
       @variable_set.add_vars(*vars)
       @variable_set.modify(&block) if block_given?
+
+      @interface.set_key_map @variable_set
     end
 
     # Public: Array accessor setter method for the values of a dataset variable.
@@ -184,7 +186,7 @@ module Remi
       @interface.write_metadata(variable_set: @variable_set) unless @metadata_written
       @metadata_written = true
 
-      @row_set.add(Row.new(@active_row.to_a, key_map: @variable_set))
+      @row_set.add(@active_row)
       @interface.write_row(@active_row)
     end
 
@@ -193,7 +195,7 @@ module Remi
     # Returns nothing.
     def read_row
       load_row_set
-      @active_row = Row.new(@row_set.curr)
+      @active_row = @row_set.curr
     end
 
     # Public: Reads the data set metadata from the interface.
@@ -229,7 +231,7 @@ module Remi
       if @row_set.lead(@row_set.lead_rows).last_row
         Row.new(Array.new(@active_row.length), last_row: true, key_map: @variable_set)
       else
-        @interface.read_row(key_map: @variable_set)
+        @interface.read_row
       end
     end
 
