@@ -13,10 +13,6 @@ Gem::Specification.new do |s|
   s.description = "Data manipulation and ETL in Ruby"
 
   s.rubyforge_project = "Remi"
-  s.add_runtime_dependency "google_visualr", ["~> 2.3"]
-  s.add_runtime_dependency "launchy", ["~> 2.4"]
-  s.add_runtime_dependency "msgpack", ["~> 0.5"]
-  s.add_runtime_dependency "configatron", ["~> 3.2"]
 
 
   s.files         = `git ls-files`.split("\n")
