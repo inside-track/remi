@@ -20,7 +20,11 @@ be made to maintain backward compatibility.
 
 ## Transforming Data
 
-TODO: Examples setting up a job class with
+TODO:
+
+Describe Daru foundation
+
+Examples setting up a job class with
 * csv source
 * sf source
 * dataframe intermediate target
@@ -31,6 +35,29 @@ TODO: Examples setting up a job class with
 ## Business Rules
 
 TODO: Description of writing Business Rules.
+
+### Conventions to follow when writing features
+
+* Sources, targets, examples, field names enclosed in single quotes - `'field name'`
+* Field values enclosed in double quotes - `"field value"`
+* Special functions enclosed in stars - `*function*`
+* Example values encolsed in angular brackets - `<example>`
+
+Write whatever in scenario and feature descriptions
+
+### Common step library
+
+
+`Given the job is 'My Cool Job'`
+`Given the job source 'Client File'`
+`Given the job source 'Salesforce Extract'
+`Given the job target 'Salesforce Contact'`
+
+    Given the following example record called 'my killer example record':
+      | Id   | Name                |
+      | 1234 | OneTwoThreeFour     |
+
+... etc ...
 
 ## Business Rule Validation
 
