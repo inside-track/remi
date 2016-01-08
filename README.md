@@ -1,23 +1,40 @@
 # Remi - Ruby Extract Map Integrate
 
-**Purpose:** Remi is a Ruby-based ETL suite that is built to provide
-an expressive data transformation language and facilitate the design
-and implementation of business logic.
+**Purpose:** Remi is a Ruby-based ETL package that provides an
+expressive data transformation language and facilitates the
+implementation and validation of non-technical business logic.
 
-**Vision:** The vision of a functioning Remi solution includes (See
-also the [fluffier long version](/doc/vision_a_story.md))
+Borrowing from principles of test/behavior-driven development
+(TDD/BDD), Remi is a system that supports business-rule-driven
+development (BRDD).  BRDD captures the idea that the rules that
+describe data transformations should both (1) be accessible to
+non-technical business users and (2) be strictly enforced in the logic
+that executes those transformations.  Remi is a Ruby application
+that allows a developer to write data transformation logic and have
+that logic validated according to business rule documentation.
 
-* *Business rule driven development support* - Borrowing from
-  principles of Test Driven Development (TDD), Remi will be built to
-  support Business Rule Driven Development (BRDD).  BRDD captures the
-  idea that the definition of business rules, data discovery, and ETL
-  coding all need to be developed in concert and continually refined.
-  *All* transformation logic encoded in the ETL need to
-  accessible to business users.
 
-I intend to follow [semantic versioning](http://semver.org/)
-principles.  Of course, while we're still on major version zero, no
-attempt will be made to maintain backward compatibility.
+Remi will follow [semantic versioning](http://semver.org/) principles.
+Of course, while we're still on major version zero, little effort will
+be made to maintain backward compatibility.
+
+## Transforming Data
+
+TODO: Examples setting up a job class with
+* csv source
+* sf source
+* dataframe intermediate target
+* csv target
+* parameters
+* maps
+
+## Business Rules
+
+TODO: Description of writing Business Rules.
+
+## Business Rule Validation
+
+TODO: Description of how to write Business Rule validations.
 
 
 ## Installation
