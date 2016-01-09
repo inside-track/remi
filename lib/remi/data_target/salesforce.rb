@@ -3,7 +3,7 @@ module Remi
     class Salesforce
       include DataTarget
 
-      def initialize(object:, operation:, credentials:, api: :bulk, logger: Remi::Settings.logger.new_logger)
+      def initialize(object:, operation:, credentials:, api: :bulk, logger: Remi::Settings.logger)
         @sfo = object
         @operation = operation
         @credentials = credentials

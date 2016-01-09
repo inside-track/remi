@@ -15,7 +15,7 @@ module Remi
 
       class FileNotFoundError < StandardError; end
 
-      def initialize(credentials:, remote_file:, remote_folder: '', local_folder: Settings.work_dir, port: '22', most_recent_only: false, logger: Remi::Settings.logger.new_logger)
+      def initialize(credentials:, remote_file:, remote_folder: '', local_folder: Settings.work_dir, port: '22', most_recent_only: false, logger: Remi::Settings.logger)
         @credentials = credentials
         @remote_file = remote_file
         @remote_folder = remote_folder

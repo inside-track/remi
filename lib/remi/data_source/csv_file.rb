@@ -14,7 +14,7 @@ module Remi
       end
 
 
-      def initialize(fields: {}, extractor:, csv_options: {}, logger: Remi::Settings.logger.new_logger)
+      def initialize(fields: {}, extractor:, csv_options: {}, logger: Remi::Settings.logger)
         @fields = fields
         self.extractor = extractor
         @csv_options = self.class.default_csv_options.merge(csv_options)

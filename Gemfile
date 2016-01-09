@@ -4,7 +4,6 @@ source 'https://rubygems.org'
 gem 'daru', '~> 0.1'
 gem 'bond', '~> 0.5'
 gem 'docile', '~> 1.1'
-gem 'configatron', '~> 4.5'
 gem 'net-sftp', '~> 2.1'
 
 gem 'restforce', '~> 2.1'

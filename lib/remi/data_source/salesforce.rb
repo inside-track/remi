@@ -3,7 +3,7 @@ module Remi
     class Salesforce
       include DataSource
 
-      def initialize(fields: {}, object:, query:, credentials:, api: :bulk, logger: Remi::Settings.logger.new_logger)
+      def initialize(fields: {}, object:, query:, credentials:, api: :bulk, logger: Remi::Settings.logger)
         @fields = fields
         @sfo = object
         @query = query

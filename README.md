@@ -18,6 +18,22 @@ Remi will follow [semantic versioning](http://semver.org/) principles.
 Of course, while we're still on major version zero, little effort will
 be made to maintain backward compatibility.
 
+## Getting Started
+
+Add the gem to your Gemfile, `bundle install`, and then initialize your repository as
+Remi project
+
+    remi --init
+
+This command will create two directories: `jobs` and `features`.  The
+`jobs` directory contains an example of a Remi job that can be tested
+using the BRDD spec defined in the `features` directory.  Test to make
+sure this works by running
+
+    cucumber
+
+All of the test should pass.
+
 ## Transforming Data
 
 TODO:
@@ -64,14 +80,6 @@ Write whatever in scenario and feature descriptions
 TODO: Description of how to write Business Rule validations.
 
 
-## Installation
-
-So, this will eventually be packaged as a gem with a tool to set up
-standard Remi projects, but for now we're only testing, so just
-
-    bundle install
-
-and go!
 
 
 

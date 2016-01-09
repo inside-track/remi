@@ -1,3 +1,6 @@
+# Auto-generated from Remi.  Editing this file is not recommended.  Instead,
+# create another step definition file to contain application-specific steps.
+
 ### Job and background setup
 
 Given /^the job is '([[:alnum:]\s]+)'$/ do |arg|

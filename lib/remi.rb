@@ -8,7 +8,6 @@ require 'tmpdir'
 # Gems
 require 'daru'
 require 'docile'
-require 'configatron'
 require 'net/sftp'
 
 # Should separate SF stuff into separate SF support package
