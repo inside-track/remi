@@ -21,8 +21,8 @@ Restart the shell and install
 
 Restart the shell and then install the rubies
 
-    rbenv install 2.0.0-p353
-    rbenv global 2.0.0-p353
+    rbenv install 2.2.2
+    rbenv global 2.2.2
 
 Install rbenv-bundler
 
@@ -38,7 +38,7 @@ Install bundler
 Configure bundler by adding the following to `~/.bundle/config`
 
     ---
-    BUNDLE_PATH: vendor
+    BUNDLE_PATH: vendor/bundle
     BUNDLE_DISABLE_SHARED_GEMS: "1"
 
 Finally, move into the Remi directory and install gems
