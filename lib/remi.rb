@@ -9,6 +9,7 @@ require 'tmpdir'
 require 'daru'
 require 'docile'
 require 'net/sftp'
+require 'pg'
 
 # Should separate SF stuff into separate SF support package
 require 'restforce'
@@ -34,6 +35,7 @@ require 'remi/extractor/sftp_file'
 require 'remi/data_source.rb'
 require 'remi/data_source/csv_file'
 require 'remi/data_source/salesforce'
+require 'remi/data_source/postgres'
 
 require 'remi/data_target.rb'
 require 'remi/data_target/data_frame'

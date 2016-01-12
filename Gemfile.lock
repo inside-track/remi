@@ -1,3 +1,17 @@
+PATH
+  remote: .
+  specs:
+    remi (0.2.1)
+      bond (~> 0.5)
+      cucumber (~> 2.1)
+      daru (~> 0.1)
+      docile (~> 1.1)
+      net-sftp (~> 2.1)
+      pg (~> 0.18)
+      regexp-examples (~> 1.1)
+      restforce (~> 2.1)
+      salesforce_bulk_api (= 0.0.12)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -28,10 +42,11 @@ GEM
       faraday (>= 0.7.4, < 0.10)
     gherkin3 (3.1.2)
     hashie (3.4.3)
-    iruby (0.2.8)
+    iruby (0.2.7)
       bond (~> 0.5)
       mimemagic (~> 0.3)
       multi_json (~> 1.11)
+      rbczmq (~> 1.7)
     json (1.8.3)
     mimemagic (0.3.1)
     multi_json (1.11.2)
@@ -40,6 +55,7 @@ GEM
     net-sftp (2.1.2)
       net-ssh (>= 2.6.5)
     net-ssh (3.0.2)
+    pg (0.18.4)
     prawn (0.8.4)
       prawn-core (>= 0.8.4, < 0.9)
       prawn-layout (>= 0.8.4, < 0.9)
@@ -49,6 +65,7 @@ GEM
     prawn-security (0.8.4)
     prawn-svg (0.9.1.11)
       prawn (>= 0.8.4)
+    rbczmq (1.7.9)
     regexp-examples (1.1.4)
     reportbuilder (1.4.2)
       clbustos-rtf (~> 0.4.0)
@@ -60,19 +77,6 @@ GEM
       faraday_middleware (>= 0.8.8)
       hashie (>= 1.2.0, < 4.0)
       json (>= 1.7.5, < 1.9.0)
-    rspec (3.4.0)
-      rspec-core (~> 3.4.0)
-      rspec-expectations (~> 3.4.0)
-      rspec-mocks (~> 3.4.0)
-    rspec-core (3.4.1)
-      rspec-support (~> 3.4.0)
-    rspec-expectations (3.4.0)
-      diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.4.0)
-    rspec-mocks (3.4.1)
-      diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.4.0)
-    rspec-support (3.4.1)
     ruby-ole (1.2.12)
     salesforce_bulk_api (0.0.12)
       json
@@ -86,16 +90,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bond (~> 0.5)
-  cucumber (~> 2.1)
-  daru (~> 0.1)
-  docile (~> 1.1)
-  iruby (~> 0.2.7)
-  net-sftp (~> 2.1)
-  regexp-examples (~> 1.1)
-  restforce (~> 2.1)
-  rspec (~> 3.3)
-  salesforce_bulk_api (= 0.0.12)
+  iruby (= 0.2.7)
+  remi!
 
 BUNDLED WITH
    1.10.6

@@ -17,15 +17,18 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'bond', ['~> 0.5']
   s.add_runtime_dependency 'docile', ['~> 1.1']
-  s.add_runtime_dependency 'configatron', ['~> 4.5']
   s.add_runtime_dependency 'net-sftp', ['~> 2.1']
+  s.add_runtime_dependency 'pg', ['~> 0.18']
 
   s.add_runtime_dependency "cucumber", ["~> 2.1"]
   s.add_runtime_dependency "regexp-examples", ["~> 1.1"]
 
+
   # Move these into separate package
   s.add_runtime_dependency 'restforce', ['~> 2.1']
   s.add_runtime_dependency 'salesforce_bulk_api', ['0.0.12']
+
+  s.add_development_dependency 'iruby', ['0.2.7']
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
