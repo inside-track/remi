@@ -183,14 +183,18 @@ module Remi
     def load_all_targets
       targets.each do |target|
         @logger.info "Loading target #{target}"
-        self.send(target).load
+        self.send(target).tap { |t| t.respond_to?(:load) ? t.load : nil }
       end
     end
 
+    # Public: Runs all transforms defined in the job.
+    #
+    # Returns the job instance.
     def run
       # Do all of the stuff here
       run_all_transforms
       load_all_targets
+      self
     end
   end
 end
