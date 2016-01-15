@@ -52,6 +52,9 @@ module Remi::BusinessRules
       @job_targets.add_subject(name, @job.send(name.symbolize))
     end
 
+    def set_job_parameter(name, value)
+      @job.params[name.to_sym] = value
+    end
 
     def add_source(name)
       @sources.add_subject(name, @job.send(name.symbolize))
@@ -281,8 +284,9 @@ module Remi::BusinessRules
       @fields.values.first
     end
 
+    # All values get tested as strings
     def values
-      @fields.map { |field_name, field| field.values }.transpose
+      @fields.map { |field_name, field| field.values.map(&:to_s) }.transpose
     end
   end
 
@@ -352,7 +356,8 @@ module Remi::BusinessRules
     end
 
     def to_df(seed_hash, field_symbolizer:)
-      df = Daru::DataFrame.new([], order: seed_hash.keys)
+      table_headers = @table.headers.map { |h| h.symbolize(field_symbolizer) }
+      df = Daru::DataFrame.new([], order: seed_hash.keys | table_headers)
       @table.hashes.each do |example_row|
         example_row_sym = example_row.reduce({}) { |h, (k,v)| h[k.symbolize(field_symbolizer)] = v; h }
         df.add_row(seed_hash.merge(example_row_sym))

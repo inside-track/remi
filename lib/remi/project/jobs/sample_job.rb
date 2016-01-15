@@ -80,7 +80,7 @@ class SampleJob
     all_contacts.df = sample_file.df.monkey_dup
     Remi::SourceToTargetMap.apply(all_contacts.df) do
       map source(:program) .target(:Major__c)
-        .transform(Remi::Transformer[:lookup][program_name_lookup])
+        .transform(Remi::Transform[:lookup][program_name_lookup])
     end
     all_contacts.df = all_contacts.df.where(all_contacts.df[:Major__c].not_eq(nil))
 
@@ -91,8 +91,8 @@ class SampleJob
 
       # Prefixes source id record and then looks up existing salesforce Id
       map source(:student_id) .target(:External_ID__c, :Id)
-        .transform(Remi::Transformer[:prefixer]['SAMP'])
-        .transform(->(v) { [v, Remi::Transformer[:lookup][student_id_to_sf_id].call(v)] })
+        .transform(Remi::Transform[:prefix]['SAMP'])
+        .transform(->(v) { [v, Remi::Transform[:lookup][student_id_to_sf_id].call(v)] })
     end
   end
 
@@ -105,36 +105,36 @@ class SampleJob
       map source(:school_id)           .target(:School_ID__c)
       map source(:school_name)         .target(:School_Name__c)
       map source(:first_name)          .target(:FirstName)
-        .transform(Remi::Transformer[:ifblank].('Not Provided'))
+        .transform(Remi::Transform[:ifblank].('Not Provided'))
       map source(:last_name)           .target(:LastName)
-        .transform(Remi::Transformer[:ifblank].('Not Provided'))
+        .transform(Remi::Transform[:ifblank].('Not Provided'))
       map source(:mailing_city)        .target(:MailingCity)
       map source(:mailing_state)       .target(:MailingState)
       map source(:mailing_postal_code) .target(:MailingPostalCode)
 
       map source(:birthdate)                  .target(:Birthdate)
-        .transform(Remi::Transformer[:date_formatter][from_fmt: sample_file.fields[:birthdate][:format]])
+        .transform(Remi::Transform[:format_date][from_fmt: sample_file.fields[:birthdate][:format]])
 
       map source(:applied_date)              .target(:Applied_Date__c)
-        .transform(Remi::Transformer[:ifblank].(Date.today.strftime(sample_file.fields[:applied_date][:format])))
-        .transform(Remi::Transformer[:date_formatter].(from_fmt: sample_file.fields[:applied_date][:format]))
+        .transform(Remi::Transform[:ifblank].(Date.today.strftime(sample_file.fields[:applied_date][:format])))
+        .transform(Remi::Transform[:format_date].(from_fmt: sample_file.fields[:applied_date][:format]))
 
       map source(:mailing_address_line_1, :mailing_address_line_2) .target(:MailingStreet)
         .transform(->(line_1, line_2) {
-           Remi::Transformer[:ifblank].(nil).call(line_1).nil? ? [] : [line_1, line_2]
+           Remi::Transform[:ifblank].(nil).call(line_1).nil? ? [] : [line_1, line_2]
            })
-        .transform(Remi::Transformer[:concatenator].(', '))
+        .transform(Remi::Transform[:concatenate].(', '))
 
       map source(:school_id, :school_name) .target(:School__c)
         .transform(->(id, name) {[
-            Remi::Transformer[:ifblank]["Unknown"].call(id),
-            Remi::Transformer[:ifblank]["Unknown"].call(name)
+            Remi::Transform[:ifblank]["Unknown"].call(id),
+            Remi::Transform[:ifblank]["Unknown"].call(name)
           ]})
-        .transform(Remi::Transformer[:concatenator].('-'))
+        .transform(Remi::Transform[:concatenate].('-'))
 
       map source(:current_email)       .target(:Email)
-        .transform(Remi::Transformer[:replace].(/,/, '.'))
-        .transform(Remi::Transformer[:email_validator].call)
+        .transform(Remi::Transform[:replace].(/,/, '.'))
+        .transform(Remi::Transform[:validate_email].call)
     end
 
     contact_creates.df = work_contact_creates[

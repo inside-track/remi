@@ -19,8 +19,17 @@ Given /^the following example record called '([[:alnum:]\s]+)':$/ do |arg, examp
   @brt.add_example arg, example_table
 end
 
+Given /^the job parameter '([[:alnum:]\s]+)' is "(.+)"$/ do |param, value|
+  @brt.set_job_parameter(param, value)
+end
 
 ### Setting up example data
+
+Given /^the following example record for '([[:alnum:]\s]+)':$/ do |source_name, example_table|
+  example_name = source_name
+  @brt.add_example example_name, example_table
+  @brt.job_sources[source_name].stub_data_with(@brt.examples[example_name])
+end
 
 Given /^the example '([[:alnum:]\s]+)' for '([[:alnum:]\s]+)'$/ do |example_name, source_name|
   @brt.job_sources[source_name].stub_data_with(@brt.examples[example_name])
@@ -222,7 +231,7 @@ end
 
 Then /^the target field '(.+)' is populated from the source field using the format "([^"]*)"$/ do |target_field, target_format|
   source_format = @brt.source.field.metadata[:format]
-  source_reformatted = Remi::Transformer[:date_formatter].(from_fmt: source_format, to_fmt: target_format)
+  source_reformatted = Remi::Transform[:format_date].(from_fmt: source_format, to_fmt: target_format)
     .call(@brt.source.field.value)
 
   step "the target field '#{target_field}'"
@@ -233,7 +242,7 @@ end
 Then /^the target field '(.+)' is populated with "([^"]*)" using the format "([^"]*)"$/ do |target_field, target_value, target_format|
   source_format = @brt.source.field.metadata[:format]
   target_value_source_format = target_value == "*Today's Date*" ? Date.today.strftime(source_format) : target_value
-  target_reformatted = Remi::Transformer[:date_formatter].(from_fmt: source_format, to_fmt: target_format)
+  target_reformatted = Remi::Transform[:format_date].(from_fmt: source_format, to_fmt: target_format)
    .call(target_value_source_format)
 
   step "the target field '#{target_field}'"

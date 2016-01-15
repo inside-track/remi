@@ -6,3 +6,5 @@ require 'remi'
 require 'remi/cucumber'
 
 require_relative 'env_app.rb'
+
+Remi::Settings.log_level = Logger::ERROR

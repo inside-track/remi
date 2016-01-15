@@ -11,7 +11,19 @@ require 'docile'
 require 'net/sftp'
 require 'pg'
 
-# Should separate SF stuff into separate SF support package
+# ActiveSupport extensions
+require 'active_support'
+require 'active_support/core_ext/object/conversions'
+require 'active_support/core_ext/object/blank'
+require 'active_support/core_ext/object/try'
+require 'active_support/core_ext/object/inclusion'
+require 'active_support/core_ext/string/inflections'
+require 'active_support/core_ext/numeric/time'
+require 'active_support/core_ext/numeric/conversions'
+require 'active_support/core_ext/date/calculations'
+require 'active_support/core_ext/time/calculations'
+
+# - Should separate SF stuff into separate SF support package
 require 'restforce'
 require 'salesforce_bulk_api'
 
@@ -33,6 +45,7 @@ require 'remi/core/refinements'
 require 'remi/extractor/sftp_file'
 
 require 'remi/data_source.rb'
+require 'remi/data_source/data_frame'
 require 'remi/data_source/csv_file'
 require 'remi/data_source/salesforce'
 require 'remi/data_source/postgres'
@@ -43,4 +56,4 @@ require 'remi/data_target/salesforce'
 require 'remi/data_target/csv_file'
 
 require 'remi/lookup/regex_sieve'
-require 'remi/transformer'
+require 'remi/transform'
