@@ -21,8 +21,10 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'pg', ['~> 0.18']
 
   s.add_runtime_dependency "cucumber", ["~> 2.1"]
+  s.add_runtime_dependency "rspec", ["~> 3.3"]
   s.add_runtime_dependency "regexp-examples", ["~> 1.1"]
 
+  s.add_runtime_dependency "activesupport", ["~> 4.2"]
 
   # Move these into separate package
   s.add_runtime_dependency 'restforce', ['~> 2.1']

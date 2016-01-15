@@ -1,5 +1,5 @@
 module Remi
-  module Transformer
+  module Transform
     extend self
 
     def [](meth)
@@ -18,19 +18,19 @@ module Remi
       instance_variable_set("@#{func}", hash_memo)[args]
     end
 
-    def prefixer(prefix)
+    def prefix(prefix)
       memoize_as_lambda(__method__, prefix) do |(mprefix), larg|
         "#{mprefix}#{larg}"
       end
     end
 
-    def postfixer(postfix)
+    def postfix(postfix)
       memoize_as_lambda(__method__, postfix) do |(mpostfix), larg|
         "#{larg}#{mpostfix}"
       end
     end
 
-    def concatenator(delimiter="")
+    def concatenate(delimiter="")
       memoize_as_lambda(__method__, delimiter) do |(mdelimiter), *largs|
         Array(largs).join(mdelimiter)
       end
@@ -52,29 +52,65 @@ module Remi
 
     def nvl
       memoize_as_lambda(__method__) do |*largs|
-        Array(largs).find('') { |arg| !blank?(arg) }
+        Array(largs).find('') { |arg| !arg.blank? }
       end
     end
 
     def ifblank(replace_with)
       memoize_as_lambda(__method__, replace_with) do |(mreplace_with), larg|
-        blank?(larg) ? mreplace_with : larg
+        larg.blank? ? mreplace_with : larg
       end
     end
 
-    def date_formatter(from_fmt: '%m/%d/%Y', to_fmt: '%Y-%m-%d')
+    def format_date(from_fmt: '%m/%d/%Y', to_fmt: '%Y-%m-%d')
       memoize_as_lambda(__method__, from_fmt, to_fmt) do |(mfrom_fmt, mto_fmt), larg|
         begin
-          if blank?(larg) then
+          if larg.blank? then
             ''
-          elsif larg.class == String
-            Date.strptime(larg, mfrom_fmt).strftime(mto_fmt)
-          else
+          elsif larg.respond_to? :strftime
             larg.strftime(mto_fmt)
+          else
+            Date.strptime(larg, mfrom_fmt).strftime(mto_fmt)
           end
         rescue ArgumentError => err
-          puts "Error parsing date (#{v.class}): '#{larg}' - #{blank?(larg)}"
+          puts "Error parsing date (#{larg.class}): '#{larg}'"
           raise err
+        end
+      end
+    end
+
+
+    def parse_date(format: '%Y-%m-%d', if_blank: nil)
+      memoize_as_lambda(__method__, format, if_blank.to_sym) do |(mformat, mif_blank), larg|
+        begin
+          if larg.blank? then
+            if mif_blank == :low
+              Date.new(1900,01,01)
+            elsif mif_blank == :high
+              Date.new(2999,12,31)
+            else
+              mif_blank
+            end
+          else
+            Date.strptime(larg, mformat)
+          end
+        rescue ArgumentError => err
+          puts "Error parsing date (#{larg.class}): '#{larg}')"
+          raise err
+        end
+      end
+    end
+
+    def date_diff(measure = :days)
+      memoize_as_lambda(__method__, measure.to_sym) do |(mmeasure), *larg|
+        if mmeasure == :days
+          (larg.last - larg.first).to_i
+        elsif mmeasure == :months
+          (larg.last.year * 12 + larg.last.month) - (larg.first.year * 12 + larg.first.month)
+        elsif mmeasure == :years
+          larg.last.year - larg.first.year
+        else
+          raise "I don't know how to handle #{mmeasure} yet"
         end
       end
     end
@@ -91,16 +127,10 @@ module Remi
       end
     end
 
-    def email_validator(substitute='')
+    def validate_email(substitute='')
       memoize_as_lambda(__method__, substitute) do |(msubstitute), larg|
         larg.match(/^.+@[a-z0-9\-\.]+$/i) ? larg : msubstitute
       end
-    end
-
-    private
-
-    def blank?(arg)
-      arg.nil? || !!arg.strip.empty?
     end
 
   end
