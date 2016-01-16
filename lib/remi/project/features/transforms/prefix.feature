@@ -1,4 +1,4 @@
-Feature: Test the prefixer transformer.
+Feature: Test the prefix transformer.
 
   Background:
     Given the job is 'Prefix'

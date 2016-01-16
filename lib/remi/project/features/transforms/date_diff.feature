@@ -1,4 +1,4 @@
-Feature: Tests the date_diff transformer
+Feature: Tests the date_diff transform
 
   Background:
     Given the job is 'DateDiff'

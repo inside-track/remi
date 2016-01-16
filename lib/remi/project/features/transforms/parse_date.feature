@@ -1,4 +1,4 @@
-Feature: Tests the date_parser transformer
+Feature: Tests the parse_date transform
 
   Background:
     Given the job is 'ParseDate'
