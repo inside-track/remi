@@ -19,7 +19,7 @@ Given /^the following example record called '([[:alnum:]\s]+)':$/ do |arg, examp
   @brt.add_example arg, example_table
 end
 
-Given /^the job parameter '([[:alnum:]\s]+)' is "(.+)"$/ do |param, value|
+Given /^the job parameter '([[:alnum:]_\s]+)' is "(.*)"$/ do |param, value|
   @brt.set_job_parameter(param, value)
 end
 
@@ -123,12 +123,12 @@ When /^the source field '(.+)' (?:has an empty value|is blank)$/ do |source_fiel
   @brt.source.fields[source_field].value = ''
 end
 
-Given /^the source field '([^:]+)' (?:has|is set to) the value "(.+)"$/ do |source_field, value|
+Given /^the source field '([^:]+)' (?:has|is set to) the value "(.*)"$/ do |source_field, value|
   step "the source field '#{source_field}'"
   @brt.source.fields[source_field].value = value
 end
 
-Given /^the source field '(.+:.+)' (?:has|is set to) the value "(.+)"$/ do |source_field, value|
+Given /^the source field '(.+:.+)' (?:has|is set to) the value "(.*)"$/ do |source_field, value|
   step "the source field '#{source_field}'"
   source_name, field_name = *Remi::BusinessRules.parse_full_field(source_field)
   @brt.sources[source_name].fields[field_name].value = value

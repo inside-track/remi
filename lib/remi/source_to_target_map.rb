@@ -60,7 +60,7 @@ module Remi
 
     def do_map_single_source_and_target_field
       @target_df[@target_fields.first] = @source_df[@source_fields.first].recode do |field_value|
-        @transforms.reduce(field_value) { |value, tform| tform.call(*value) }
+        @transforms.reduce(field_value) { |value, tform| tform.call(*(value || [nil])) }
       end
     end
 
