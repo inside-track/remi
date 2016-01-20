@@ -18,6 +18,68 @@ module Remi::BusinessRules
     }
   end
 
+
+  module ParseFormula
+    extend self
+
+    def is_formula?(arg)
+      !base_regex.match(arg).nil?
+    end
+
+    def base_regex
+      @base_regex ||= /\A\*(.*)\*\Z/
+    end
+
+    def formulas
+      @formulas ||= Remi::Lookup::RegexSieve.new({
+        /(yesterday|tomorrow)/i => [:date_reference, :match_single_day],
+        /(last|previous|next) (day|month|year|week)/i => [:date_reference, :match_single_unit],
+        /(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)/i => [:date_reference, :match_multiple]
+      })
+    end
+
+    def parse(form)
+      return form unless is_formula?(form)
+
+      form_opt = formulas[form, :match]
+      raise "Unknown formula #{form}" unless form_opt
+
+      if form_opt[:value][0] == :date_reference
+        date_reference(form_opt[:value][1], form_opt[:match])
+      end
+    end
+
+
+    def date_reference(formula, captured)
+      parsed = self.send("date_reference_#{formula}", *captured)
+      Date.current.send("#{parsed[:unit]}_#{parsed[:direction]}", parsed[:quantity]).strftime('%Y-%m-%d')
+    end
+
+    def date_reference_match_single_day(form, direction)
+      {
+        quantity: 1,
+        unit: 'days',
+        direction: { 'yesterday' => 'ago', 'tomorrow' => 'since' }[direction.downcase]
+      }
+    end
+
+    def date_reference_match_single_unit(form, direction, unit)
+      {
+        quantity: 1,
+        unit: unit.downcase.pluralize,
+        direction: { 'last' => 'ago', 'previous' => 'ago', 'next' => 'since' }[direction.downcase]
+      }
+    end
+
+    def date_reference_match_multiple(form, quantity, unit, direction)
+      {
+        quantity: quantity.to_i,
+        unit: unit.downcase.pluralize,
+        direction: { 'ago' => 'ago', 'from now' => 'since' }[direction.downcase]
+      }
+    end
+  end
+
   class Tester
 
     def initialize(job_name)
@@ -316,7 +378,7 @@ module Remi::BusinessRules
     end
 
     def values
-      vector.to_a
+      vector.to_a.map(&:to_s)
     end
 
     def value=(arg)
@@ -359,7 +421,10 @@ module Remi::BusinessRules
       table_headers = @table.headers.map { |h| h.symbolize(field_symbolizer) }
       df = Daru::DataFrame.new([], order: seed_hash.keys | table_headers)
       @table.hashes.each do |example_row|
-        example_row_sym = example_row.reduce({}) { |h, (k,v)| h[k.symbolize(field_symbolizer)] = v; h }
+        example_row_sym = example_row.reduce({}) do |h, (k,v)|
+          h[k.symbolize(field_symbolizer)] = ParseFormula.parse(v)
+          h
+        end
         df.add_row(seed_hash.merge(example_row_sym))
       end
       df

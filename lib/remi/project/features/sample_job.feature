@@ -151,7 +151,7 @@ Feature: This is a sample feature file.
     And the example 'existing contact' for 'Existing Contacts'
 
     And the source field 'Sample File: Student Id'
-    And the source field 'Existing Contacts: External_ID__c' has the value "*some arbitrary value*"
+    And the source field 'Existing Contacts: External_ID__c' has the value "some arbitrary value"
     Then a target record is created
 
     When the source field 'Existing Contacts: External_ID__c' has the value in the source field 'Sample File: Student Id', prefixed with "SAMP"
@@ -218,10 +218,10 @@ Feature: This is a sample feature file.
     Then the target field is a concatenation of the source fields, delimited by "-"
 
     When the source field 'School Id' is blank
-    And the source field 'School Name' has the value "*some arbitrary value*"
+    And the source field 'School Name' has the value "some arbitrary value"
     Then the target field is a concatenation of "Unknown" and 'School Name', delimited by "-"
 
-    When the source field 'School Id' has the value "*some arbitrary value*"
+    When the source field 'School Id' has the value "some arbitrary value"
     And the source field 'School Name' is blank
     Then the target field is a concatenation of 'School Id' and "Unknown", delimited by "-"
 
@@ -300,5 +300,5 @@ Feature: This is a sample feature file.
     And the source field 'Existing Contacts: External_ID__c' has the value in the source field 'Sample File: Student Id', prefixed with "SAMP"
     Then a target record is created
 
-    When the source field 'Existing Contacts: External_ID__c' has the value "*some arbitrary value*"
+    When the source field 'Existing Contacts: External_ID__c' has the value "some arbitrary value"
     Then a target record is not created

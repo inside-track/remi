@@ -7,31 +7,31 @@ Given /^the job is '([[:alnum:]\s]+)'$/ do |arg|
   @brt = Remi::BusinessRules::Tester.new(arg)
 end
 
-Given /^the job source '([[:alnum:]\s]+)'$/ do |arg|
+Given /^the job source '([[:alnum:]\s\-_]+)'$/ do |arg|
   @brt.add_job_source arg
 end
 
-Given /^the job target '([[:alnum:]\s]+)'$/ do |arg|
+Given /^the job target '([[:alnum:]\s\-_]+)'$/ do |arg|
   @brt.add_job_target arg
 end
 
-Given /^the following example record called '([[:alnum:]\s]+)':$/ do |arg, example_table|
+Given /^the following example record called '([[:alnum:]\s\-_]+)':$/ do |arg, example_table|
   @brt.add_example arg, example_table
 end
 
-Given /^the job parameter '([[:alnum:]_\s]+)' is "(.*)"$/ do |param, value|
+Given /^the job parameter '([[:alnum:]\s\-_]+)' is "([^"]*)"$/ do |param, value|
   @brt.set_job_parameter(param, value)
 end
 
 ### Setting up example data
 
-Given /^the following example record for '([[:alnum:]\s]+)':$/ do |source_name, example_table|
+Given /^the following example record for '([[:alnum:]\s\-_]+)':$/ do |source_name, example_table|
   example_name = source_name
   @brt.add_example example_name, example_table
   @brt.job_sources[source_name].stub_data_with(@brt.examples[example_name])
 end
 
-Given /^the example '([[:alnum:]\s]+)' for '([[:alnum:]\s]+)'$/ do |example_name, source_name|
+Given /^the example '([[:alnum:]\s\-_]+)' for '([[:alnum:]\s\-_]+)'$/ do |example_name, source_name|
   @brt.job_sources[source_name].stub_data_with(@brt.examples[example_name])
 end
 
@@ -102,7 +102,7 @@ end
 
 ### Source
 
-Given /^the source '([[:alnum:]\s]+)'$/ do |arg|
+Given /^the source '([[:alnum:]\s\-_]+)'$/ do |arg|
   @brt.add_source(arg)
 end
 
@@ -110,8 +110,8 @@ Given /^the source field '(.+)'$/ do |arg|
   @brt.sources.add_field(arg)
 end
 
-Given /^the source field has the value "(.+)"$/ do |arg|
-  @brt.source.field.value = arg
+Given /^the source field has the value "([^"]*)"$/ do |arg|
+  @brt.source.field.value = Remi::BusinessRules::ParseFormula.parse(arg)
 end
 
 When /^the source field (?:has an empty value|is blank)$/ do
@@ -123,18 +123,18 @@ When /^the source field '(.+)' (?:has an empty value|is blank)$/ do |source_fiel
   @brt.source.fields[source_field].value = ''
 end
 
-Given /^the source field '([^:]+)' (?:has|is set to) the value "(.*)"$/ do |source_field, value|
+Given /^the source field '([^:]+)' (?:has|is set to) the value "([^"]*)"$/ do |source_field, value|
   step "the source field '#{source_field}'"
-  @brt.source.fields[source_field].value = value
+  @brt.source.fields[source_field].value = Remi::BusinessRules::ParseFormula.parse(value)
 end
 
-Given /^the source field '(.+:.+)' (?:has|is set to) the value "(.*)"$/ do |source_field, value|
+Given /^the source field '(.+:.+)' (?:has|is set to) the value "([^"]*)"$/ do |source_field, value|
   step "the source field '#{source_field}'"
   source_name, field_name = *Remi::BusinessRules.parse_full_field(source_field)
-  @brt.sources[source_name].fields[field_name].value = value
+  @brt.sources[source_name].fields[field_name].value = Remi::BusinessRules::ParseFormula.parse(value)
 end
 
-Given /^the source field '(.+:.+)' (?:has|is set to) the value in the source field '(.+:.+)', prefixed with "(.+)"$/ do |source_field, other_source_field, prefix|
+Given /^the source field '(.+:.+)' (?:has|is set to) the value in the source field '(.+:.+)', prefixed with "([^"]*)"$/ do |source_field, other_source_field, prefix|
   step "the source field '#{source_field}'"
   step "the source field '#{other_source_field}'"
   source_name, field_name = *Remi::BusinessRules.parse_full_field(source_field)
@@ -158,7 +158,7 @@ end
 
 ### Target
 
-Given /^the target '([[:alnum:]\s]+)'$/ do |arg|
+Given /^the target '([[:alnum:]\s\-_]+)'$/ do |arg|
   @brt.add_target(arg)
 end
 
@@ -188,16 +188,18 @@ end
 
 Then /^the target field is (?:set to the value|populated with) "([^"]*)"$/ do |value|
   @brt.run_transforms
-  expect(@brt.target.field.value).to eq value
+  expect(@brt.target.field.value).to eq Remi::BusinessRules::ParseFormula.parse(value)
 end
 
 Then /^the target field '(.+)' is (?:set to the value|populated with) "([^"]*)"$/ do |target_field, value|
   @brt.targets.add_field(target_field)
   @brt.run_transforms
-  expect(@brt.targets.fields.values.uniq).to eq [[value]]
+  expect(@brt.targets.fields[target_field].values.uniq).to eq [Remi::BusinessRules::ParseFormula.parse(value)]
 end
 
-
+Then /^the target field '(.+)' is the date (.+)$/ do |target_field, date_reference|
+  step "the target field '#{target_field}' is set to the value \"*#{date_reference}*\""
+end
 
 
 ### Transforms
@@ -211,13 +213,13 @@ Then /^the target field is a concatenation of the source fields, delimited by "(
   expect(@brt.targets.fields.values.uniq).to eq concatenated_source
 end
 
-Then /^the target field is a concatenation of "(.+)" and '(.+)', delimited by "([^"]*)"$/ do |constant, source_field, delimiter|
+Then /^the target field is a concatenation of "([^"]*)" and '(.+)', delimited by "([^"]*)"$/ do |constant, source_field, delimiter|
   expected_value = [constant, @brt.sources.fields[source_field].value].join(delimiter)
   @brt.run_transforms
   expect(@brt.targets.fields.values.uniq).to eq [[expected_value]]
 end
 
-Then /^the target field is a concatenation of '(.+)' and "(.+)", delimited by "([^"]*)"$/ do |source_field, constant, delimiter|
+Then /^the target field is a concatenation of '(.+)' and "([^"]*)", delimited by "([^"]*)"$/ do |source_field, constant, delimiter|
   expected_value = [@brt.sources.fields[source_field].value, constant].join(delimiter)
   @brt.run_transforms
   expect(@brt.targets.fields.values.uniq).to eq [[expected_value]]
@@ -290,6 +292,11 @@ Then /^the record should be (?i)(Retained|Rejected)(?-i)(?: without error|)$/ do
   else
     raise "Unknown action #{action}"
   end
+end
+
+Then /^the record should (not be|be) present on the target$/ do |action|
+  map_action = { 'not be' => 'rejected', 'be' => 'retained' }
+  step "the record should be #{map_action[action]}"
 end
 
 Then /^a target record is created$/ do
