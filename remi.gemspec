@@ -6,8 +6,8 @@ Gem::Specification.new do |s|
   s.name        = "remi"
   s.version     = Remi::VERSION
   s.authors     = ["Sterling Paramore"]
-  s.email       = ["gnilrets@gmail.com"]
-  s.homepage    = "https://github.com/gnilrets"
+  s.email       = ["sterling.paramore@insidetrack.com"]
+  s.homepage    = "https://github.com/inside-track/remi"
   s.license     = "MIT"
   s.summary     = "Remi (Ruby Extract Map Integrate)"
   s.description = "Data manipulation and ETL in Ruby"
