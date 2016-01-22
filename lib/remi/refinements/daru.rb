@@ -18,11 +18,6 @@ module Remi
           File.write(filename, Marshal.dump(self.to_hash))
         end
 
-        # Public: Creates a DataFrame by reading the dumped version from a file.
-        def self.from_hash_dump(filename)
-          ::Daru::DataFrame.new(Marshal.load(File.read(filename)))
-        end
-
         # Public: Allows the user to define an arbitrary aggregation function.
         #
         # by   - The name of the DataFrame vector to use to group records.
@@ -52,6 +47,13 @@ module Remi
           )
         end
 
+      end
+
+      refine ::Daru::DataFrame.singleton_class do
+        # Public: Creates a DataFrame by reading the dumped version from a file.
+        def from_hash_dump(filename)
+          ::Daru::DataFrame.new(Marshal.load(File.read(filename)))
+        end
       end
     end
   end
