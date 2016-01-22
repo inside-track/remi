@@ -1,5 +1,5 @@
 module Remi::BusinessRules
-  using Remi::Core::Refinements
+  using Remi::Refinements::Symbolizer
 
   def self.parse_full_field(full_field_name)
     full_field_name.split(':').map(&:strip)
@@ -230,6 +230,15 @@ module Remi::BusinessRules
       @data_obj.df.size
     end
 
+    # Public: Converts the data subject to a hash where the keys are the table
+    # columns and the values are an array for the value of column for each row.
+    def column_hash
+      @data_obj.df.to_hash.reduce({}) do |h, (k,v)|
+        h[k.symbolize] = v.to_a
+        h
+      end
+    end
+
     # For debugging only
     def _df
       @data_obj.df
@@ -428,6 +437,17 @@ module Remi::BusinessRules
         df.add_row(seed_hash.merge(example_row_sym))
       end
       df
+    end
+
+    # Public: Converts a Cucumber::Ast::Table to a hash where the keys are the table
+    # columns and the values are an array for the value of column for each row.
+    def column_hash
+      @table.hashes.reduce({}) do |h, row|
+        row.each do |k,v|
+          (h[k.symbolize] ||= []) << v
+        end
+        h
+      end
     end
   end
 

@@ -15,7 +15,7 @@ module Remi
       options = {}
 
       opt_parser = OptionParser.new do |opts|
-        opts.banner = <<-EOT.unindent
+        opts.banner = <<-EOT.strip_heredoc
           Usage: Command line helpers for Remi.
         EOT
 

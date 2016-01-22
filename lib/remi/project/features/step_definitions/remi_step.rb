@@ -201,6 +201,22 @@ Then /^the target field '(.+)' is the date (.+)$/ do |target_field, date_referen
   step "the target field '#{target_field}' is set to the value \"*#{date_reference}*\""
 end
 
+Then /^the target '(.+)' should match the example '([[:alnum:]\s]+)'$/ do |target_name, example_name|
+  @brt.run_transforms
+
+  target_hash = @brt.targets[target_name].column_hash
+  example_hash = @brt.examples[example_name].column_hash
+  common_keys = target_hash.keys & example_hash.keys
+
+  expect(target_hash.select { |k,v| common_keys.include? k })
+    .to eq example_hash.select { |k,v| common_keys.include? k }
+end
+
+Then /^the target should match the example '([[:alnum:]\s]+)'$/ do |example_name|
+  target_name = @brt.targets.keys.first
+  step "the target '#{target_name}' should match the example '#{example_name}'"
+end
+
 
 ### Transforms
 
