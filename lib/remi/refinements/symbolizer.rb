@@ -1,6 +1,6 @@
 module Remi
-  module Core
-    module Refinements
+  module Refinements
+    module Symbolizer
       refine String do
         def symbolize(symbolizer=nil)
           if symbolizer

@@ -4,6 +4,7 @@ require_relative 'all_jobs_shared'
 
 class SampleJob
   include AllJobsShared
+  using Remi::Refinements::Daru
 
   define_source :existing_contacts, Remi::DataSource::Salesforce,
     object: :Contact,
@@ -77,7 +78,7 @@ class SampleJob
   define_transform :map_common_fields, sources: [:sample_file, :existing_contacts], targets: :all_contacts do
 
     # Exclude all source records with an invalid program name
-    all_contacts.df = sample_file.df.monkey_dup
+    all_contacts.df = sample_file.df.dup
     Remi::SourceToTargetMap.apply(all_contacts.df) do
       map source(:program) .target(:Major__c)
         .transform(Remi::Transform[:lookup][program_name_lookup])

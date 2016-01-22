@@ -18,6 +18,8 @@ require 'active_support/core_ext/object/blank'
 require 'active_support/core_ext/object/try'
 require 'active_support/core_ext/object/inclusion'
 require 'active_support/core_ext/string/inflections'
+require 'active_support/core_ext/string/strip'
+require 'active_support/core_ext/string/filters'
 require 'active_support/core_ext/numeric/time'
 require 'active_support/core_ext/numeric/conversions'
 require 'active_support/core_ext/date/calculations'
@@ -30,7 +32,6 @@ require 'salesforce_bulk_api'
 
 # Remi
 require 'remi/version.rb'
-require 'remi/core/string.rb'
 
 require 'remi/settings'
 require 'remi/job'
@@ -39,8 +40,8 @@ require 'remi/field_symbolizers'
 require 'remi/data_subject'
 require 'remi/sf_bulk_helper' # separate into SF support package
 
-require 'remi/core/daru'
-require 'remi/core/refinements'
+require 'remi/refinements/symbolizer'
+require 'remi/refinements/daru'
 
 require 'remi/extractor/sftp_file'
 
