@@ -32,8 +32,8 @@ module Remi::BusinessRules
 
     def formulas
       @formulas ||= Remi::Lookup::RegexSieve.new({
-        /(yesterday|tomorrow)/i => [:date_reference, :match_single_day],
-        /(last|previous|next) (day|month|year|week)/i => [:date_reference, :match_single_unit],
+        /(today|yesterday|tomorrow)/i => [:date_reference, :match_single_day],
+        /(this|last|previous|next) (day|month|year|week)/i => [:date_reference, :match_single_unit],
         /(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)/i => [:date_reference, :match_multiple]
       })
     end
@@ -57,17 +57,17 @@ module Remi::BusinessRules
 
     def date_reference_match_single_day(form, direction)
       {
-        quantity: 1,
+        quantity: direction.downcase == 'today' ? 0 : 1,
         unit: 'days',
-        direction: { 'yesterday' => 'ago', 'tomorrow' => 'since' }[direction.downcase]
+        direction: { 'today' => 'ago', 'yesterday' => 'ago', 'tomorrow' => 'since' }[direction.downcase]
       }
     end
 
     def date_reference_match_single_unit(form, direction, unit)
       {
-        quantity: 1,
+        quantity: direction.downcase == 'this' ? 0 : 1,
         unit: unit.downcase.pluralize,
-        direction: { 'last' => 'ago', 'previous' => 'ago', 'next' => 'since' }[direction.downcase]
+        direction: { 'this' => 'ago', 'last' => 'ago', 'previous' => 'ago', 'next' => 'since' }[direction.downcase]
       }
     end
 

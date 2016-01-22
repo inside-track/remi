@@ -10,9 +10,10 @@ Feature: This tests the creation of example records.
   Scenario: Handling date formulas in the example data with day units.
 
     Given the following example record for 'Source Data':
-      | Yesterday   | Tomorrow   | OneDayAgo   | SevenDaysAgo  | ThreeDaysFromNow  |
-      | *Yesterday* | *Tomorrow* | *1 day ago* | *7 days ago*  | *3 days from now* |
-    Then the target field 'Yesterday' is the date 1 day ago
+      | Today   | Yesterday   | Tomorrow   | OneDayAgo   | SevenDaysAgo  | ThreeDaysFromNow  |
+      | *Today* | *Yesterday* | *Tomorrow* | *1 day ago* | *7 days ago*  | *3 days from now* |
+    Then the target field 'Today' is the date 0 days ago
+    And the target field 'Yesterday' is the date 1 day ago
     And the target field 'Tomorrow' is the date 1 day from now
     And the target field 'OneDayAgo' is the date 1 day ago
     And the target field 'SevenDaysAgo' is the date 7 days ago
@@ -21,9 +22,10 @@ Feature: This tests the creation of example records.
   Scenario: Handling date formulas in the example data with month units.
 
     Given the following example record for 'Source Data':
-      | LastMonth    | NextMonth    | OneMonthAgo   | SevenMonthsAgo  | ThreeMonthsFromNow  |
-      | *Last Month* | *Next Month* | *1 month ago* | *7 months ago*  | *3 months from now* |
-    Then the target field 'LastMonth' is the date 1 month ago
+      | ThisMonth    | LastMonth    | NextMonth    | OneMonthAgo   | SevenMonthsAgo  | ThreeMonthsFromNow  |
+      | *This Month* |*Last Month* | *Next Month* | *1 month ago* | *7 months ago*  | *3 months from now* |
+    Then the target field 'ThisMonth' is the date 0 months ago
+    And the target field 'LastMonth' is the date 1 month ago
     And the target field 'NextMonth' is the date 1 month from now
     And the target field 'OneMonthAgo' is the date 1 month ago
     And the target field 'SevenMonthsAgo' is the date 7 months ago
@@ -32,9 +34,10 @@ Feature: This tests the creation of example records.
   Scenario: Handling date formulas in the example data with year units.
 
     Given the following example record for 'Source Data':
-      | LastYear    | NextYear    | OneYearAgo   | SevenYearsAgo  | ThreeYearsFromNow  |
-      | *Last Year* | *Next Year* | *1 year ago* | *7 years ago*  | *3 years from now* |
-    Then the target field 'LastYear' is the date 1 year ago
+      | ThisYear    | LastYear    | NextYear    | OneYearAgo   | SevenYearsAgo  | ThreeYearsFromNow  |
+      | *This Year* | *Last Year* | *Next Year* | *1 year ago* | *7 years ago*  | *3 years from now* |
+    Then the target field 'ThisYear' is the date 0 years ago
+    And the target field 'LastYear' is the date 1 year ago
     And the target field 'NextYear' is the date 1 year from now
     And the target field 'OneYearAgo' is the date 1 year ago
     And the target field 'SevenYearsAgo' is the date 7 years ago
@@ -43,9 +46,10 @@ Feature: This tests the creation of example records.
   Scenario: Handling date formulas in the example data with week units.
 
     Given the following example record for 'Source Data':
-      | LastWeek    | NextWeek    | OneWeekAgo   | SevenWeeksAgo  | ThreeWeeksFromNow  |
-      | *Last Week* | *Next Week* | *1 week ago* | *7 weeks ago*  | *3 weeks from now* |
-    Then the target field 'LastWeek' is the date 1 week ago
+      | ThisWeek    | LastWeek    | NextWeek    | OneWeekAgo   | SevenWeeksAgo  | ThreeWeeksFromNow  |
+      | *This Week* | *Last Week* | *Next Week* | *1 week ago* | *7 weeks ago*  | *3 weeks from now* |
+    Then the target field 'ThisWeek' is the date 0 week ago
+    And the target field 'LastWeek' is the date 1 week ago
     And the target field 'NextWeek' is the date 1 week from now
     And the target field 'OneWeekAgo' is the date 1 week ago
     And the target field 'SevenWeeksAgo' is the date 7 weeks ago
