@@ -21,16 +21,17 @@ module Remi
         # Public: Allows the user to define an arbitrary aggregation function.
         #
         # by   - The name of the DataFrame vector to use to group records.
-        # func - A lambda function that accepts two arguments - the first argument
-        #        is the DataFrame and the second is the index of the elements belonging
-        #        to a group.
+        # func - A lambda function that accepts three arguments - the
+        #        first argument is the DataFrame, the second is the
+        #        key to the current group, and the third is the index
+        #        of the elements belonging to a group.
         #
         # Example:
         #   df = Daru::DataFrame.new( { a: ['a','a','a','b','b'], year: ['2018','2015','2019', '2014', '2013'] })
         #
-        #   mymin = lambda do |field, df, indicies|
+        #   mymin = lambda do |field, df, group_key, indicies|
         #     values = indicies.map { |idx| df.row[idx][field] }
-        #     values.min
+        #     "Group #{group_key} has a minimum value of #{values.min}"
         #   end
         #
         #   df.aggregate(by: :a, func: mymin.curry.(:year))
@@ -41,7 +42,8 @@ module Remi
           grouped = self.group_by(by)
           ::Daru::Vector.new(
             grouped.groups.reduce({}) do |h, (key, indicies)|
-              h[key.size == 1 ? key.first : key] = func.(self, indicies)
+              group_key = key.size == 1 ? key.first : key
+              h[group_key] = func.(self, group_key, indicies)
               h
             end
           )
