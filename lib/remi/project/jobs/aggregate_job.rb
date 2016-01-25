@@ -14,6 +14,12 @@ class AggregateJob
       "Group #{group_key} has a minimum value of #{values.min}"
     end
 
+    # Daru groups don't use the index of the dataframe when returning groups (WTF?).
+    # Instead they return the position of the record in the dataframe.  Here, we
+    # shift the indexes which causes a failure if this artifact is not handled
+    # properly in the aggregate function
+    source_data.df.index = Daru::Index.new(1.upto(source_data.df.size).to_a)
+
     target_data.df = source_data.df.aggregate(by: :alpha, func: mymin.curry.(:year)).detach_index
     target_data.df.vectors = Daru::Index.new([:alpha, :year])
 

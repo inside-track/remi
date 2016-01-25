@@ -29,8 +29,8 @@ module Remi
         # Example:
         #   df = Daru::DataFrame.new( { a: ['a','a','a','b','b'], year: ['2018','2015','2019', '2014', '2013'] })
         #
-        #   mymin = lambda do |field, df, group_key, indicies|
-        #     values = indicies.map { |idx| df.row[idx][field] }
+        #   mymin = lambda do |field, df, group_key, indices|
+        #     values = indices.map { |idx| df.row[idx][field] }
         #     "Group #{group_key} has a minimum value of #{values.min}"
         #   end
         #
@@ -40,10 +40,14 @@ module Remi
         # Returns a Daru::Vector.
         def aggregate(by:, func:)
           grouped = self.group_by(by)
+          df_indices = self.index.to_a
           ::Daru::Vector.new(
-            grouped.groups.reduce({}) do |h, (key, indicies)|
+            grouped.groups.reduce({}) do |h, (key, indices)|
+              # Daru groups don't use the index of the dataframe when returning groups (WTF?).
+              # Instead they return the position of the record in the dataframe.  Here, we
+              group_df_indices = indices.map { |v| df_indices[v] }
               group_key = key.size == 1 ? key.first : key
-              h[group_key] = func.(self, group_key, indicies)
+              h[group_key] = func.(self, group_key, group_df_indices)
               h
             end
           )
