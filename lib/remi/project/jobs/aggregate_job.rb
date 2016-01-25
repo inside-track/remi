@@ -9,9 +9,9 @@ class AggregateJob
 
   define_transform :main, sources: :source_data, targets: :target_data do
 
-    mymin = lambda do |field, df, indicies|
+    mymin = lambda do |field, df, group_key, indicies|
       values = indicies.map { |idx| df.row[idx][field] }
-      values.min
+      "Group #{group_key} has a minimum value of #{values.min}"
     end
 
     target_data.df = source_data.df.aggregate(by: :alpha, func: mymin.curry.(:year)).detach_index

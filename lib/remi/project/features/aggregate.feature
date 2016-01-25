@@ -18,6 +18,6 @@ Feature: Tests the aggregate refinement to the Daru library
       | a     | 2017 | 4 |
     And the following example record called 'expected result':
       | Alpha | Year |
-      | a     | 2016 |
-      | b     | 2010 |
+      | a     | Group a has a minimum value of 2016 |
+      | b     | Group b has a minimum value of 2010 |
     Then the target should match the example 'expected result'
