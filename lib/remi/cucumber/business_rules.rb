@@ -245,6 +245,34 @@ module Remi::BusinessRules
     end
 
 
+    # Would like to have this return a new DataSubject and not a dataframe.
+    # Need more robust duping to make that feasible.
+    # Don't use results for anything more than size.
+    def where(field_name, operation)
+      @data_obj.df.where(@data_obj.df[field_name.symbolize(@data_obj.field_symbolizer)].recode { |v| operation.call(v) })
+    end
+
+    def where_is(field_name, value)
+      where(field_name, ->(v) { v == value })
+    end
+
+    def where_lt(field_name, value)
+      where(field_name, ->(v) { v.to_f < value.to_f })
+    end
+
+    def where_gt(field_name, value)
+      where(field_name, ->(v) { v.to_f > value.to_f })
+    end
+
+    def where_between(field_name, low_value, high_value)
+      where(field_name, ->(v) { v.to_f.between?(low_value.to_f, high_value.to_f) })
+    end
+
+    def where_in(field_name, list)
+      list_array = list.split(',').map { |v| v.strip }
+      where(field_name, ->(v) { list_array.include?(v) })
+    end
+
 
     def stub_data
       @data_obj.stub_df if @data_obj.respond_to? :stub_df

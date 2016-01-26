@@ -324,3 +324,68 @@ Then /^a target record is not created$/ do
   @brt.run_transforms
   expect(@brt.targets.total_size).to be 0
 end
+
+
+### Record counting
+
+Then /^the target has (\d+) record(?:s|)$/ do |nrecords|
+  target_name = @brt.targets.keys.first
+  step "the target '#{target_name}' has #{nrecords} records"
+end
+
+Then /^the target '([[:alnum:]\s\-_]+)' has (\d+) record(?:s|)$/ do |target_name, nrecords|
+  @brt.run_transforms
+  expect(@brt.targets[target_name].size).to be nrecords.to_i
+end
+
+Then /^the target has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is "([^"]*)"$/ do |nrecords, field_name, value|
+  target_name = @brt.targets.keys.first
+  step "the target '#{target_name}' has #{nrecords} records where '#{field_name}' is \"#{value}\""
+end
+
+Then /^the target '([[:alnum:]\s\-_]+)' has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is "([^"]*)"$/ do |target_name, nrecords, field_name, value|
+  @brt.run_transforms
+  expect(@brt.targets[target_name].where_is(field_name, value).size).to eq nrecords.to_i
+end
+
+Then /^the target has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is in "([^"]*)"$/ do |nrecords, field_name, value|
+  target_name = @brt.targets.keys.first
+  step "the target '#{target_name}' has #{nrecords} records where '#{field_name}' is in \"#{value}\""
+end
+
+Then /^the target '([[:alnum:]\s\-_]+)' has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is in "([^"]*)"$/ do |target_name, nrecords, field_name, value|
+  @brt.run_transforms
+  expect(@brt.targets[target_name].where_in(field_name, value).size).to eq nrecords.to_i
+end
+
+Then /^the target has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is (\d*\.?\d+)$/ do |nrecords, field_name, value|
+  target_name = @brt.targets.keys.first
+  step "the target '#{target_name}' has #{nrecords} records where '#{field_name}' is #{value}"
+end
+
+Then /^the target '([[:alnum:]\s\-_]+)' has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is (\d*\.?\d+)$/ do |target_name, nrecords, field_name, value|
+  @brt.run_transforms
+  expect(@brt.targets[target_name].where_is(field_name, value).size).to eq nrecords.to_i
+end
+
+Then /^the target has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is (less|greater) than (\d*\.?\d+)$/ do |nrecords, field_name, direction, value|
+  target_name = @brt.targets.keys.first
+  step "the target '#{target_name}' has #{nrecords} records where '#{field_name}' is #{direction} than #{value}"
+end
+
+Then /^the target '([[:alnum:]\s\-_]+)' has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is (less|greater) than (\d*\.?\d+)$/ do |target_name, nrecords, field_name, direction, value|
+  @brt.run_transforms
+  query_method = { 'less' => :where_lt, 'greater' => :where_gt }[direction]
+
+  expect(@brt.targets[target_name].send(query_method, field_name, value).size).to eq nrecords.to_i
+end
+
+Then /^the target has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is between (\d*\.?\d+) and (\d*\.?\d+)$/ do |nrecords, field_name, low_value, high_value|
+  target_name = @brt.targets.keys.first
+  step "the target '#{target_name}' has #{nrecords} records where '#{field_name}' is between #{low_value} and #{high_value}"
+end
+
+Then /^the target '([[:alnum:]\s\-_]+)' has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is between (\d*\.?\d+) and (\d*\.?\d+)$/ do |target_name, nrecords, field_name, low_value, high_value|
+  @brt.run_transforms
+  expect(@brt.targets[target_name].where_between(field_name, low_value, high_value).size).to eq nrecords.to_i
+end
