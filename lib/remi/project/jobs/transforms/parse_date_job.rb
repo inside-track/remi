@@ -5,7 +5,10 @@ class ParseDateJob
 
   define_param :format, '%Y-%m-%d'
   define_param :if_blank, nil
-  define_source :source_data, Remi::DataSource::DataFrame
+  define_source :source_data, Remi::DataSource::DataFrame,
+    fields: {
+      :date_string => {}
+    }
   define_target :target_data, Remi::DataTarget::DataFrame
 
   define_transform :main, sources: :source_data, targets: :target_data do

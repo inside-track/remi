@@ -59,5 +59,9 @@ module Remi
     class Salesforce
       include DataStub
     end
+
+    class DataFrame
+      include DataStub
+    end
   end
 end

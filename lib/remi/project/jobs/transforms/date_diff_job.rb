@@ -4,7 +4,11 @@ class DateDiffJob
   include AllJobsShared
 
   define_param :measure, :days
-  define_source :source_data, Remi::DataSource::DataFrame
+  define_source :source_data, Remi::DataSource::DataFrame,
+    fields: {
+      :date1 => { type: :date, format: '%Y-%m-%d' },
+      :date2 => { type: :date, format: '%Y-%m-%d' }
+    }
   define_target :target_data, Remi::DataTarget::DataFrame
 
   define_transform :main, sources: :source_data, targets: :target_data do
