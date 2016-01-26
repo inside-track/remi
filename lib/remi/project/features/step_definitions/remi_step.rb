@@ -229,6 +229,12 @@ Then /^the target field is a concatenation of the source fields, delimited by "(
   expect(@brt.targets.fields.values.uniq).to eq concatenated_source
 end
 
+Then /^the target field is a concatenation of '(.+)' and '(.+)', delimited by "([^"]*)"$/ do |source_field_1, source_field_2, delimiter|
+  expected_value = [@brt.sources.fields[source_field_1].value, @brt.sources.fields[source_field_2].value].join(delimiter)
+  @brt.run_transforms
+  expect(@brt.targets.fields.values.uniq).to eq [[expected_value]]
+end
+
 Then /^the target field is a concatenation of "([^"]*)" and '(.+)', delimited by "([^"]*)"$/ do |constant, source_field, delimiter|
   expected_value = [constant, @brt.sources.fields[source_field].value].join(delimiter)
   @brt.run_transforms
