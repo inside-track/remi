@@ -15,7 +15,7 @@ Given /^the job target '([[:alnum:]\s\-_]+)'$/ do |arg|
   @brt.add_job_target arg
 end
 
-Given /^the following example record called '([[:alnum:]\s\-_]+)':$/ do |arg, example_table|
+Given /^the following example(?: record| records|) called '([[:alnum:]\s\-_]+)':$/ do |arg, example_table|
   @brt.add_example arg, example_table
 end
 
@@ -25,7 +25,7 @@ end
 
 ### Setting up example data
 
-Given /^the following example record for '([[:alnum:]\s\-_]+)':$/ do |source_name, example_table|
+Given /^the following example(?: record| records|) for '([[:alnum:]\s\-_]+)':$/ do |source_name, example_table|
   example_name = source_name
   @brt.add_example example_name, example_table
   @brt.job_sources[source_name].stub_data_with(@brt.examples[example_name])
@@ -197,6 +197,15 @@ Then /^the target field '(.+)' is (?:set to the value|populated with) "([^"]*)"$
   expect(@brt.targets.fields[target_field].values.uniq).to eq [Remi::BusinessRules::ParseFormula.parse(value)]
 end
 
+Then /^the target field '(.+)' is in the list "([^"]*)"$/ do |target_field, list|
+  step "the target field '#{target_field}'"
+
+  list_array = list.split(',').map(&:strip)
+  @brt.run_transforms
+  expect(@brt.targets.fields[target_field].values.uniq & list_array).to include(*@brt.targets.fields[target_field].values.uniq)
+end
+
+
 Then /^the target field '(.+)' is the date (.+)$/ do |target_field, date_reference|
   step "the target field '#{target_field}' is set to the value \"*#{date_reference}*\""
 end
@@ -301,8 +310,8 @@ end
 
 ### Record-level expectations
 
-Then /^the record should be (?i)(Retained|Rejected)(?-i)(?: without error|)$/ do |action|
-  source_size  = @brt.source.size
+Then /^the record from source '(.+)' should be (?i)(Retained|Rejected)(?-i)(?: without error|)$/ do |source_name, action|
+  source_size  = @brt.sources[source_name].size
   @brt.run_transforms
   targets_size = @brt.targets.total_size
 
@@ -316,7 +325,12 @@ Then /^the record should be (?i)(Retained|Rejected)(?-i)(?: without error|)$/ do
   end
 end
 
-Then /^the record should (not be|be) present on the target$/ do |action|
+Then /^the record(?:s|) should be (?i)(Retained|Rejected)(?-i)(?: without error|)$/ do |action|
+  source_name = @brt.sources.keys.first
+  step "the record from source '#{source_name}' should be #{action}"
+end
+
+Then /^the record(?:s|) should (not be|be) present on the target$/ do |action|
   map_action = { 'not be' => 'rejected', 'be' => 'retained' }
   step "the record should be #{map_action[action]}"
 end
