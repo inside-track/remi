@@ -7,9 +7,6 @@ Feature: Tests the date_diff transform
 
     And the source 'Source Data'
     And the target 'Target Data'
-    And the following example record for 'Source Data':
-      | Date1      | Date2      |
-      | 2015-12-31 | 2016-01-02 |
 
   Scenario Outline: Calculating date difference in days2.
     Given the job parameter 'measure' is "days"

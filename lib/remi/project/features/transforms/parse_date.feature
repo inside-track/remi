@@ -7,9 +7,6 @@ Feature: Tests the parse_date transform
 
     And the source 'Source Data'
     And the target 'Target Data'
-    And the following example record for 'Source Data':
-      | Date String |
-      | 2015-12-31  |
 
   Scenario Outline: Parsing date strings.
     Given the source field 'Date String' has the value "<Date String>"
