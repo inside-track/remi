@@ -1,4 +1,5 @@
 Feature: This tests the creation of example records.
+  The job that runs does nothing but copy source data to target.
 
   Background:
     Given the job is 'Copy Source'
@@ -55,14 +56,20 @@ Feature: This tests the creation of example records.
     And the target field 'SevenWeeksAgo' is the date 7 weeks ago
     And the target field 'ThreeWeeksFromNow' is the date 3 weeks from now
 
-  Scenario: Handling date formulas when set explicitly in the source.
+  Scenario: Handling date formulas when set outside of a data example.
 
+    Given the source field 'Some Date' is set to the value "*Yesterday*"
+    Then the target field 'Some Date' is the date 1 day ago
+
+    When the source field 'Some Date' is set to the value "*2 months from now*"
+    Then the target field 'Some Date' is the date 2 months from now
+    Then the target field 'Some Date' is populated with "*2 months from now*"
+
+  Scenario: Handling a date formula that is embedded in a larger string.
     Given the following example record for 'Source Data':
-      | SomeDate   |
-      | 2015-10-22 |
-    And the source field 'SomeDate' is set to the value "*Yesterday*"
-    Then the target field 'SomeDate' is the date 1 day ago
-
-    When the source field 'SomeDate' is set to the value "*2 months from now*"
-    Then the target field 'SomeDate' is the date 2 months from now
-    Then the target field 'SomeDate' is populated with "*2 months from now*"
+      | Some Date | Some String | Combination       |
+      | *Today*   | Something   | *Today*-Something |
+    And the source field 'Some Date'
+    And the source field 'Some String'
+    And the target field 'Combination'
+    Then the target field is a concatenation of 'Some Date' and 'Some String', delimited by "-"

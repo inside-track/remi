@@ -27,7 +27,7 @@ module Remi::BusinessRules
     end
 
     def base_regex
-      @base_regex ||= /\A\*(.*)\*\Z/
+      @base_regex ||= /\*(.*)\*/
     end
 
     def formulas
@@ -44,9 +44,14 @@ module Remi::BusinessRules
       form_opt = formulas[form, :match]
       raise "Unknown formula #{form}" unless form_opt
 
-      if form_opt[:value][0] == :date_reference
+      to_replace = form.match(base_regex)[0]
+      replace_with = if form_opt[:value][0] == :date_reference
         date_reference(form_opt[:value][1], form_opt[:match])
+      else
+        to_replace
       end
+
+      form.gsub(to_replace, replace_with)
     end
 
 
