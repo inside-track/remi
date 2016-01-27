@@ -130,11 +130,14 @@ module Remi
 
 
 
-    def initialize(delete_work_dir: true, logger: Settings.logger)
+    def initialize(runtime_params: {}, delete_work_dir: true, logger: Settings.logger)
+      @runtime_params = runtime_params
       @delete_work_dir = delete_work_dir
       @logger = logger
       create_work_dir
     end
+
+    attr_accessor :runtime_params
 
     def work_dir
       self.class.work_dir
