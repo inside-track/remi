@@ -35,7 +35,7 @@ module Remi
     end
 
     def initialize_project
-      template_dir = File.expand_path(File.join(File.dirname(__FILE__),'project'))
+      template_dir = File.expand_path(File.join(File.dirname(__FILE__),'../../'))
 
       FileUtils.mkdir_p "features"
       FileUtils.cp(File.join(template_dir, 'features/sample_job.feature'), 'features')
