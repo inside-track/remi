@@ -15,7 +15,7 @@ module Remi
 
         # Public: Saves a Dataframe to a file.
         def hash_dump(filename)
-          File.write(filename, Marshal.dump(self.to_hash))
+          File.binwrite(filename, Marshal.dump(self.to_hash))
         end
 
         # Public: Allows the user to define an arbitrary aggregation function.
@@ -58,7 +58,7 @@ module Remi
       refine ::Daru::DataFrame.singleton_class do
         # Public: Creates a DataFrame by reading the dumped version from a file.
         def from_hash_dump(filename)
-          ::Daru::DataFrame.new(Marshal.load(File.read(filename)))
+          ::Daru::DataFrame.new(Marshal.load(File.binread(filename)))
         end
       end
     end
