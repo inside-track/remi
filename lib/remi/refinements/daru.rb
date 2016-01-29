@@ -21,7 +21,7 @@ module Remi
             vectors << self[v].dup.to_a.concat(other_df[v].to_a)
           end
 
-          Daru::DataFrame.new(vectors, order: @vectors)
+          ::Daru::DataFrame.new(vectors, order: @vectors)
         end
 
         # Public: Saves a Dataframe to a file.
