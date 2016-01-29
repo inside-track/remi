@@ -13,6 +13,17 @@ module Remi
           dupdf
         end
 
+        # Public: Fixes a bug where the dataframe on the left side of the
+        # concatenation is accidentally modified.
+        def concat other_df
+          vectors = []
+          @vectors.each do |v|
+            vectors << self[v].dup.to_a.concat(other_df[v].to_a)
+          end
+
+          Daru::DataFrame.new(vectors, order: @vectors)
+        end
+
         # Public: Saves a Dataframe to a file.
         def hash_dump(filename)
           File.binwrite(filename, Marshal.dump(self.to_hash))
