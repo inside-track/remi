@@ -63,5 +63,9 @@ module Remi
     class DataFrame
       include DataStub
     end
+
+    class Postgres
+      include DataStub
+    end
   end
 end
