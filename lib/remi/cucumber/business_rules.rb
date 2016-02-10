@@ -112,6 +112,7 @@ module Remi::BusinessRules
     def add_job_source(name)
       raise "Unknown source #{name} for job" unless @job.methods.include? name.symbolize
       @job_sources.add_subject(name, @job.send(name.symbolize))
+      @job.send(name.symbolize).empty_stub_df
     end
 
     def add_job_target(name)
