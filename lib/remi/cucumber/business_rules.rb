@@ -15,6 +15,7 @@ module Remi::BusinessRules
       'windows'         => "\r\n",
       'unix'            => "\n",
       'windows or unix' => :auto,
+      'null character'  => 0.chr,
     }
   end
 
