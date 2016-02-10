@@ -14,10 +14,13 @@ module Remi
         end
       end
 
+      def empty_stub_df
+        self.df = Daru::DataFrame.new([], order: @fields.keys)
+      end
+
       def stub_df
-        wdf = Daru::DataFrame.new([], order: @fields.keys)
-        wdf.add_row(stub_row_array)
-        self.df = wdf
+        empty_stub_df
+        self.df.add_row(stub_row_array)
       end
 
       def stub_values
