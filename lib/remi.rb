@@ -10,6 +10,7 @@ require 'daru'
 require 'docile'
 require 'net/sftp'
 require 'pg'
+require 'regex_sieve'
 
 # ActiveSupport extensions
 require 'active_support'
@@ -56,5 +57,4 @@ require 'remi/data_target/data_frame'
 require 'remi/data_target/salesforce'
 require 'remi/data_target/csv_file'
 
-require 'remi/lookup/regex_sieve'
 require 'remi/transform'

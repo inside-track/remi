@@ -66,14 +66,14 @@ class SampleJob
     operation: :create,
     api: :bulk
 
-  define_lookup :program_name_lookup, Remi::Lookup::RegexSieve, {
+  define_param :program_name_lookup, RegexSieve.new({
     /^BIO$/              => "Biology",
     /^Fake Biology$/     => nil,
     /(?:B|Microb)iology/ => "Biology",
     /^CHEM$/             => "Chemistry",
     /Chemistry/          => "Chemistry",
     /Physics/            => "Physics"
-  }
+  })
 
   define_transform :map_common_fields, sources: [:sample_file, :existing_contacts], targets: :all_contacts do
 
@@ -81,7 +81,7 @@ class SampleJob
     all_contacts.df = sample_file.df.dup
     Remi::SourceToTargetMap.apply(all_contacts.df) do
       map source(:program) .target(:Major__c)
-        .transform(Remi::Transform[:lookup][program_name_lookup])
+        .transform(Remi::Transform[:lookup][params[:program_name_lookup]])
     end
     all_contacts.df = all_contacts.df.where(all_contacts.df[:Major__c].not_eq(nil))
 
