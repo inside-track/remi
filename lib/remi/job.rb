@@ -2,7 +2,6 @@ module Remi
   module Job
     module JobClassMethods
       attr_accessor :params
-      attr_accessor :lookups
       attr_accessor :sources
       attr_accessor :targets
       attr_accessor :transforms
@@ -10,23 +9,6 @@ module Remi
       def define_param(key, value)
         @params ||= {}
         @params[key] = value
-      end
-
-      def define_lookup(name, type_class, options)
-        @lookups ||= []
-        @lookups << name
-
-        define_method(name) do
-          iv_name = instance_variable_get("@#{name}")
-          return iv_name if iv_name
-
-          if type_class == Hash
-            lookup = options
-          else
-            lookup = type_class.new(options)
-          end
-          instance_variable_set("@#{name}", lookup)
-        end
       end
 
       def define_source(name, type_class, **options)
@@ -69,10 +51,6 @@ module Remi
         @params || {}
       end
 
-      def lookups
-        @lookups || []
-      end
-
       def sources
         @sources || []
       end
@@ -96,7 +74,6 @@ module Remi
       def included(receiver)
         receiver.extend(JobClassMethods)
         receiver.params     = self.params.merge(receiver.params)
-        receiver.lookups    = self.lookups + receiver.lookups
         receiver.sources    = self.sources + receiver.sources
         receiver.targets    = self.targets + receiver.targets
         receiver.transforms = self.transforms.merge(receiver.transforms)
@@ -110,10 +87,6 @@ module Remi
 
     def params
       self.class.params
-    end
-
-    def lookups
-      self.class.lookups
     end
 
     def sources

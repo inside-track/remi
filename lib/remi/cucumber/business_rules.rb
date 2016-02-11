@@ -32,7 +32,7 @@ module Remi::BusinessRules
     end
 
     def formulas
-      @formulas ||= Remi::Lookup::RegexSieve.new({
+      @formulas ||= RegexSieve.new({
         /(today|yesterday|tomorrow)/i => [:date_reference, :match_single_day],
         /(this|last|previous|next) (day|month|year|week)/i => [:date_reference, :match_single_unit],
         /(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)/i => [:date_reference, :match_multiple]
