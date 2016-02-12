@@ -8,3 +8,19 @@ require 'remi/cucumber'
 require_relative 'env_app.rb'
 
 Remi::Settings.log_level = Logger::ERROR
+
+Before '~@fails' do
+  def expect_cucumber(&block)
+    block.call
+  end
+end
+
+Before '@fails' do
+  def expect_cucumber(&block)
+    begin
+      block.call
+    rescue RSpec::Expectations::ExpectationNotMetError => err
+      puts "Expected error: #{err}"
+    end
+  end
+end

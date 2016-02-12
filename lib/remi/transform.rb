@@ -50,9 +50,9 @@ module Remi
       end
     end
 
-    def nvl
-      memoize_as_lambda(__method__) do |*largs|
-        Array(largs).find('') { |arg| !arg.blank? }
+    def nvl(default='')
+      memoize_as_lambda(__method__, default) do |(mdefault), *largs|
+        Array(largs).find(->() { mdefault }) { |arg| !arg.blank? }
       end
     end
 
