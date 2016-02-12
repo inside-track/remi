@@ -3,14 +3,7 @@ module Remi
     module DataStub
       def stub_row_array
         @fields.values.map do |attrib|
-          case attrib[:type]
-          when :date
-            stub_values[:date].strftime(attrib[:format])
-          when nil
-            stub_values[:string]
-          else
-            stub_values[attrib[:type]]
-          end
+          stub_values[attrib[:type]].call
         end
       end
 
@@ -25,11 +18,12 @@ module Remi
 
       def stub_values
         @stub_values ||= {
-          string: "Some String",
-          number: 133,
-          float: 3.14159,
-          integer: 38,
-          date: Date.parse('2015-10-21')
+          nil => ->() { Faker::Hipster.word },
+          string: ->() { Faker::Hipster.word },
+          number: ->() { Faker::Number.decimal(4,4) },
+          float: ->() { Faker::Number.decimal(2,2) },
+          integer: ->() { Faker::Number.number(4) },
+          date: ->() { Date.parse('2015-10-21') }
         }
       end
     end

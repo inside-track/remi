@@ -9,6 +9,17 @@ require_relative 'env_app.rb'
 
 Remi::Settings.log_level = Logger::ERROR
 
+Before do
+  # Restart the random number generator prior to each scenario to
+  # ensure we have reproducibility of random output
+  Kernel.srand(35983958269835333)
+end
+
+After do
+  Kernel.srand
+end
+
+
 Before '~@fails' do
   def expect_cucumber(&block)
     block.call

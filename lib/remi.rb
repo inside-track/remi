@@ -11,6 +11,7 @@ require 'docile'
 require 'net/sftp'
 require 'pg'
 require 'regex_sieve'
+require 'faker'
 
 # ActiveSupport extensions
 require 'active_support'

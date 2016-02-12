@@ -31,8 +31,8 @@ Feature: Test the NVL (Next Value Lookup) transformer.
     Then the target field 'Result Field' is the first non-blank value from source fields 'Field1', 'Field2', 'Field3'
 
   @fails
-  Scenario: Testing that the NVL with the short form version fails appropriately
+  Scenario: Testing an NVL with the short form version in the wrong order
     Given the source 'Source Data'
     And the target 'Target Data'
 
-    Then the target field 'Field2 Copy' is the first non-blank value from source fields 'Field1', 'Field2', 'Field3'
+    Then the target field 'Result Field' is the first non-blank value from source fields 'Field2', 'Field1', 'Field3'
