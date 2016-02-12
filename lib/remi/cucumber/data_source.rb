@@ -17,14 +17,14 @@ module Remi
       end
 
       def stub_values
-        @stub_values ||= {
-          nil => ->() { Faker::Hipster.word },
-          string: ->() { Faker::Hipster.word },
-          number: ->() { Faker::Number.decimal(4,4) },
-          float: ->() { Faker::Number.decimal(2,2) },
+        @stub_values ||= Hash.new(->() { Faker::Hipster.word }).merge({
+          string:  ->() { Faker::Hipster.word },
+          number:  ->() { Faker::Number.decimal(4,4) },
+          float:   ->() { Faker::Number.decimal(2,2) },
           integer: ->() { Faker::Number.number(4) },
-          date: ->() { Date.parse('2015-10-21') }
-        }
+          date:    ->() { Date.parse('2015-10-21') },
+          boolean: ->() { ['T','F'].shuffle.first }
+        })
       end
     end
 
