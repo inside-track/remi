@@ -18,12 +18,13 @@ module Remi
 
       def stub_values
         @stub_values ||= Hash.new(->() { Faker::Hipster.word }).merge({
-          string:  ->() { Faker::Hipster.word },
-          number:  ->() { Faker::Number.decimal(4,4) },
-          float:   ->() { Faker::Number.decimal(2,2) },
-          integer: ->() { Faker::Number.number(4) },
-          date:    ->() { Date.parse('2015-10-21') },
-          boolean: ->() { ['T','F'].shuffle.first }
+          string:   ->() { Faker::Hipster.word },
+          number:   ->() { Faker::Number.decimal(4,4) },
+          float:    ->() { Faker::Number.decimal(2,2) },
+          integer:  ->() { Faker::Number.number(4) },
+          date:     ->() { Faker::Date.backward(3650) },
+          datetime: ->() { Faker::Time.backward(3650) },
+          boolean:  ->() { ['T','F'].shuffle.first }
         })
       end
     end

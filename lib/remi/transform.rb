@@ -83,7 +83,9 @@ module Remi
     def parse_date(format: '%Y-%m-%d', if_blank: nil)
       memoize_as_lambda(__method__, format, if_blank.try(:to_sym)) do |(mformat, mif_blank), larg|
         begin
-          if larg.blank? then
+          if larg.respond_to?(:strftime)
+            larg
+          elsif larg.blank? then
             if mif_blank == :low
               Date.new(1900,01,01)
             elsif mif_blank == :high
