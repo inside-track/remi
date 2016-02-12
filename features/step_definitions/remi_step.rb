@@ -283,6 +283,27 @@ Then /^the target field '(.+)' is populated with "([^"]*)" using the format "([^
   expect(@brt.target.field.value).to eq target_reformatted
 end
 
+Then /^the target field '(.+)' is the first non-blank value from source fields '(.+)'$/ do |target_field_name, source_field_list|
+  source_field_names = "'#{source_field_list}'".split(',').map do |field_with_quotes|
+    field_with_quotes.match(/'(.+)'/)[1]
+  end
+
+  source_field_names.each do |name|
+    step "the source field '#{name}'"
+  end
+  step "the target field '#{target_field_name}'"
+
+  source_field_names.each do |source_field_name|
+    @brt.run_transforms
+
+    source_values = source_field_names.map { |name| @brt.source.fields[name].value }
+    source_values_nvl = source_values.find { |arg| !arg.blank? }
+
+    expect_cucumber { expect(@brt.target.fields[target_field_name].value).to eq source_values_nvl }
+    @brt.source.fields[source_field_name].value = ''
+  end
+
+end
 
 When /^in the source field, periods have been used in place of commas$/ do
   @brt.source.field.value = @brt.source.field.value.gsub(/\./, ',')
