@@ -44,7 +44,7 @@ Feature: This is a sample feature file.
     And the source file is delimited with a comma
     And the source file is encoded using "ISO-8859-1" format
     And the source file uses a double quote to quote embedded delimiters
-    And the source file uses a preceeding double quote to escape an embedded quoting character
+    And the source file uses a preceding double quote to escape an embedded quoting character
     And the source file uses windows or unix line endings
     And the source file contains a header row
     And the source file contains at least the following headers in no particular order:
