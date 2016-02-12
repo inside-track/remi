@@ -79,7 +79,7 @@ Given /^the source file uses a ([\w ]+) to quote embedded delimiters$/ do |quote
   expect(@brt.source.csv_options[:quote_char]).to eq Remi::BusinessRules.csv_opt_map[quote_char]
 end
 
-Given /^the source file uses a preceeding ([\w ]+) to escape an embedded quoting character$/ do |escape_char|
+Given /^the source file uses a preceding ([\w ]+) to escape an embedded quoting character$/ do |escape_char|
   expect(@brt.source.csv_options[:quote_char]).to eq Remi::BusinessRules.csv_opt_map[escape_char]
 end
 
@@ -184,6 +184,14 @@ Then /^the target field '(.+)' is copied from the source field '(.+:.+)'$/ do |t
 
   @brt.run_transforms
   expect(@brt.target.field.value).to eq (@brt.sources[source_name].fields[source_field_name].value)
+end
+
+Then /^the target field '(.+)' is copied from the source field '([^:]+)'$/ do |target_field, source_field|
+  step "the target field '#{target_field}'"
+  step "the source field '#{source_field}'"
+
+  @brt.run_transforms
+  expect(@brt.target.field.value).to eq (@brt.source.fields[source_field].value)
 end
 
 Then /^the target field is (?:set to the value|populated with) "([^"]*)"$/ do |value|
