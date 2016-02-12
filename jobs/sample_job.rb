@@ -12,7 +12,8 @@ class SampleJob
     api: :bulk,
     fields: {
       :Id             => {},
-      :External_ID__c => {}
+      :External_ID__c => {},
+      :IsActive       => { type: :boolean }
     },
     query: <<-EOQ
       SELECT
