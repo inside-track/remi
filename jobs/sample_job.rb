@@ -13,7 +13,8 @@ class SampleJob
     fields: {
       :Id             => {},
       :External_ID__c => {},
-      :IsActive       => { type: :boolean }
+      :IsActive       => { type: :boolean },
+      :CreatedDate    => { type: :date, format: '%Y-%m-%d %H:%M:%S' }
     },
     query: <<-EOQ
       SELECT
