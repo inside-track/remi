@@ -47,3 +47,17 @@ Feature: This tests the creation of example records.
     And the target has 3 records where 'Quantity' is greater than 0.9
     And the target has 3 records where 'Quantity' is between 0 and 1
     And the target has 2 records where 'Quantity' is between 0.6 and 2
+
+
+
+  Scenario: Adding data to a source that already has example data.
+    Given the following example for 'Source Data':
+      | Id | Name  |
+      | 1  | Alpha |
+      | 2  | Beta  |
+      | 3  | Gamma |
+    And the following records are appended to 'Source Data':
+      | Id | Name    |
+      | 4  | Delta   |
+      | 5  | Epsilon |
+    Then the target has 5 records

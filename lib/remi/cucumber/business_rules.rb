@@ -285,9 +285,17 @@ module Remi::BusinessRules
       @data_obj.stub_df if @data_obj.respond_to? :stub_df
     end
 
+    def example_to_df(example)
+      example.to_df(@data_obj.df.row[0].to_hash, field_symbolizer: @data_obj.field_symbolizer)
+    end
+
     def stub_data_with(example)
       stub_data
-      @data_obj.df = example.to_df(@data_obj.df.row[0].to_hash, field_symbolizer: @data_obj.field_symbolizer)
+      @data_obj.df = example_to_df(example)
+    end
+
+    def append_data_with(example)
+      @data_obj.df = @data_obj.df.concat example_to_df(example)
     end
 
 

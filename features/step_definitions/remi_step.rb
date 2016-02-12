@@ -15,15 +15,15 @@ Given /^the job target '([[:alnum:]\s\-_]+)'$/ do |arg|
   @brt.add_job_target arg
 end
 
-Given /^the following example(?: record| records|) called '([[:alnum:]\s\-_]+)':$/ do |arg, example_table|
-  @brt.add_example arg, example_table
-end
-
 Given /^the job parameter '([[:alnum:]\s\-_]+)' is "([^"]*)"$/ do |param, value|
   @brt.set_job_parameter(param, value)
 end
 
 ### Setting up example data
+
+Given /^the following example(?: record| records|) called '([[:alnum:]\s\-_]+)':$/ do |arg, example_table|
+  @brt.add_example arg, example_table
+end
 
 Given /^the following example(?: record| records|) for '([[:alnum:]\s\-_]+)':$/ do |source_name, example_table|
   example_name = source_name
@@ -35,6 +35,11 @@ Given /^the example '([[:alnum:]\s\-_]+)' for '([[:alnum:]\s\-_]+)'$/ do |exampl
   @brt.job_sources[source_name].stub_data_with(@brt.examples[example_name])
 end
 
+Given /^the following (?:record is|records are) appended to '([[:alnum:]\s\-_]+)':$/ do |source_name, example_table|
+  example_name = SecureRandom.uuid
+  @brt.add_example example_name, example_table
+  @brt.job_sources[source_name].append_data_with(@brt.examples[example_name])
+end
 
 ### Source file processing
 
