@@ -205,9 +205,13 @@ Then /^the target field is (?:set to the value|populated with) "([^"]*)"$/ do |v
 end
 
 Then /^the target field '(.+)' is (?:set to the value|populated with) "([^"]*)"$/ do |target_field, value|
-  @brt.targets.add_field(target_field)
-  @brt.run_transforms
-  expect(@brt.targets.fields[target_field].values.uniq).to eq [Remi::BusinessRules::ParseFormula.parse(value)]
+  expect_cucumber {
+    expect {
+      @brt.targets.add_field(target_field)
+      @brt.run_transforms
+    }.not_to raise_error
+    expect(@brt.targets.fields[target_field].values.uniq).to eq [Remi::BusinessRules::ParseFormula.parse(value)]
+  }
 end
 
 Then /^the target field '(.+)' is in the list "([^"]*)"$/ do |target_field, list|
