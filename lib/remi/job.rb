@@ -7,7 +7,7 @@ module Remi
       attr_accessor :transforms
 
       def define_param(key, value)
-        @params ||= {}
+        @params ||= Hash.new { |h, key| raise "Parameter #{key} is not defined" }
         @params[key] = value
       end
 
