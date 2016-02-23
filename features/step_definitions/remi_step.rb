@@ -111,8 +111,8 @@ Given /^the source '([[:alnum:]\s\-_]+)'$/ do |arg|
   @brt.add_source(arg)
 end
 
-Given /^the source field '(.+)'$/ do |arg|
-  @brt.sources.add_field(arg)
+Given /^the source field '([^']+)'$/ do |source_field_name|
+  @brt.sources.add_field(source_field_name)
 end
 
 Given /^the source field has the value "([^"]*)"$/ do |arg|
@@ -135,15 +135,15 @@ end
 
 Given /^the source field '(.+:.+)' (?:has|is set to) the value "([^"]*)"$/ do |source_field, value|
   step "the source field '#{source_field}'"
-  source_name, field_name = *Remi::BusinessRules.parse_full_field(source_field)
+  source_name, field_name = @brt.sources.parse_full_field(source_field)
   @brt.sources[source_name].fields[field_name].value = Remi::BusinessRules::ParseFormula.parse(value)
 end
 
 Given /^the source field '(.+:.+)' (?:has|is set to) the value in the source field '(.+:.+)', prefixed with "([^"]*)"$/ do |source_field, other_source_field, prefix|
   step "the source field '#{source_field}'"
   step "the source field '#{other_source_field}'"
-  source_name, field_name = *Remi::BusinessRules.parse_full_field(source_field)
-  other_source_name, other_field_name = *Remi::BusinessRules.parse_full_field(other_source_field)
+  source_name, field_name = @brt.sources.parse_full_field(source_field)
+  other_source_name, other_field_name = @brt.sources.parse_full_field(other_source_field)
 
   prefixed = "#{prefix}#{@brt.sources[other_source_name].fields[other_field_name].value}"
   @brt.sources[source_name].fields[field_name].value = prefixed
@@ -185,7 +185,7 @@ Then /^the target field '(.+)' is copied from the source field '(.+:.+)'$/ do |t
   step "the target field '#{target_field}'"
   step "the source field '#{source_field}'"
 
-  source_name, source_field_name = *Remi::BusinessRules.parse_full_field(source_field)
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
 
   @brt.run_transforms
   expect(@brt.target.field.value).to eq (@brt.sources[source_name].fields[source_field_name].value)
