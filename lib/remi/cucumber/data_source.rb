@@ -23,7 +23,7 @@ module Remi
           float:    ->() { Faker::Number.decimal(2,2) },
           integer:  ->() { Faker::Number.number(4) },
           date:     ->() { Faker::Date.backward(3650) },
-          datetime: ->() { Faker::Time.backward(3650) },
+          datetime: ->() { Faker::Time.backward(3650).to_datetime },
           boolean:  ->() { ['T','F'].shuffle.first }
         })
       end
