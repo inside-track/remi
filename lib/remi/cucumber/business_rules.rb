@@ -1,10 +1,6 @@
 module Remi::BusinessRules
   using Remi::Refinements::Symbolizer
 
-  def self.parse_full_field(full_field_name)
-    full_field_name.split(':').map(&:strip)
-  end
-
   def self.csv_opt_map
     {
       'tab'             => "\t",
@@ -173,18 +169,25 @@ module Remi::BusinessRules
       @subjects.keys
     end
 
+    def parse_full_field(full_field_name, multi: false)
+      if full_field_name.include? ':'
+        full_field_name.split(':').map(&:strip)
+      elsif multi
+        [@subjects.keys, full_field_name]
+      else
+        raise "Multiple subjects defined: #{keys}" unless @subjects.size == 1
+        [@subjects.keys.first, full_field_name]
+      end
+    end
+
     def add_subject(subject_name, subject)
       @subjects[subject_name] ||= DataSubject.new(subject)
     end
 
     def add_field(full_field_name)
-      if full_field_name.include? ':'
-        subject_name, field_name = *Remi::BusinessRules.parse_full_field(full_field_name)
+      subject_names, field_name = parse_full_field(full_field_name, multi: true)
+      Array(subject_names).each do |subject_name|
         @subjects[subject_name].add_field(field_name)
-      else
-        @subjects.each do |subject_name, subject|
-          subject.add_field(full_field_name)
-        end
       end
     end
 
