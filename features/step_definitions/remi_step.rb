@@ -125,7 +125,8 @@ end
 
 When /^the source field '(.+)' (?:has an empty value|is blank)$/ do |source_field|
   step "the source field '#{source_field}'"
-  @brt.source.fields[source_field].value = ''
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  @brt.sources[source_name].fields[source_field_name].value = ''
 end
 
 Given /^the source field '([^:]+)' (?:has|is set to) the value "([^"]*)"$/ do |source_field, value|
@@ -139,6 +140,15 @@ Given /^the source field '(.+:.+)' (?:has|is set to) the value "([^"]*)"$/ do |s
   @brt.sources[source_name].fields[field_name].value = Remi::BusinessRules::ParseFormula.parse(value)
 end
 
+Given /^the source field '(.+:.+)' (?:has|is set to) the value in the source field '(.+:.+)'$/ do |source_field, other_source_field|
+  step "the source field '#{source_field}'"
+  step "the source field '#{other_source_field}'"
+  source_name, field_name = @brt.sources.parse_full_field(source_field)
+  other_source_name, other_field_name = @brt.sources.parse_full_field(other_source_field)
+
+  @brt.sources[source_name].fields[field_name].value = @brt.sources[other_source_name].fields[other_field_name].value
+end
+
 Given /^the source field '(.+:.+)' (?:has|is set to) the value in the source field '(.+:.+)', prefixed with "([^"]*)"$/ do |source_field, other_source_field, prefix|
   step "the source field '#{source_field}'"
   step "the source field '#{other_source_field}'"
@@ -147,6 +157,10 @@ Given /^the source field '(.+:.+)' (?:has|is set to) the value in the source fie
 
   prefixed = "#{prefix}#{@brt.sources[other_source_name].fields[other_field_name].value}"
   @brt.sources[source_name].fields[field_name].value = prefixed
+end
+
+Given /^the source data are tied through the fields '(.+:.+)' and '(.+:.+)'$/ do |source_field, other_source_field|
+  step "the source field '#{other_source_field}' is set to the value in the source field '#{source_field}'"
 end
 
 Given /^the source field is parsed with the date format "([^"]*)"$/ do |date_format|
@@ -188,7 +202,7 @@ Then /^the target field '(.+)' is copied from the source field '(.+:.+)'$/ do |t
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
 
   @brt.run_transforms
-  expect(@brt.target.field.value).to eq (@brt.sources[source_name].fields[source_field_name].value)
+  expect(@brt.target.fields[target_field].value).to eq (@brt.sources[source_name].fields[source_field_name].value)
 end
 
 Then /^the target field '(.+)' is copied from the source field '([^:]+)'$/ do |target_field, source_field|
@@ -207,10 +221,10 @@ end
 Then /^the target field '(.+)' is (?:set to the value|populated with) "([^"]*)"$/ do |target_field, value|
   expect_cucumber {
     expect {
-      @brt.targets.add_field(target_field)
-      @brt.run_transforms
+  @brt.targets.add_field(target_field)
+  @brt.run_transforms
     }.not_to raise_error
-    expect(@brt.targets.fields[target_field].values.uniq).to eq [Remi::BusinessRules::ParseFormula.parse(value)]
+  expect(@brt.targets.fields[target_field].values.uniq).to eq [Remi::BusinessRules::ParseFormula.parse(value)]
   }
 end
 
@@ -243,6 +257,15 @@ Then /^the target should match the example '([[:alnum:]\s]+)'$/ do |example_name
   step "the target '#{target_name}' should match the example '#{example_name}'"
 end
 
+Then /^the target field '(.+)' is populated from the source field '(.+)' after translating it according to:$/ do |target_field, source_field, translation_table|
+  step "the target field '#{target_field}'"
+
+  translation_table.rows.each do |translation_row|
+    step "the source field '#{source_field}' is set to the value \"#{translation_row[0]}\""
+    @brt.run_transforms
+    expect(@brt.target.fields[target_field].value).to eq translation_row[1]
+  end
+end
 
 ### Transforms
 
@@ -301,23 +324,26 @@ Then /^the target field '(.+)' is populated with "([^"]*)" using the format "([^
 end
 
 Then /^the target field '(.+)' is the first non-blank value from source fields '(.+)'$/ do |target_field_name, source_field_list|
-  source_field_names = "'#{source_field_list}'".split(',').map do |field_with_quotes|
-    field_with_quotes.match(/'(.+)'/)[1]
+  source_fields = "'#{source_field_list}'".split(',').map do |field_with_quotes|
+    full_field_name = field_with_quotes.match(/'(.+)'/)[1]
+
+    source_name, field_name = @brt.sources.parse_full_field(full_field_name)
+    { full_field_name: full_field_name, source: source_name, field: field_name }
   end
 
-  source_field_names.each do |name|
-    step "the source field '#{name}'"
+  source_fields.each do |source_field|
+    step "the source field '#{source_field[:full_field_name]}'"
   end
   step "the target field '#{target_field_name}'"
 
-  source_field_names.each do |source_field_name|
+  source_fields.each do |source_field|
     @brt.run_transforms
 
-    source_values = source_field_names.map { |name| @brt.source.fields[name].value }
+    source_values = source_fields.map { |v_source_field| @brt.sources[v_source_field[:source]].fields[v_source_field[:field]].value }
     source_values_nvl = source_values.find { |arg| !arg.blank? }
 
     expect_cucumber { expect(@brt.target.fields[target_field_name].value).to eq source_values_nvl }
-    @brt.source.fields[source_field_name].value = ''
+    @brt.sources[source_field[:source]].fields[source_field[:field]].value = ''
   end
 
 end
@@ -393,7 +419,7 @@ end
 
 Then /^the target '([[:alnum:]\s\-_]+)' has (\d+) record(?:s|)$/ do |target_name, nrecords|
   @brt.run_transforms
-  expect(@brt.targets[target_name].size).to be nrecords.to_i
+  expect(@brt.targets[target_name].size).to eq nrecords.to_i
 end
 
 Then /^the target has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is "([^"]*)"$/ do |nrecords, field_name, value|
