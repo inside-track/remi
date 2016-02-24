@@ -1,47 +1,40 @@
 module Remi
   module DataTarget
-    class Salesforce
+    class CsvFile
       include DataTarget
 
-      def initialize(object:, operation:, credentials:, api: :bulk, logger: Remi::Settings.logger)
-        @sfo = object
-        @operation = operation
-        @credentials = credentials
-        @api = api
+      def self.default_csv_options
+        CSV::DEFAULT_OPTIONS.merge({
+          headers: true,
+          header_converters: Remi::FieldSymbolizers[:standard],
+          col_sep: ',',
+          encoding: 'UTF-8',
+          quote_char: '"',
+          row_sep: "\n"
+        })
+      end
+
+      def initialize(path:, csv_options: {}, logger: Remi::Settings.logger)
+        @path = path
+        @csv_options = self.class.default_csv_options.merge(csv_options)
         @logger = logger
       end
 
+      attr_reader   :path
+      attr_reader   :csv_options
+
       def field_symbolizer
-        Remi::FieldSymbolizers[:salesforce]
+        self.class.default_csv_options[:header_converters]
       end
 
       def load
         return true if @loaded || df.size == 0
 
-        @logger.info "Performing Salesforce #{@operation} on object #{@sfo}"
+        @logger.info "Writing CSV file #{@path}"
 
-        if @operation == :update
-          Remi::SfBulkHelper::SfBulkUpdate.update(restforce_client, @sfo, df_as_array_of_hashes, logger: @logger)
-        elsif @operation == :create
-          Remi::SfBulkHelper::SfBulkCreate.create(restforce_client, @sfo, df_as_array_of_hashes, logger: @logger)
-        end
+        df.write_csv @path, @csv_options
 
         @loaded = true
-      end
-
-      def restforce_client
-        @restforce_client ||= begin
-          client = Restforce.new(@credentials)
-
-          #run a dummy query to initiate a connection. Workaround for Bulk API problem
-          # https://github.com/yatish27/salesforce_bulk_api/issues/33
-          client.query('SELECT Id FROM Contact LIMIT 1')
-          client
-        end
-      end
-
-      def df_as_array_of_hashes
-        df.to_a[0]
       end
 
     end
