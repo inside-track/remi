@@ -18,15 +18,23 @@ module Remi
       instance_variable_set("@#{func}", hash_memo)[args]
     end
 
-    def prefix(prefix)
-      memoize_as_lambda(__method__, prefix) do |(mprefix), larg|
-        "#{mprefix}#{larg}"
+    def prefix(prefix, if_blank: '')
+      memoize_as_lambda(__method__, prefix, if_blank) do |(mprefix, mif_blank), larg|
+        if larg.blank?
+          mif_blank
+        else
+          "#{mprefix}#{larg}"
+        end
       end
     end
 
-    def postfix(postfix)
-      memoize_as_lambda(__method__, postfix) do |(mpostfix), larg|
-        "#{larg}#{mpostfix}"
+    def postfix(postfix, if_blank: '')
+      memoize_as_lambda(__method__, postfix, if_blank) do |(mpostfix, mif_blank), larg|
+        if larg.blank?
+          mif_blank
+        else
+          "#{larg}#{mpostfix}"
+        end
       end
     end
 
