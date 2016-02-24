@@ -1,5 +1,1 @@
-require_relative '../../jobs/sample_job'
-require_relative '../../jobs/copy_source_job'
-require_relative '../../jobs/transforms/transform_jobs'
-require_relative '../../jobs/aggregate_job'
-require_relative '../../jobs/parameters_job'
+Dir["#{File.dirname(__FILE__)}/../../jobs/**/*_job.rb"].each { |f| require(f) }

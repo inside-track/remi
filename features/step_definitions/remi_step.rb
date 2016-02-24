@@ -71,37 +71,52 @@ Then /^no files will be downloaded for processing$/ do
   expect { @brt.source.extract }.to raise_error Remi::Extractor::SftpFile::FileNotFoundError
 end
 
-
-Given /^the source file is delimited with a (\w+)$/ do |delimiter|
-  expect(@brt.source.csv_options[:col_sep]).to eq Remi::BusinessRules.csv_opt_map[delimiter]
+Then /^the file is uploaded to the remote path "([^"]+)"$/ do |remote_path|
+  expect(@brt.target.get_attrib(:remote_path)).to eq Remi::BusinessRules::ParseFormula.parse(remote_path)
 end
 
-Given /^the source file is encoded using "([^"]+)" format$/ do |encoding|
-  expect(@brt.source.csv_options[:encoding].split(':').first).to eq encoding
+## CSV Options
+
+Given /^the (source|target) file is delimited with a (\w+)$/ do |st, delimiter|
+  expect(@brt.send(st.to_sym).csv_options[:col_sep]).to eq Remi::BusinessRules.csv_opt_map[delimiter]
 end
 
-Given /^the source file uses a ([\w ]+) to quote embedded delimiters$/ do |quote_char|
-  expect(@brt.source.csv_options[:quote_char]).to eq Remi::BusinessRules.csv_opt_map[quote_char]
+Given /^the (source|target) file is encoded using "([^"]+)" format$/ do |st, encoding|
+  expect(@brt.send(st.to_sym).csv_options[:encoding].split(':').first).to eq encoding
 end
 
-Given /^the source file uses a preceding ([\w ]+) to escape an embedded quoting character$/ do |escape_char|
-  expect(@brt.source.csv_options[:quote_char]).to eq Remi::BusinessRules.csv_opt_map[escape_char]
+Given /^the (source|target) file uses a ([\w ]+) to quote embedded delimiters$/ do |st, quote_char|
+  expect(@brt.send(st.to_sym).csv_options[:quote_char]).to eq Remi::BusinessRules.csv_opt_map[quote_char]
 end
 
-Given /^the source file uses ([\w ]+) line endings$/ do |line_endings|
-  expect(@brt.source.csv_options[:row_sep]).to eq Remi::BusinessRules.csv_opt_map[line_endings]
+Given /^the (source|target) file uses a preceding ([\w ]+) to escape an embedded quoting character$/ do |st, escape_char|
+  expect(@brt.send(st.to_sym).csv_options[:quote_char]).to eq Remi::BusinessRules.csv_opt_map[escape_char]
 end
 
-Given /^the source file (contains|does not contain) a header row$/ do |header|
-  expect(@brt.source.csv_options[:headers]).to eq (header == 'contains')
+Given /^the (source|target) file uses ([\w ]+) line endings$/ do |st, line_endings|
+  expect(@brt.send(st.to_sym).csv_options[:row_sep]).to eq Remi::BusinessRules.csv_opt_map[line_endings]
 end
 
-Given /^the source file contains at least the following headers in no particular order:$/ do |table|
+Given /^the (source|target) file (contains|does not contain) a header row$/ do |st, header|
+  expect(@brt.send(st.to_sym).csv_options[:headers]).to eq (header == 'contains')
+end
+
+Given /^the (source|target) file contains at least the following headers in no particular order:$/ do |st, table|
   table.rows.each do |row|
     field = row.first
-    step "the source field '#{field}'"
+    step "the #{st} field '#{field}'"
   end
-  expect(@brt.source.data_obj.fields.keys).to include(*@brt.source.fields.names)
+  expect(@brt.send(st.to_sym).data_obj.fields.keys).to include(*@brt.send(st.to_sym).fields.names)
+end
+
+Given /^the (source|target) file contains all of the following headers in this order:$/ do |st, table|
+  table.rows.each do |row|
+    field = row.first
+    step "the #{st} field '#{field}'"
+  end
+
+  @brt.run_transforms if st == 'target'
+  expect(@brt.send(st.to_sym).data_obj.fields.keys).to eq @brt.send(st.to_sym).fields.names
 end
 
 

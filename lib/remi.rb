@@ -57,5 +57,6 @@ require 'remi/data_target.rb'
 require 'remi/data_target/data_frame'
 require 'remi/data_target/salesforce'
 require 'remi/data_target/csv_file'
+require 'remi/data_target/sftp_file'
 
 require 'remi/transform'

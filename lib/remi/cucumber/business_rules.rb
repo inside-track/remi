@@ -29,9 +29,9 @@ module Remi::BusinessRules
 
     def formulas
       @formulas ||= RegexSieve.new({
-        /(today|yesterday|tomorrow)/i => [:date_reference, :match_single_day],
-        /(this|last|previous|next) (day|month|year|week)/i => [:date_reference, :match_single_unit],
-        /(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)/i => [:date_reference, :match_multiple]
+        /(today|yesterday|tomorrow)(|:[^*]+)\*/i => [:date_reference, :match_single_day],
+        /(this|last|previous|next) (day|month|year|week)(|:[^*]+)\*/i => [:date_reference, :match_single_unit],
+        /(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)(|:[^*]+)\*/i => [:date_reference, :match_multiple]
       })
     end
 
@@ -39,7 +39,7 @@ module Remi::BusinessRules
       return form unless is_formula?(form)
 
       form_opt = formulas[form, :match]
-      raise "Unknown formula #{form}" unless form_opt
+      raise "Unknown formula #{form}" unless form_opt[:match]
 
       to_replace = form.match(base_regex)[0]
       replace_with = if form_opt[:value][0] == :date_reference
@@ -54,30 +54,37 @@ module Remi::BusinessRules
 
     def date_reference(formula, captured)
       parsed = self.send("date_reference_#{formula}", *captured)
-      Date.current.send("#{parsed[:unit]}_#{parsed[:direction]}", parsed[:quantity]).strftime('%Y-%m-%d')
+      Date.current.send("#{parsed[:unit]}_#{parsed[:direction]}", parsed[:quantity]).strftime(parsed[:format])
     end
 
-    def date_reference_match_single_day(form, direction)
+    def parse_colon_date_format(str)
+      str.blank? ? '%Y-%m-%d' : str.slice(1..-1).strip
+    end
+
+    def date_reference_match_single_day(form, direction, format=nil)
       {
         quantity: direction.downcase == 'today' ? 0 : 1,
         unit: 'days',
-        direction: { 'today' => 'ago', 'yesterday' => 'ago', 'tomorrow' => 'since' }[direction.downcase]
+        direction: { 'today' => 'ago', 'yesterday' => 'ago', 'tomorrow' => 'since' }[direction.downcase],
+        format: parse_colon_date_format(format)
       }
     end
 
-    def date_reference_match_single_unit(form, direction, unit)
+    def date_reference_match_single_unit(form, direction, unit, format=nil)
       {
         quantity: direction.downcase == 'this' ? 0 : 1,
         unit: unit.downcase.pluralize,
-        direction: { 'this' => 'ago', 'last' => 'ago', 'previous' => 'ago', 'next' => 'since' }[direction.downcase]
+        direction: { 'this' => 'ago', 'last' => 'ago', 'previous' => 'ago', 'next' => 'since' }[direction.downcase],
+        format: parse_colon_date_format(format)
       }
     end
 
-    def date_reference_match_multiple(form, quantity, unit, direction)
+    def date_reference_match_multiple(form, quantity, unit, direction, format=nil)
       {
         quantity: quantity.to_i,
         unit: unit.downcase.pluralize,
-        direction: { 'ago' => 'ago', 'from now' => 'since' }[direction.downcase]
+        direction: { 'ago' => 'ago', 'from now' => 'since' }[direction.downcase],
+        format: parse_colon_date_format(format)
       }
     end
   end
@@ -238,6 +245,10 @@ module Remi::BusinessRules
 
     def size
       @data_obj.df.size
+    end
+
+    def get_attrib(name)
+      @data_obj.send(name)
     end
 
     # Public: Converts the data subject to a hash where the keys are the table
