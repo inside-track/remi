@@ -38,6 +38,12 @@ module Remi
       end
     end
 
+    def truncate(len)
+      memoize_as_lambda(__method__, len) do |(mlen), larg|
+        larg.slice(0,len)
+      end
+    end
+
     def concatenate(delimiter="")
       memoize_as_lambda(__method__, delimiter) do |(mdelimiter), *largs|
         Array(largs).join(mdelimiter)
