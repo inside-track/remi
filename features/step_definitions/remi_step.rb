@@ -106,7 +106,7 @@ Given /^the (source|target) file contains at least the following headers in no p
     field = row.first
     step "the #{st} field '#{field}'"
   end
-  expect(@brt.send(st.to_sym).data_obj.fields.keys).to include(*@brt.send(st.to_sym).fields.names)
+  expect(@brt.send(st.to_sym).data_obj.fields.keys).to include(*@brt.send(st.to_sym).fields.field_names)
 end
 
 Given /^the (source|target) file contains all of the following headers in this order:$/ do |st, table|
@@ -116,7 +116,7 @@ Given /^the (source|target) file contains all of the following headers in this o
   end
 
   @brt.run_transforms if st == 'target'
-  expect(@brt.send(st.to_sym).data_obj.fields.keys).to eq @brt.send(st.to_sym).fields.names
+  expect(@brt.send(st.to_sym).data_obj.fields.keys).to eq @brt.send(st.to_sym).fields.field_names
 end
 
 
@@ -130,29 +130,31 @@ Given /^the source field '([^']+)'$/ do |source_field_name|
   @brt.sources.add_field(source_field_name)
 end
 
-Given /^the source field has the value "([^"]*)"$/ do |arg|
-  @brt.source.field.value = Remi::BusinessRules::ParseFormula.parse(arg)
-end
-
-When /^the source field (?:has an empty value|is blank)$/ do
-  @brt.source.field.value = ''
-end
-
-When /^the source field '(.+)' (?:has an empty value|is blank)$/ do |source_field|
+Given /^the source field '([^']+)' (?:has|is set to) the value "([^"]*)"$/ do |source_field, value|
   step "the source field '#{source_field}'"
+
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  @brt.sources[source_name].fields[source_field_name].value = Remi::BusinessRules::ParseFormula.parse(value)
+end
+
+Given /^the source field (?:has|is set to) the value "([^"]*)"$/ do |value|
+  @brt.sources.fields.each do |field|
+    step "the source field '#{field.full_name}' is set to the value \"#{value}\""
+  end
+end
+
+When /^the source field '([^']+)' (?:has an empty value|is blank)$/ do |source_field|
+  step "the source field '#{source_field}'"
+
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+
   @brt.sources[source_name].fields[source_field_name].value = ''
 end
 
-Given /^the source field '([^:]+)' (?:has|is set to) the value "([^"]*)"$/ do |source_field, value|
-  step "the source field '#{source_field}'"
-  @brt.source.fields[source_field].value = Remi::BusinessRules::ParseFormula.parse(value)
-end
-
-Given /^the source field '(.+:.+)' (?:has|is set to) the value "([^"]*)"$/ do |source_field, value|
-  step "the source field '#{source_field}'"
-  source_name, field_name = @brt.sources.parse_full_field(source_field)
-  @brt.sources[source_name].fields[field_name].value = Remi::BusinessRules::ParseFormula.parse(value)
+When /^the source field (?:has an empty value|is blank)$/ do
+  @brt.sources.fields.each do |field|
+    step "the source field '#{field.full_name}' is blank"
+  end
 end
 
 Given /^the source field '(.+:.+)' (?:has|is set to) the value in the source field '(.+:.+)'$/ do |source_field, other_source_field|
@@ -178,8 +180,17 @@ Given /^the source data are tied through the fields '(.+:.+)' and '(.+:.+)'$/ do
   step "the source field '#{other_source_field}' is set to the value in the source field '#{source_field}'"
 end
 
+Given /^the source field '([^']+)' is parsed with the date format "([^"]*)"$/ do |source_field, date_format|
+  step "the source field '#{source_field}'"
+
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  expect(@brt.sources[source_name].fields[source_field_name].metadata[:format]).to eq date_format
+end
+
 Given /^the source field is parsed with the date format "([^"]*)"$/ do |date_format|
-  expect(@brt.source.field.metadata[:format]).to eq date_format
+  @brt.sources.fields.each do |field|
+    step "the source field '#{field.full_name}' is parsed with the date format \"#{date_format}\""
+  end
 end
 
 Given /^the source field is a valid email address$/ do
@@ -200,55 +211,66 @@ Given /^the target field '([^']+)'$/ do |arg|
   @brt.targets.add_field(arg)
 end
 
-Then /^the target field '(.+)' is copied from the source field$/ do |arg|
-  step "the target field '#{arg}'"
-  step "the target field is copied from the source field"
-end
-
-Then /^the target field is copied from the source field$/ do
-  @brt.run_transforms
-  expect(@brt.target.field.value).to eq (@brt.source.field.value)
-end
-
-Then /^the target field '(.+)' is copied from the source field '(.+:.+)'$/ do |target_field, source_field|
+Then /^the target field '([^']+)' is copied from the source field '([^']+)'$/ do |target_field, source_field|
   step "the target field '#{target_field}'"
   step "the source field '#{source_field}'"
 
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
 
   @brt.run_transforms
-  expect(@brt.target.fields[target_field].value).to eq (@brt.sources[source_name].fields[source_field_name].value)
+  Array(target_names).each do |target_name|
+    expect(@brt.targets[target_name].fields[target_field_name].value).to eq (@brt.sources[source_name].fields[source_field_name].value)
+  end
 end
 
-Then /^the target field '(.+)' is copied from the source field '([^:]+)'$/ do |target_field, source_field|
-  step "the target field '#{target_field}'"
-  step "the source field '#{source_field}'"
-
-  @brt.run_transforms
-  expect(@brt.target.field.value).to eq (@brt.source.fields[source_field].value)
+Then /^the target field '([^']+)' is copied from the source field$/ do |target_field|
+  @brt.sources.fields.each do |source_field|
+    step "the target field '#{target_field}' is copied from the source field '#{source_field.full_name}'"
+  end
 end
 
-Then /^the target field is (?:set to the value|populated with) "([^"]*)"$/ do |value|
-  @brt.run_transforms
-  expect(@brt.target.field.value).to eq Remi::BusinessRules::ParseFormula.parse(value)
+Then /^the target field is copied from the source field$/ do
+  @brt.targets.fields.each do |target_field|
+    @brt.sources.fields.each do |source_field|
+      step "the target field '#{target_field.full_name}' is copied from the source field '#{source_field.full_name}'"
+    end
+  end
 end
 
-Then /^the target field '(.+)' is (?:set to the value|populated with) "([^"]*)"$/ do |target_field, value|
+Then /^the target field '([^']+)' is (?:set to the value|populated with) "([^"]*)"$/ do |target_field, value|
   expect_cucumber {
+    target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+
     expect {
-  @brt.targets.add_field(target_field)
-  @brt.run_transforms
+      Array(target_names).each do |target_name|
+        @brt.targets[target_name].add_field(target_field_name)
+      end
+      @brt.run_transforms
     }.not_to raise_error
-  expect(@brt.targets.fields[target_field].values.uniq).to eq [Remi::BusinessRules::ParseFormula.parse(value)]
+    Array(target_names).each do |target_name|
+      expect(@brt.targets[target_name].fields[target_field_name].values.uniq).to eq [Remi::BusinessRules::ParseFormula.parse(value)]
+    end
   }
 end
 
-Then /^the target field '(.+)' is in the list "([^"]*)"$/ do |target_field, list|
+Then /^the target field is (?:set to the value|populated with) "([^"]*)"$/ do |value|
+  @brt.targets.fields.each do |field|
+    step "the target field '#{field.full_name}' is populated with \"#{value}\""
+  end
+end
+
+
+Then /^the target field '(.+)' has a value in the list "([^"]*)"$/ do |target_field, list|
   step "the target field '#{target_field}'"
+
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
 
   list_array = list.split(',').map(&:strip)
   @brt.run_transforms
-  expect(@brt.targets.fields[target_field].values.uniq & list_array).to include(*@brt.targets.fields[target_field].values.uniq)
+  Array(target_names).each do |target_name|
+    expect(@brt.targets[target_name].fields[target_field].values.uniq & list_array).to include(*@brt.targets[target_name].fields[target_field].values.uniq)
+  end
 end
 
 
@@ -284,31 +306,82 @@ end
 
 ### Transforms
 
-Then /^the target field is a concatenation of the source fields, delimited by "([^"]*)"$/ do |delimiter|
-  concatenated_source = @brt.sources.fields.values.uniq.map do |row|
-    Array(row.join(delimiter))
+Then /^the target field '([^']+)' is a concatenation of the source fields '(.+)', delimited by "([^"]*)"$/ do |target_field, source_field_list, delimiter|
+  source_fields = "'#{source_field_list}'".gsub(' and ', ', ').split(',').map do |field_with_quotes|
+    full_field_name = field_with_quotes.match(/'(.+)'/)[1]
+
+    source_name, field_name = @brt.sources.parse_full_field(full_field_name)
+    { full_field_name: full_field_name, source: source_name, field: field_name }
   end
 
+  concatenated_source = source_fields.map do |field|
+    step "the source field '#{field[:full_field_name]}'"
+    @brt.sources[field[:source]].fields[field[:field]].values.uniq
+  end.join(delimiter)
+
+  step "the target field '#{target_field}'"
+
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+
   @brt.run_transforms
-  expect(@brt.targets.fields.values.uniq).to eq concatenated_source
+  Array(target_names).each do |target_name|
+    expect(@brt.targets[target_name].fields[target_field_name].values.uniq).to eq Array(concatenated_source)
+  end
 end
 
-Then /^the target field is a concatenation of '(.+)' and '(.+)', delimited by "([^"]*)"$/ do |source_field_1, source_field_2, delimiter|
-  expected_value = [@brt.sources.fields[source_field_1].value, @brt.sources.fields[source_field_2].value].join(delimiter)
+Then /^the target field '([^']+)' is a concatenation of the source fields, delimited by "([^"]*)"$/ do |target_field, delimiter|
+  source_field_list = @brt.sources.fields.map do |field|
+    "'#{field.full_name}'"
+  end.join(',')
+
+  step "the target field '#{target_field}' is a concatenation of the source fields #{source_field_list}, delimited by \"#{delimiter}\""
+end
+
+Then /^the target field is a concatenation of the source fields, delimited by "([^"]*)"$/ do |delimiter|
+  @brt.targets.fields.each do |target_field|
+    step "the target field '#{target_field.full_name}' is a concatenation of the source fields, delimited by \"#{delimiter}\""
+  end
+end
+
+
+Then /^the target field '([^']+)' is a concatenation of "([^"]*)" and '(.+)', delimited by "([^"]*)"$/ do |target_field, constant, source_field, delimiter|
+  step "the target field '#{target_field}'"
+
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+
+  expected_value = [constant, @brt.sources[source_name].fields[source_field_name].value].join(delimiter)
   @brt.run_transforms
-  expect(@brt.targets.fields.values.uniq).to eq [[expected_value]]
+
+  Array(target_names).each do |target_name|
+    expect(@brt.targets[target_name].fields[target_field_name].values.uniq).to eq Array(expected_value)
+  end
+end
+
+Then /^the target field '([^']+)' is a concatenation of '(.+)' and "([^"]*)", delimited by "([^"]*)"$/ do |target_field, source_field, constant, delimiter|
+  step "the target field '#{target_field}'"
+
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+
+  expected_value = [@brt.sources[source_name].fields[source_field_name].value, constant].join(delimiter)
+  @brt.run_transforms
+
+  Array(target_names).each do |target_name|
+    expect(@brt.targets[target_name].fields[target_field_name].values.uniq).to eq Array(expected_value)
+  end
 end
 
 Then /^the target field is a concatenation of "([^"]*)" and '(.+)', delimited by "([^"]*)"$/ do |constant, source_field, delimiter|
-  expected_value = [constant, @brt.sources.fields[source_field].value].join(delimiter)
-  @brt.run_transforms
-  expect(@brt.targets.fields.values.uniq).to eq [[expected_value]]
+  @brt.targets.fields.each do |target_field|
+    step "the target field '#{target_field.full_name}' is a concatenation of \"#{constant}\" and '#{source_field}', delimited by \"#{delimiter}\""
+  end
 end
 
 Then /^the target field is a concatenation of '(.+)' and "([^"]*)", delimited by "([^"]*)"$/ do |source_field, constant, delimiter|
-  expected_value = [@brt.sources.fields[source_field].value, constant].join(delimiter)
-  @brt.run_transforms
-  expect(@brt.targets.fields.values.uniq).to eq [[expected_value]]
+  @brt.targets.fields.each do |target_field|
+    step "the target field '#{target_field.full_name}' is a concatenation of '#{source_field}' and \"#{constant}\", delimited by \"#{delimiter}\""
+  end
 end
 
 Then /^the source field is prefixed with "([^"]*)" and loaded into the target field$/ do |prefix|
@@ -317,14 +390,27 @@ Then /^the source field is prefixed with "([^"]*)" and loaded into the target fi
   expect(@brt.target.field.value).to eq prefixed_source
 end
 
-Then /^the target field '(.+)' is populated from the source field using the format "([^"]*)"$/ do |target_field, target_format|
-  source_format = @brt.source.field.metadata[:format]
-  source_reformatted = Remi::Transform[:format_date].(from_fmt: source_format, to_fmt: target_format)
-    .call(@brt.source.field.value)
-
+Then /^the target field '([^']+)' is populated from the source field '([^']+)' using the format "([^"]*)"$/ do |target_field, source_field, target_format|
+  step "the source field '#{source_field}'"
   step "the target field '#{target_field}'"
+
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+
+  source_format = @brt.sources[source_name].fields[source_field_name].metadata[:format]
+  source_reformatted = Remi::Transform[:format_date].(from_fmt: source_format, to_fmt: target_format)
+    .call(@brt.sources[source_name].fields[source_field_name].value)
+
   @brt.run_transforms
-  expect(@brt.target.field.value).to eq source_reformatted
+  target_names.each do |target_name|
+    expect(@brt.targets[target_name].fields[target_field_name].value).to eq source_reformatted
+  end
+end
+
+Then /^the target field '([^']+)' is populated from the source field using the format "([^"]*)"$/ do |target_field, target_format|
+  @brt.sources.fields.each do |source_field|
+    step "the target field '#{target_field}' is populated from the source field '#{source_field.full_name}' using the format \"#{target_format}\""
+  end
 end
 
 Then /^the target field '(.+)' is the first non-blank value from source fields '(.+)'$/ do |target_field_name, source_field_list|
@@ -363,6 +449,35 @@ Then /^the target field is copied from the source field, but commas have been re
   expect(@brt.target.field.value).to eq source_field_value.gsub(/,/, '.')
 end
 
+Then /^the target field '([^']+)' contains a unique value matching the pattern \/(.*)\/$/ do |target_field, pattern|
+  step "the target field '#{target_field}'"
+
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+  regex_pattern = Regexp.new(pattern)
+
+  results = 1.upto(10).map do |iter|
+    @brt.run_transforms
+
+    Array(target_names).map do |target_name|
+      @brt.targets[target_name].fields[target_field_name].values.uniq
+    end.flatten
+  end.flatten
+
+  results.each do |result_value|
+    expect(result_value).to match(regex_pattern)
+  end
+
+  expect(results.size).to eq results.uniq.size
+
+end
+
+Then /^the target field contains a unique value matching the pattern \/(.*)\/$/ do |pattern|
+  @brt.targets.fields.each do |target_field|
+    step "the target field '#{target_field.full_name}' contains a unique value matching the pattern /#{pattern}/"
+  end
+end
+
+
 
 ### Field presence
 
@@ -373,7 +488,7 @@ Then /^only the following fields should be present on the target:$/ do |table|
   end
 
   @brt.run_transforms
-  expect(@brt.target.data_obj.fields.keys).to match_array @brt.target.fields.names
+  expect(@brt.target.data_obj.fields.keys).to match_array @brt.target.fields.field_names
 end
 
 ### Record-level expectations

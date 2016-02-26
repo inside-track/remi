@@ -198,9 +198,9 @@ Feature: This is a sample feature file.
     Then the target field '<Target Field>' is populated with "<If Blank>"
 
     Examples:
-      | Source Field | Source Format | Target Field    | Target Format | If Blank           |
-      | Applied Date | %m/%d/%Y      | Applied_Date__c | %Y-%m-%d      | *Today: %Y-%m-%d*  |
-      | Birthdate    | %m/%d/%Y      | Birthdate       | %Y-%m-%d      |                    |
+      | Source Field | Source Format | Target Field    | Target Format | If Blank          |
+      | Applied Date | %m/%d/%Y      | Applied_Date__c | %Y-%m-%d      | *Today: %Y-%m-%d* |
+      | Birthdate    | %m/%d/%Y      | Birthdate       | %Y-%m-%d      |                   |
 
 
   Scenario: Populating School__c
