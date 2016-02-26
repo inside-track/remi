@@ -327,17 +327,6 @@ Then /^the target field '(.+)' is populated from the source field using the form
   expect(@brt.target.field.value).to eq source_reformatted
 end
 
-Then /^the target field '(.+)' is populated with "([^"]*)" using the format "([^"]*)"$/ do |target_field, target_value, target_format|
-  source_format = @brt.source.field.metadata[:format]
-  target_value_source_format = target_value == "*Today's Date*" ? Date.today.strftime(source_format) : target_value
-  target_reformatted = Remi::Transform[:format_date].(from_fmt: source_format, to_fmt: target_format)
-   .call(target_value_source_format)
-
-  step "the target field '#{target_field}'"
-  @brt.run_transforms
-  expect(@brt.target.field.value).to eq target_reformatted
-end
-
 Then /^the target field '(.+)' is the first non-blank value from source fields '(.+)'$/ do |target_field_name, source_field_list|
   source_fields = "'#{source_field_list}'".split(',').map do |field_with_quotes|
     full_field_name = field_with_quotes.match(/'(.+)'/)[1]
