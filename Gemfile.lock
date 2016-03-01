@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    remi (0.2.17)
+    remi (0.2.18)
       activesupport (~> 4.2)
       bond (~> 0.5)
       cucumber (~> 2.1)
@@ -123,4 +123,4 @@ DEPENDENCIES
   remi!
 
 BUNDLED WITH
-   1.10.6
+   1.11.2
