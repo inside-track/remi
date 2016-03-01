@@ -188,7 +188,7 @@ module Remi::BusinessRules
     end
 
     def add_subject(subject_name, subject)
-      @subjects[subject_name] ||= DataSubject.new(subject)
+      @subjects[subject_name] ||= DataSubject.new(subject_name, subject)
     end
 
     def add_field(full_field_name)
@@ -204,11 +204,17 @@ module Remi::BusinessRules
     end
 
     def fields
-      dfc = DataFieldCollection.new
-      @subjects.each do |subject_name, subject|
-        subject.fields.each { |field_name, field| dfc.add_field(subject, field_name) }
+      Enumerator.new do |enum|
+        @subjects.each do |subject_name, subject|
+          subject.fields.each { |field_name, field| enum << field }
+        end
       end
-      dfc
+    end
+
+    def full_field_names
+      @subjects.map do |subject_name, subject|
+        subject.fields.map { |field_name, field| "#{field.full_name}" }
+      end.flatten
     end
 
     def size
@@ -222,13 +228,15 @@ module Remi::BusinessRules
 
 
   class DataSubject
-    def initialize(subject)
+    def initialize(name, subject)
+      @name = name
       @data_obj = subject
       @fields = DataFieldCollection.new
 
       stub_data
     end
 
+    attr_reader :name
     attr_reader :data_obj
 
     def add_field(field_name)
@@ -353,7 +361,7 @@ module Remi::BusinessRules
       generated_data = generate_values_from_cumulative_dist(@data_obj.df.size, cumulative_dist)
 
       generated_data.each do |field_name, data_array|
-        vector_name = fields[field_name].name
+        vector_name = fields[field_name].field_name
         @data_obj.df[vector_name] = Daru::Vector.new(data_array, index: @data_obj.df.index)
       end
     end
@@ -403,8 +411,13 @@ module Remi::BusinessRules
       @fields.values.map(&:name)
     end
 
+    def field_names
+      @fields.values.map(&:field_name)
+    end
+
     def add_field(subject, field_name)
-      @fields[field_name] = DataField.new(subject.data_obj, field_name) unless @fields.include? field_name
+      raise "Attempting to add a field with the same name but different subject - #{subject.name}: #{field_name}" if @fields.include?(field_name) && @fields[field_name].subject.name != subject.name
+      @fields[field_name] = DataField.new(subject, field_name) unless @fields.include? field_name
     end
 
     def only
@@ -420,21 +433,26 @@ module Remi::BusinessRules
 
 
   class DataField
-    def initialize(subject, field_name)
+    def initialize(subject, name)
       @subject = subject
-      @field_name = field_name.symbolize(subject.field_symbolizer)
+      @name = name
+      @field_name = name.symbolize(subject.data_obj.field_symbolizer)
     end
 
-    def name
-      @field_name
+    attr_reader :name
+    attr_reader :field_name
+    attr_reader :subject
+
+    def full_name
+      "#{@subject.name}: #{@name}"
     end
 
     def metadata
-      @subject.fields[name]
+      @subject.data_obj.fields[@field_name]
     end
 
     def vector
-      @subject.df[@field_name]
+      @subject.data_obj.df[@field_name]
     end
 
     def value

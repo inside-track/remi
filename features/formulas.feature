@@ -72,4 +72,5 @@ Feature: This tests the creation of example records.
     And the source field 'Some Date'
     And the source field 'Some String'
     And the target field 'Combination'
-    Then the target field is a concatenation of 'Some Date' and 'Some String', delimited by "-"
+    Then the target field 'Combination' is a concatenation of the source fields 'Some Date' and 'Some String', delimited by "-"
+    Then the target field 'Combination' is a concatenation of the source fields, delimited by "-"
