@@ -230,6 +230,12 @@ Then /^the target field '([^']+)' is copied from the source field$/ do |target_f
   end
 end
 
+Then /^the target field is copied from the source field '([^']+)'$/ do |source_field|
+  @brt.targets.fields.each do |target_field|
+    step "the target field '#{target_field.full_name}' is copied from the source field '#{source_field}'"
+  end
+end
+
 Then /^the target field is copied from the source field$/ do
   @brt.targets.fields.each do |target_field|
     @brt.sources.fields.each do |source_field|
