@@ -21,6 +21,15 @@ module Remi
 
       def extract
         @raw_result = sf_bulk.query(@sfo, @query, 10000)
+
+        check_for_errors(@raw_result)
+        @raw_result
+      end
+
+      def check_for_errors(sf_result)
+        sf_result['batches'].each do |batch|
+          raise "Error with batch #{batch['id']} - #{batch['state']}: #{batch['stateMessage']}" unless batch['state'].first == 'Completed'
+        end
       end
 
       def raw_result
