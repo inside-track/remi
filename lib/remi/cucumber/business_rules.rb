@@ -308,7 +308,7 @@ module Remi::BusinessRules
     end
 
     def example_to_df(example)
-      example.to_df(@data_obj.df.row[0].to_hash, field_symbolizer: @data_obj.field_symbolizer)
+      example.to_df(@data_obj)
     end
 
     def stub_data_with(example)
@@ -501,15 +501,17 @@ module Remi::BusinessRules
       @table = table
     end
 
-    def to_df(seed_hash, field_symbolizer:)
+    def to_df(template_df)
+      field_symbolizer = template_df.field_symbolizer
+
       table_headers = @table.headers.map { |h| h.symbolize(field_symbolizer) }
-      df = Daru::DataFrame.new([], order: seed_hash.keys | table_headers)
+      df = Daru::DataFrame.new([], order: template_df.fields.keys | table_headers)
       @table.hashes.each do |example_row|
         example_row_sym = example_row.reduce({}) do |h, (k,v)|
           h[k.symbolize(field_symbolizer)] = ParseFormula.parse(v)
           h
         end
-        df.add_row(seed_hash.merge(example_row_sym))
+        df.add_row(template_df.stub_row_hash.merge(example_row_sym))
       end
       df
     end

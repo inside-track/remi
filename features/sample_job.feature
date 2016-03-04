@@ -210,7 +210,7 @@ Feature: This is a sample feature file.
     Given the source 'Sample File'
     And the target 'Contact Creates'
     And the example 'existing contact' for 'Existing Contacts'
-    And the example 'sample records to load' for 'Sample File'
+    And the example 'sample record to create' for 'Sample File'
 
     And the source field 'School Id'
     And the source field 'School Name'

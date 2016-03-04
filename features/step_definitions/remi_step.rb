@@ -473,7 +473,7 @@ Then /^the target field '([^']+)' contains a unique value matching the pattern \
     expect(result_value).to match(regex_pattern)
   end
 
-  expect(results.size).to eq results.uniq.size
+  expect(results.uniq.size).to eq results.size
 
 end
 
@@ -483,7 +483,22 @@ Then /^the target field contains a unique value matching the pattern \/(.*)\/$/ 
   end
 end
 
+Then /^the target field '([^']+)' contains unique values$/ do |target_field|
+  step "the target field '#{target_field}'"
 
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+
+  @brt.run_transforms
+
+  results = Array(target_names).map do |target_name|
+    @brt.targets[target_name].fields[target_field_name].values
+  end.flatten
+
+  expect_cucumber {
+    expect(results.size).to be > 1, "Cannot test uniqueness with only one record"
+    expect(results.uniq.size).to eq results.size
+  }
+end
 
 ### Field presence
 

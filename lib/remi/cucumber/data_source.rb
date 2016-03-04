@@ -7,6 +7,13 @@ module Remi
         end
       end
 
+      def stub_row_hash
+        @fields.reduce({}) do |h, (k,v)|
+          h[k] = stub_values[v[:type]].call
+          h
+        end
+      end
+
       def empty_stub_df
         self.df = Daru::DataFrame.new([], order: @fields.keys)
       end
