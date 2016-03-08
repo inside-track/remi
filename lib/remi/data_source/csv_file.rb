@@ -3,6 +3,8 @@ module Remi
     class CsvFile
       include DataSource
 
+      using Remi::Refinements::Daru
+
       def self.default_csv_options
         CSV::DEFAULT_OPTIONS.merge({
           headers: true,
@@ -14,10 +16,11 @@ module Remi
       end
 
 
-      def initialize(fields: {}, extractor:, csv_options: {}, logger: Remi::Settings.logger)
+      def initialize(fields: {}, extractor:, csv_options: {}, filename_field: nil, logger: Remi::Settings.logger)
         @fields = fields
         self.extractor = extractor
         @csv_options = self.class.default_csv_options.merge(csv_options)
+        @filename_field = filename_field
         @logger = logger
       end
 
@@ -30,7 +33,11 @@ module Remi
       end
 
       def extract
-        Array(@extractor.extract).tap { |x| raise "Multiple files not supported" if x.size > 1 }
+        @extracted = Array(@extractor.extract)
+      end
+
+      def extracted
+        @extracted || extract
       end
 
       def extractor=(arg)
@@ -38,7 +45,7 @@ module Remi
         when Extractor::SftpFile, Extractor::LocalFile
           @extractor = arg
         when String
-          @extractor = Extractor::LocalFile.new(arg)
+          @extractor = Extractor::LocalFile.new(path: arg)
         when Regexp
           raise "Adding regex matching to local files would be easy, not done yet"
         else
@@ -48,7 +55,8 @@ module Remi
 
       # Only going to support single file for now
       def source_filename
-        @source_filename ||= extract.first
+        raise "Multiple source files detected" if extracted.size > 1
+        @source_filename ||= extracted.first
       end
 
       def first_line
@@ -67,8 +75,21 @@ module Remi
       end
 
       def to_dataframe
-        @logger.info "Converting #{source_filename} to a dataframe"
-        Daru::DataFrame.from_csv source_filename, @csv_options
+        # Assumes that each file has exactly the same structure
+        result_df = nil
+        extracted.each_with_index do |filename, idx|
+          @logger.info "Converting #{filename} to a dataframe"
+          csv_df = Daru::DataFrame.from_csv filename, @csv_options
+
+          csv_df[@filename_field] = Daru::Vector.new([filename] * csv_df.size, index: csv_df.index) if @filename_field
+          if idx == 0
+            result_df = csv_df
+          else
+            result_df = result_df.concat csv_df
+          end
+        end
+
+        result_df
       end
 
       def df
