@@ -13,15 +13,23 @@ module Remi
           dupdf
         end
 
-        # Public: Fixes a bug where the dataframe on the left side of the
-        # concatenation is accidentally modified.
+        # Public: Allows for combining dataframes with different columns
         def concat other_df
-          vectors = []
-          @vectors.each do |v|
-            vectors << self[v].dup.to_a.concat(other_df[v].to_a)
+          vectors = @vectors.to_a
+          data = []
+
+          vectors.each do |v|
+            other_vec = other_df.vectors.include?(v) ? other_df[v].to_a : [nil] * other_df.size
+            data << self[v].dup.to_a.concat(other_vec)
           end
 
-          ::Daru::DataFrame.new(vectors, order: @vectors)
+          other_df.vectors.each do |v|
+            next if vectors.include?(v)
+            vectors << v
+            data << ([nil] * self.size).concat(other_df[v].to_a)
+          end
+
+          ::Daru::DataFrame.new(data, order: vectors)
         end
 
         # Public: Saves a Dataframe to a file.
