@@ -40,7 +40,7 @@ module Remi
 
     def truncate(len)
       memoize_as_lambda(__method__, len) do |(mlen), larg|
-        larg.slice(0,len)
+        larg.slice(0,mlen)
       end
     end
 
