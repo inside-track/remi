@@ -12,3 +12,8 @@ Feature: Test the truncate transformer.
 
     And the source field 'My Field' is set to the value "something"
     Then the target field 'Truncated Field' is set to the value "somet"
+
+    And the job parameter 'truncate_len' is "7"
+
+    And the source field 'My Field' is set to the value "something"
+    Then the target field 'Truncated Field' is set to the value "somethi"
