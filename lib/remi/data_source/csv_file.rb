@@ -9,6 +9,7 @@ module Remi
         CSV::DEFAULT_OPTIONS.merge({
           headers: true,
           header_converters: Remi::FieldSymbolizers[:standard],
+          converters: [],
           col_sep: ',',
           encoding: 'UTF-8',
           quote_char: '"'
