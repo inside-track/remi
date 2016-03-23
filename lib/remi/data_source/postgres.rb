@@ -14,21 +14,21 @@ module Remi
 
       def extract
         @logger.info "Executing query #{@query}"
-        @raw_result = pg_conn.exec @query
+        @raw_result = connection.exec @query
       end
 
       def raw_result
         @raw_result ||= extract
       end
 
-      def pg_conn
-        @pg_conn ||= PG.connect(
+      def connection
+        @connection ||= PG.connect(
           host:     @credentials[:host] || 'localhost',
           port:     @credentials[:port] || 5432,
           dbname:   @credentials[:dbname],
           user:     @credentials[:user] || `whoami`.chomp,
           password: @credentials[:password],
-          sslmode:  @credentials[:sslmode] || 'require'
+          sslmode:  @credentials[:sslmode] || 'allow'
         )
       end
 
