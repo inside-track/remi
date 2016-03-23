@@ -483,7 +483,19 @@ Then /^the target field contains a unique value matching the pattern \/(.*)\/$/ 
   end
 end
 
+Then /^the source field '([^']+)' is truncated to (\d+) characters and loaded into the target field '([^']+)'$/ do |source_field, character_limit, target_field|
+  step "the target field '#{target_field}'"
+  step "the source field '#{source_field}'"
 
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+
+  truncated_source = @brt.sources[source_name].fields[source_field_name].value.slice(0, character_limit.to_i)
+  @brt.run_transforms
+  Array(target_names).each do |target_name|
+    expect(@brt.targets[target_name].fields[target_field_name].value).to eq truncated_source
+  end
+end
 
 ### Field presence
 
