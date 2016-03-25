@@ -310,6 +310,7 @@ Then /^the target field '(.+)' is populated from the source field '(.+)' after t
   end
 end
 
+
 ### Transforms
 
 Then /^the target field '([^']+)' is a concatenation of the source fields '(.+)', delimited by "([^"]*)"$/ do |target_field, source_field_list, delimiter|
@@ -494,6 +495,40 @@ Then /^the source field '([^']+)' is truncated to (\d+) characters and loaded in
   @brt.run_transforms
   Array(target_names).each do |target_name|
     expect(@brt.targets[target_name].fields[target_field_name].value).to eq truncated_source
+  end
+end
+
+Then /^the source field '([^']+)' is name-cased and loaded into the target field '([^']+)'$/ do |source_field, target_field|
+  step "the target field '#{target_field}'"
+  step "the source field '#{source_field}'"
+
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+
+  @brt.sources[source_name].fields[source_field_name].value = 'SCROOGE MCDUCK'
+  @brt.run_transforms
+  Array(target_names).each do |target_name|
+    expect(@brt.targets[target_name].fields[target_field_name].value).to eq 'Scrooge McDuck'
+  end
+end
+
+Then /^the source field is name-cased and loaded into the target field '([^']+)'$/ do |target_field|
+  @brt.sources.fields.each do |source_field|
+    step "the source field '#{source_field}' is name-cased and loaded into the target field '#{target_field}'"
+  end
+end
+
+Then /^the source field '([^']+)' is name-cased and loaded into the target field$/ do |source_field|
+  @brt.targets.fields.each do |target_field|
+    step "the source field '#{source_field}' is name-cased and loaded into the target field '#{target_field}'"
+  end
+end
+
+Then /^the source field is name-cased and loaded into the target field$/ do
+  @brt.targets.fields.each do |target_field|
+    @brt.sources.fields.each do |source_field|
+      step "the source field '#{source_field}' is name-cased and loaded into the target field '#{target_field}'"
+    end
   end
 end
 
