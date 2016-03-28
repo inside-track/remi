@@ -491,7 +491,10 @@ Then /^the source field '([^']+)' is truncated to (\d+) characters and loaded in
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
   target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
 
-  truncated_source = @brt.sources[source_name].fields[source_field_name].value.slice(0, character_limit.to_i)
+  value = (@brt.sources[source_name].fields[source_field_name].value) * character_limit.to_i
+  @brt.sources[source_name].fields[source_field_name].value = value
+
+  truncated_source = value.slice(0, character_limit.to_i)
   @brt.run_transforms
   Array(target_names).each do |target_name|
     expect(@brt.targets[target_name].fields[target_field_name].value).to eq truncated_source
