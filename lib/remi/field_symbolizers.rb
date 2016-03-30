@@ -9,7 +9,7 @@ module Remi
         standard: CSV::HeaderConverters[:symbol],
         salesforce: lambda { |f|
           f.encode(CSV::ConverterEncoding).strip.gsub(/\s+/, "_").
-                                           gsub(/\W+/, "").to_sym
+                                           gsub(/[^0-9a-zA-Z_.]+/, "").to_sym
         }
       }
     end
