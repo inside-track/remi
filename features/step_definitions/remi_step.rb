@@ -284,21 +284,34 @@ Then /^the target field '(.+)' is the date (.+)$/ do |target_field, date_referen
   step "the target field '#{target_field}' is set to the value \"*#{date_reference}*\""
 end
 
-Then /^the target '(.+)' should match the example '([[:alnum:]\s]+)'$/ do |target_name, example_name|
+Then /^the target '(.+)' should match the example '([[:alnum:]\-\s]+)'$/ do |target_name, example_name|
   @brt.run_transforms
 
   target_hash = @brt.targets[target_name].column_hash
   example_hash = @brt.examples[example_name].column_hash
   common_keys = target_hash.keys & example_hash.keys
 
-  expect(target_hash.select { |k,v| common_keys.include? k })
-    .to eq example_hash.select { |k,v| common_keys.include? k }
+  target_to_compare = target_hash.select { |k,v| common_keys.include? k }
+  target_to_compare.each do |k, v|
+    target_to_compare[k] = v.map { |e| e.to_s }
+  end
+
+  example_to_compare = example_hash.select { |k,v| common_keys.include? k }
+
+  expect(target_to_compare).to eq example_to_compare
 end
 
-Then /^the target should match the example '([[:alnum:]\s]+)'$/ do |example_name|
+Then /^the target should match the example '([[:alnum:]\-\s]+)'$/ do |example_name|
   target_name = @brt.targets.keys.first
   step "the target '#{target_name}' should match the example '#{example_name}'"
 end
+
+Then /^the target should match the example:/ do |example_table|
+  example_name = SecureRandom.uuid
+  @brt.add_example example_name, example_table
+  step "the target should match the example '#{example_name}'"
+end
+
 
 Then /^the target field '(.+)' is populated from the source field '(.+)' after translating it according to:$/ do |target_field, source_field, translation_table|
   step "the target field '#{target_field}'"
@@ -391,11 +404,42 @@ Then /^the target field is a concatenation of '(.+)' and "([^"]*)", delimited by
   end
 end
 
-Then /^the source field is prefixed with "([^"]*)" and loaded into the target field$/ do |prefix|
-  prefixed_source = "#{prefix}#{@brt.source.field.value}"
+Then /^the source field '([^']+)' is prefixed with "([^"]*)" and loaded into the target field '([^']+)'$/ do |source_field, prefix, target_field|
+  step "the target field '#{target_field}'"
+  step "the source field '#{source_field}'"
+
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+
+  prefixed_source = "#{prefix}#{@brt.sources[source_name].fields[source_field_name].value}"
+
   @brt.run_transforms
-  expect(@brt.target.field.value).to eq prefixed_source
+  Array(target_names).each do |target_name|
+    expect(@brt.targets[target_name].fields[target_field_name].value).to eq prefixed_source
+  end
+
 end
+
+Then /^the source field is prefixed with "([^"]*)" and loaded into the target field '([^']+)'$/ do |prefix, target_field|
+  @brt.sources.fields.each do |source_field|
+    step "the source field '#{source_field.full_name}' is prefixed with \"#{prefix}\" and loaded into the target field '#{target_field}'"
+  end
+end
+
+Then /^the source field '([^']+)' is prefixed with "([^"]*)" and loaded into the target field$/ do |source_field, prefix|
+  @brt.targets.fields.each do |target_field|
+    step "the source field '#{source_field}' is prefixed with \"#{prefix}\" and loaded into the target field '#{target_field.full_name}'"
+  end
+end
+
+Then /^the source field is prefixed with "([^"]*)" and loaded into the target field$/ do |prefix|
+  @brt.sources.fields.each do |source_field|
+    @brt.targets.fields.each do |target_field|
+      step "the source field '#{source_field.full_name}' is prefixed with \"#{prefix}\" and loaded into the target field '#{target_field.full_name}'"
+    end
+  end
+end
+
 
 Then /^the target field '([^']+)' is populated from the source field '([^']+)' using the format "([^"]*)"$/ do |target_field, source_field, target_format|
   step "the source field '#{source_field}'"
