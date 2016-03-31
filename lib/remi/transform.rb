@@ -145,7 +145,7 @@ module Remi
 
     def validate_email(substitute='')
       memoize_as_lambda(__method__, substitute) do |(msubstitute), larg|
-        larg.match(/^.+@[a-z0-9\-\.]+$/i) ? larg : msubstitute
+        larg.match(/^[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+[A-Z]{2,}$/i) ? larg : msubstitute
       end
     end
 
