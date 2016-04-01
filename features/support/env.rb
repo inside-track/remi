@@ -5,8 +5,6 @@ require 'bundler/setup'
 require 'remi'
 require 'remi/cucumber'
 
-require_relative 'env_app.rb'
-
 Remi::Settings.log_level = Logger::ERROR
 
 Before do
@@ -35,3 +33,20 @@ Before '@fails' do
     end
   end
 end
+
+
+# Fix current time to the first time it is called in a test
+module TimeTesting
+  def current
+    @current_time ||= super
+  end
+end
+
+class Time
+  class << Time
+    prepend TimeTesting
+  end
+end
+
+# Include user-defined environment
+require_relative 'env_app.rb'
