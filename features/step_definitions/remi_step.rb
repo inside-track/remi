@@ -97,6 +97,10 @@ Given /^the (source|target) file uses ([\w ]+) line endings$/ do |st, line_endin
   expect(@brt.send(st.to_sym).csv_options[:row_sep]).to eq Remi::BusinessRules.csv_opt_map[line_endings]
 end
 
+Given /^the (source|target) file uses "([^"]+)" as a record separator$/ do |st, line_endings|
+  expect(@brt.send(st.to_sym).csv_options[:row_sep]).to eq line_endings.gsub(/\\n/, "\n").gsub(/\\r/, "\r")
+end
+
 Given /^the (source|target) file (contains|does not contain) a header row$/ do |st, header|
   expect(@brt.send(st.to_sym).csv_options[:headers]).to eq (header == 'contains')
 end
