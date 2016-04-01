@@ -29,9 +29,10 @@ module Remi::BusinessRules
 
     def formulas
       @formulas ||= RegexSieve.new({
-        /(today|yesterday|tomorrow)(|:[^*]+)\*/i => [:date_reference, :match_single_day],
-        /(this|last|previous|next) (day|month|year|week)(|:[^*]+)\*/i => [:date_reference, :match_single_unit],
-        /(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)(|:[^*]+)\*/i => [:date_reference, :match_multiple]
+        /\*now(|:[^*]+)\*/i => [:time_reference, :match_now],
+        /\*(today|yesterday|tomorrow)(|:[^*]+)\*/i => [:date_reference, :match_single_day],
+        /\*(this|last|previous|next) (day|month|year|week)(|:[^*]+)\*/i => [:date_reference, :match_single_unit],
+        /\*(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)(|:[^*]+)\*/i => [:date_reference, :match_multiple]
       })
     end
 
@@ -44,6 +45,8 @@ module Remi::BusinessRules
       to_replace = form.match(base_regex)[0]
       replace_with = if form_opt[:value][0] == :date_reference
         date_reference(form_opt[:value][1], form_opt[:match])
+      elsif form_opt[:value][0] == :time_reference
+        time_reference(form_opt[:value][1], form_opt[:match])
       else
         to_replace
       end
@@ -51,6 +54,10 @@ module Remi::BusinessRules
       form.gsub(to_replace, replace_with)
     end
 
+    def time_reference(formula, captured)
+      parsed = self.send("time_reference_#{formula}", *captured)
+      Time.current.send("#{parsed[:unit]}_#{parsed[:direction]}", parsed[:quantity]).strftime(parsed[:format])
+    end
 
     def date_reference(formula, captured)
       parsed = self.send("date_reference_#{formula}", *captured)
@@ -59,6 +66,19 @@ module Remi::BusinessRules
 
     def parse_colon_date_format(str)
       str.blank? ? '%Y-%m-%d' : str.slice(1..-1).strip
+    end
+
+    def parse_colon_time_format(str)
+      str.blank? ? '%Y-%m-%d %H:%M:%S' : str.slice(1..-1).strip
+    end
+
+    def time_reference_match_now(form, format=nil)
+      {
+        quantity: 0,
+        unit: 'days',
+        direction: 'ago',
+        format: parse_colon_time_format(format)
+      }
     end
 
     def date_reference_match_single_day(form, direction, format=nil)
