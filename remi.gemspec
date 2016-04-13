@@ -29,8 +29,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "faker", ["~> 1.6"]
 
   # Move these into separate package
-  s.add_runtime_dependency 'restforce', ['~> 2.1']
-  s.add_runtime_dependency 'salesforce_bulk_api', ['0.0.12']
+#  s.add_runtime_dependency 'restforce', ['~> 2.1']
+#  s.add_runtime_dependency 'salesforce_bulk_api', ['0.0.12']
 
   s.add_development_dependency 'iruby', ['0.2.7']
 

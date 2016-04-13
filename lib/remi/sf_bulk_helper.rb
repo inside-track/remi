@@ -228,6 +228,12 @@ module Remi
         SfBulkUpsert.new(*args,**kargs).tap { |sf| sf.send(:execute) }
       end
 
+      def initialize(restforce_client, object, data, external_id: 'Id', batch_size: 5000, max_attempts: 1, logger: Logger.new(STDOUT))
+        @external_id = external_id
+
+        super(restforce_client, object, data, batch_size: batch_size, max_attempts: max_attempts, logger: logger)
+      end
+
       def operation
         :upsert
       end
@@ -235,8 +241,7 @@ module Remi
       private
 
       def send_bulk_operation
-        # Upsert does not support external id right now
-        sf_bulk.send(operation, @object, @data, 'Id', true, false, [], @batch_size)
+        sf_bulk.send(operation, @object, @data, @external_id, true, false, [], @batch_size)
       end
     end
 

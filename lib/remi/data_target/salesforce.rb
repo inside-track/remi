@@ -3,9 +3,10 @@ module Remi
     class Salesforce
       include DataTarget
 
-      def initialize(object:, operation:, credentials:, api: :bulk, logger: Remi::Settings.logger)
+      def initialize(object:, operation:, credentials:, external_id: 'Id', api: :bulk, logger: Remi::Settings.logger)
         @sfo = object
         @operation = operation
+        @external_id = external_id
         @credentials = credentials
         @api = api
         @logger = logger
@@ -24,6 +25,10 @@ module Remi
           Remi::SfBulkHelper::SfBulkUpdate.update(restforce_client, @sfo, df_as_array_of_hashes, logger: @logger)
         elsif @operation == :create
           Remi::SfBulkHelper::SfBulkCreate.create(restforce_client, @sfo, df_as_array_of_hashes, logger: @logger)
+        elsif @operation == :upsert
+          Remi::SfBulkHelper::SfBulkUpsert.upsert(restforce_client, @sfo, df_as_array_of_hashes, external_id: @external_id, logger: @logger)
+        else
+          raise "Unknown operation: #{@operation}"
         end
 
         @loaded = true
