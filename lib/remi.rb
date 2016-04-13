@@ -28,8 +28,8 @@ require 'active_support/core_ext/date/calculations'
 require 'active_support/core_ext/time/calculations'
 
 # - Should separate SF stuff into separate SF support package
-require 'restforce'
-require 'salesforce_bulk_api'
+#require 'restforce'
+#require 'salesforce_bulk_api'
 
 
 # Remi
