@@ -15,7 +15,7 @@ class NvlJob
   define_transform :main, sources: :source_data, targets: :target_data do
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(:field1, :field2, :field3) .target(:result_field)
-        .transform(Remi::Transform[:nvl].(params[:default]))
+        .transform(Remi::Transform::Nvl.new(params[:default]))
     end
   end
 end

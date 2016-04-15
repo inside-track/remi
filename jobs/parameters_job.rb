@@ -14,7 +14,7 @@ class ParametersJob
   define_transform :main do
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(nil) .target(:myparam)
-        .transform(Remi::Transform[:constant].(params[:myparam]))
+        .transform(Remi::Transform::Constant.new(params[:myparam]))
       map source(:parameter_name) .target(:parameter_name)
         .transform(->(v) { params[v.to_sym] })
     end

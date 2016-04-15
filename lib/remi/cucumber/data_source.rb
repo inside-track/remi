@@ -54,7 +54,8 @@ module Remi
       end
     end
 
-    class Salesforce
+    # Hmmm.... this gets called first because I'm trying to split SF off as a "plugin"
+    class Salesforce < Remi::DataSubject
       include DataStub
     end
 

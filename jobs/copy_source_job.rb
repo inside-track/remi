@@ -2,7 +2,6 @@ require_relative 'all_jobs_shared'
 
 class CopySourceJob
   include AllJobsShared
-  using Remi::Refinements::Daru
 
   define_source :source_data, Remi::DataSource::DataFrame,
     fields: {

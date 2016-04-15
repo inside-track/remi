@@ -2,7 +2,6 @@ require_relative 'all_jobs_shared'
 
 class CsvFileTargetJob
   include AllJobsShared
-  using Remi::Refinements::Daru
 
   define_target :some_csv_file, Remi::DataTarget::CsvFile,
     path: "#{Remi::Settings.work_dir}/some_file.csv",

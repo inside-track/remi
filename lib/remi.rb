@@ -39,25 +39,20 @@ require 'remi/settings'
 require 'remi/job'
 require 'remi/source_to_target_map'
 require 'remi/field_symbolizers'
-require 'remi/data_subject'
-require 'remi/sf_bulk_helper' # separate into SF support package
 
 require 'remi/refinements/symbolizer'
-require 'remi/refinements/daru'
 
 require 'remi/extractor/sftp_file'
 
-require 'remi/data_source.rb'
-require 'remi/data_source/data_frame'
-require 'remi/data_source/csv_file'
-require 'remi/data_source/salesforce'
-require 'remi/data_source/postgres'
+require 'remi/fields'
+require 'remi/data_frame'
+require 'remi/data_frame/daru'
 
-require 'remi/data_target.rb'
-require 'remi/data_target/data_frame'
-require 'remi/data_target/salesforce'
-require 'remi/data_target/csv_file'
-require 'remi/data_target/sftp_file'
-require 'remi/data_target/postgres'
+require 'remi/data_subject'
+require 'remi/data_subject/csv_file'
+#require 'remi/data_subject/salesforce' # intentionally not included by default
+require 'remi/data_subject/postgres'
+require 'remi/data_subject/sftp_file'
+require 'remi/data_subject/data_frame'
 
 require 'remi/transform'

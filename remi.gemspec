@@ -13,7 +13,8 @@ Gem::Specification.new do |s|
   s.description = "Data manipulation and ETL in Ruby"
 
   s.rubyforge_project = "Remi"
-  s.add_runtime_dependency "daru", ["0.1.2"]
+#  Making use of a fork for now
+#  s.add_runtime_dependency "daru", ["0.1.2"]
 
   s.add_runtime_dependency 'bond', ['~> 0.5']
   s.add_runtime_dependency 'docile', ['~> 1.1']

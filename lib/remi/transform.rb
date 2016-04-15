@@ -1,152 +1,495 @@
 module Remi
-  module Transform
-    extend self
+  class Transform
 
-    def [](meth)
-      method(meth)
+    # Public: Initializes the static arguments of a transform.
+    #
+    # source_metadata - Metadata for the transform source.
+    # target_metadata - Metadata for the transform target.
+    def initialize(*args, source_metadata: {}, target_metadata: {}, **kargs, &block)
+      @source_metadata = source_metadata
+      @target_metadata = target_metadata
+      @multi_args = false
     end
 
-    # We need to memoize each lambda with its static arguments so it's not recreated each row.
-    # Inspired by parameter memoization in http://www.justinweiss.com/articles/4-simple-memoization-patterns-in-ruby-and-one-gem/
-    def memoize_as_lambda(func, *args, &block)
-      iv = instance_variable_get("@#{func}")
-      return iv[args] if iv
+    # Public: Accessor for source metadata
+    attr_accessor :source_metadata
 
-      hash_memo = Hash.new do |h, margs|
-        h[margs] = lambda { |*largs| block.call(margs, *largs) }
+    # Public: Accessor for target metadata
+    attr_accessor :target_metadata
+
+    # Public: Set to true if the transform expects multiple arguments (default: false)
+    attr_reader :multi_arg
+
+    # Public: Defines the operation of this transform class.
+    #
+    # value - The value to be transformed
+    #
+    # Returns the transformed value.
+    def transform(value)
+      raise NoMethodError, "#{__method__} not defined for #{self.class.name}"
+    end
+
+    # Public: Allows one to call the proc defined by the transform so that
+    # Remi::Transform instances can be used interchangeably with normal lambdas.
+    #
+    # values - The values to be transformed.
+    #
+    # Returns the transformed value.
+    def call(*values)
+      if @multi_arg
+        to_proc.call(*values)
+      else
+        to_proc.call(Array(values).first)
       end
-      instance_variable_set("@#{func}", hash_memo)[args]
     end
 
-    def prefix(prefix, if_blank: '')
-      memoize_as_lambda(__method__, prefix, if_blank) do |(mprefix, mif_blank), larg|
-        if larg.blank?
-          mif_blank
+    # Public: Returns the transform as a lambda.
+    def to_proc
+      @to_proc ||= method(:transform).to_proc
+    end
+
+
+
+
+
+
+    # Public: Transform used to prefix string values in a vector.
+    #
+    # prefix   - The string prefix.
+    # if_blank - String value to substitute if the value is blank (default: '').
+    #
+    # Examples:
+    #
+    #  Prefix.new('CU').to_proc.call('123') # => "CU123"
+    class Prefix < Transform
+      def initialize(prefix, *args, if_blank: '', **kargs, &block)
+        super
+        @prefix   = prefix
+        @if_blank = if_blank
+      end
+
+      def transform(value)
+        if value.blank?
+          @if_blank
         else
-          "#{mprefix}#{larg}"
+          "#{@prefix}#{value}"
         end
       end
     end
 
-    def postfix(postfix, if_blank: '')
-      memoize_as_lambda(__method__, postfix, if_blank) do |(mpostfix, mif_blank), larg|
-        if larg.blank?
-          mif_blank
+
+    # Public: Transform used to postfix values in a vector.
+    #
+    # postfix  - The string postfix.
+    # if_blank - String value to substitute if the value is blank (default: '').
+    #
+    # Examples:
+    #
+    #  Postfix.new('A').to_proc.call('123') # => "123A"
+    class Postfix < Transform
+      def initialize(postfix, *args, if_blank: '', **kargs, &block)
+        super
+        @postfix   = postfix
+        @if_blank = if_blank
+      end
+
+      def transform(value)
+        if value.blank?
+          @if_blank
         else
-          "#{larg}#{mpostfix}"
+          "#{value}#{@postfix}"
         end
       end
     end
 
-    def truncate(len)
-      memoize_as_lambda(__method__, len) do |(mlen), larg|
-        larg.slice(0,mlen)
+
+    # Public: Transform used to truncate values in a vector.
+    #
+    # len - The maximum length of the string.
+    #
+    # Examples:
+    #
+    #  Truncate.new(3).to_proc.call('1234') # => "123"
+    class Truncate < Transform
+      def initialize(len, *args, **kargs, &block)
+        super
+        @len = len
+      end
+
+      def transform(value)
+        value.slice(0,@len)
       end
     end
 
-    def concatenate(delimiter="")
-      memoize_as_lambda(__method__, delimiter) do |(mdelimiter), *largs|
-        Array(largs).join(mdelimiter)
+    # Public: Transform used to concatenate a list of values, joined by a delimiter.
+    #
+    # delimiter - The delimiter used between values in the list (default: '').
+    #
+    # Examples:
+    #
+    #  Concatenate.new('-').to_proc.call('a', 'b', 'c') # => "a-b-c"
+    class Concatenate < Transform
+      def initialize(delimiter='', *args, **kargs, &block)
+        super
+        @multi_args = true
+        @delimiter = delimiter
+      end
+
+      def transform(*values)
+        Array(values).join(@delimiter)
       end
     end
 
-    def lookup(h_lookup, missing: nil)
-      memoize_as_lambda(__method__, h_lookup, missing) do |(mh_lookup, mmissing), larg|
-        result = mh_lookup[larg]
+
+    # Public: Transform used to do key-value lookup on hash-like objects
+    #
+    # lookup  - The lookup object that takes keys and returns values.
+    # missing - What to use if a key is not found in the lookup (default: nil).  If this
+    #           is a proc, it is sent the key as an argument.
+    #
+    # Examples:
+    #
+    #  my_lookup = { 1 => 'one', 2 => 'two }
+    #  Lookup.new().to_proc.call(1) # => "1"
+    #  Lookup.new().to_proc.call(3) # => nil
+    #  Lookup.new().to_proc.call(3, missing: 'UNK') # => "UNK"
+    #  Lookup.new().to_proc.call(3, missing: ->(v) { "I don't know #{v}" }) # => "I don't know 3"
+    class Lookup < Transform
+      def initialize(lookup, *args, missing: nil, **kargs, &block)
+        super
+        @lookup  = lookup
+        @missing = missing
+      end
+
+      def transform(value)
+        result = @lookup[value]
 
         if !result.nil?
           result
-        elsif mmissing.class == Proc
-          mmissing.call(larg)
+        elsif @missing.respond_to? :call
+          @missing.call(value)
         else
-          mmissing
+          @missing
         end
       end
     end
 
-    def nvl(default='')
-      memoize_as_lambda(__method__, default) do |(mdefault), *largs|
-        Array(largs).find(->() { mdefault }) { |arg| !arg.blank? }
+    # Public: (Next-Value-Lookup) transform used to find the first non-blank value in a list.
+    #
+    # default - What to use if all values are blank (default: '').
+    #
+    # Examples:
+    #
+    #  Nvl.new.to_proc.call(nil,'','a','b') # => "a"
+    class Nvl < Transform
+      def initialize(default='', *args, **kargs, &block)
+        super
+        @multi_args = true
+        @default = default
+      end
+
+      def transform(*values)
+        Array(values).find(->() { @default }) { |arg| !arg.blank? }
       end
     end
 
-    def ifblank(replace_with)
-      memoize_as_lambda(__method__, replace_with) do |(mreplace_with), larg|
-        larg.blank? ? mreplace_with : larg
+    # Public: Used to replace blank values.
+    #
+    # replace_with - Use this if the source value is blank (default: '').
+    #
+    # Examples:
+    #
+    #  IfBlank.new('MISSING VALUE').to_proc.call('alpha') # => "alpha"
+    #  IfBlank.new('MISSING VALUE').to_proc.call('') # => "MISSING VALUE"
+    class IfBlank < Transform
+      def initialize(replace_with='', *args, **kargs, &block)
+        super
+        @replace_with = replace_with
+      end
+
+      def transform(value)
+        value.blank? ? @replace_with : value
       end
     end
 
-    def format_date(from_fmt: '%m/%d/%Y', to_fmt: '%Y-%m-%d')
-      memoize_as_lambda(__method__, from_fmt, to_fmt) do |(mfrom_fmt, mto_fmt), larg|
+    # Public: Parses a string and converts it to a date.
+    # This transform is metadata aware and will use :in_format metadata
+    # from the source
+    #
+    # in_format - The date format to use to convert the string (default: uses :in_format
+    #             from the source metadata.  If that is not defined, use '%Y-%m-%d').
+    # if_blank  - Value to use if the the incoming value is blank (default: uses :if_blank
+    #             from the source metadata.  If that is not defined, use nil).  If set to
+    #             :high, then use the largest date, if set to :ow, use the lowest date.
+    #
+    # Examples:
+    #
+    #  ParseDate.new(in_format: '%m/%d/%Y').to_proc.call('02/22/2013') # => Date.new(2013,2,22)
+    #
+    #  tform = ParseDate.new
+    #  tform.source_metadata = { in_format: '%m/%d/%Y' }
+    #  tform.to_proc.call('02/22/2013') # => Date.new(2013,2,22)
+    class ParseDate < Transform
+      def initialize(*args, in_format: nil, if_blank: nil, **kargs, &block)
+        super
+        @in_format = in_format
+        @if_blank  = if_blank
+      end
+
+      def in_format
+        @in_format ||= @source_metadata.fetch(:in_format, '%Y-%m-%d')
+      end
+
+      def if_blank
+        @if_blank ||= @source_metadata.fetch(:if_blank, nil)
+      end
+
+      def transform(value)
         begin
-          if larg.blank? then
+          if value.respond_to?(:strftime)
+            value
+          elsif value.blank? then
+            blank_handler(value)
+          else
+            string_to_date(value)
+          end
+        rescue ArgumentError => err
+          raise err, "Error parsing date (#{value.class}): '#{value}' with format #{in_format})"
+        end
+      end
+
+      def string_to_date(value)
+        Date.strptime(value, in_format)
+      end
+
+      def blank_handler(value)
+        if if_blank == :low
+          Date.new(1900,01,01)
+        elsif if_blank == :high
+          Date.new(2999,12,31)
+        elsif if_blank.respond_to? :call
+          if_blank.call(value)
+        else
+          if_blank
+        end
+      end
+    end
+
+
+    # Public: (Re)formats a date.
+    # This transform is metadata aware and will use :in_format/:out_format metadata
+    # from the source.
+    #
+    # in_format  - The date format to used to parse the input value.  If the input value
+    #              is a date, then then parameter is ignored.  (default: uses :in_format
+    #              from the source metadata.  If that is not defined, use '%Y-%m-%d')
+    # out_format - The date format applied to provide the resulting string.  (default:
+    #              uses :out_format from the source metadata.  If that is not defined,
+    #              use '%Y-%m-%d')
+    #
+    # Examples:
+    #
+    #  FormatDate.new(in_format: '%m/%d/%Y', out_format: '%Y-%m-%d').to_proc.call('02/22/2013') # => "2013-02-22"
+    #
+    #  tform = FormatDate.new
+    #  tform.source_metadata = { in_format: '%m/%d/%Y', out_format: '%Y-%m-%d' }
+    #  tform.to_proc.call('02/22/2013') # => "2013-02-22"
+    class FormatDate < Transform
+      def initialize(*args, in_format: nil, out_format: nil, **kargs, &block)
+        super
+        @in_format  = in_format
+        @out_format = out_format
+      end
+
+      def in_format
+        @in_format ||= @source_metadata.fetch(:in_format, '%Y-%m-%d')
+      end
+
+      def out_format
+        @out_format ||= @source_metadata.fetch(:out_format, '%Y-%m-%d')
+      end
+
+      def transform(value)
+        begin
+          if value.blank? then
             ''
-          elsif larg.respond_to? :strftime
-            larg.strftime(mto_fmt)
+          elsif value.respond_to? :strftime
+            value.strftime(out_format)
           else
-            Date.strptime(larg, mfrom_fmt).strftime(mto_fmt)
+            Date.strptime(value, in_format).strftime(out_format)
           end
         rescue ArgumentError => err
-          puts "Error parsing date (#{larg.class}): '#{larg}'"
-          raise err
+          raise err, "Error parsing date (#{value.class}): '#{value}' using the format #{in_format} => #{out_format}"
         end
       end
     end
 
-
-    def parse_date(format: '%Y-%m-%d', if_blank: nil)
-      memoize_as_lambda(__method__, format, if_blank.try(:to_sym)) do |(mformat, mif_blank), larg|
-        begin
-          if larg.respond_to?(:strftime)
-            larg
-          elsif larg.blank? then
-            if mif_blank == :low
-              Date.new(1900,01,01)
-            elsif mif_blank == :high
-              Date.new(2999,12,31)
-            else
-              mif_blank
-            end
-          else
-            Date.strptime(larg, mformat)
-          end
-        rescue ArgumentError => err
-          puts "Error parsing date (#{larg.class}): '#{larg}')"
-          raise err
-        end
+    # Public: Used to calculate differences between dates by a given measure.
+    #
+    # measure - One of :days, :months, or :years. (default: :days).
+    #
+    # Examples:
+    #
+    #  DateDiff.new(:months).to_proc.call([Date.new(2016,1,30), Date.new(2016,3,1)]) # => 2
+    class DateDiff < Transform
+      def initialize(measure = :days, *args, **kargs, &block)
+        super
+        @multi_args = true
+        @measure = measure
       end
-    end
 
-    def date_diff(measure = :days)
-      memoize_as_lambda(__method__, measure.to_sym) do |(mmeasure), *larg|
-        if mmeasure == :days
-          (larg.last - larg.first).to_i
-        elsif mmeasure == :months
-          (larg.last.year * 12 + larg.last.month) - (larg.first.year * 12 + larg.first.month)
-        elsif mmeasure == :years
-          larg.last.year - larg.first.year
+      def transform(from_date, to_date)
+
+        case @measure.to_sym
+        when :days
+          (to_date - from_date).to_i
+        when :months
+          (to_date.year * 12 + to_date.month) - (from_date.year * 12 + from_date.month)
+        when :years
+          to_date.year - from_date.year
         else
-          raise "I don't know how to handle #{mmeasure} yet"
+          raise ArgumentError, "Unknown date difference measure: #{@measure}"
         end
       end
     end
 
-    def constant(const)
-      memoize_as_lambda(__method__, const) do |(mconst), larg|
-        mconst
+    # Public: Simply returns a constant.
+    #
+    # constant - The constant value to return.
+    #
+    # Examples:
+    #
+    #  Constant.new('ewoks').to_proc.call('whatever') # => 'ewoks'
+    class Constant < Transform
+      def initialize(constant, *args, **kargs, &block)
+        super
+        @constant = constant
+      end
+
+      def transform(values)
+        @constant
       end
     end
 
-    def replace(regex, replace_with)
-      memoize_as_lambda(__method__, regex, replace_with) do |(mregex, mreplace_with), larg|
-        larg.gsub(regex, replace_with)
+    # Public: Replaces one substring with another.
+    #
+    # to_replace   - The string or regex to be replaced.
+    # repalce_with - The value to substitute.
+    #
+    # Examples:
+    #
+    #  Replace.new(/\s/, '-').to_proc.call('hey jude') #=> 'hey-jude'
+    class Replace < Transform
+      def initialize(to_replace, replace_with, *args, **kargs, &block)
+        super
+        @to_replace   = to_replace
+        @replace_with = replace_with
+      end
+
+      def transform(value)
+        value.gsub(@to_replace, @replace_with)
       end
     end
 
-    def validate_email(substitute='')
-      memoize_as_lambda(__method__, substitute) do |(msubstitute), larg|
-        larg = larg || ''
-        larg.match(/^[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+[A-Z]{2,}$/i) ? larg : msubstitute
+    # Public: Checks to see if an email validates against a regex (imperfect)
+    # and will substitute it with some value if not.
+    #
+    # substitute - The value used to substitute for an invalid email.  Can use a proc
+    #              that accepts the value of the invalid email
+    #
+    # Examples:
+    #
+    #  ValidateEmail.new('invalid@example.com').to_proc.call('uhave.email') #=> 'invalid@example.com'
+    #  ValidateEmail.new(->(v) { "#{SecureRandom.uuid}@example.com" }).to_proc.call('uhave.email') #=> '3f158f29-bc75-44f0-91ed-22fbe5157297@example.com'
+    class ValidateEmail < Transform
+      def initialize(substitute='', *args, **kargs, &block)
+        super
+        @substitute   = substitute
+      end
+
+      def transform(value)
+        value = value || ''
+        if value.match(/^[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+[A-Z]{2,}$/i)
+          value
+        elsif @substitute.respond_to? :call
+          @substitute.call value
+        else
+          @substitute
+        end
+      end
+    end
+
+
+
+    # Public: Enforces the type declared in the :type metadata field (if it exists)
+    #
+    # Examples:
+    #
+    #  tform = EnforceType.new
+    #  tform.source_metadata = { type: :date, in_format: '%m/%d/%Y' }
+    #  tform.to_proc.call('02/22/2013') # => Date.new(2013,2,22)
+    #
+    #  tform = EnforceType.new
+    #  tform.source_metadata = { type: :integer }
+    #  tform.to_proc.call('12') # => 12
+    #
+    #  tform = EnforceType.new
+    #  tform.source_metadata = { type: :integer }
+    #  tform.to_proc.call('12A') # => ArgumentError: invalid value for Integer(): "12A"
+    class EnforceType < Transform
+      def initialize(*args, **kargs, &block)
+        super
+      end
+
+      def type
+        @type ||= @source_metadata.fetch(:type, :string)
+      end
+
+      def in_format
+        @in_format ||= @source_metadata.fetch(:in_format, '')
+      end
+
+      def scale
+        @scale ||= @source_metadata.fetch(:scale, 0)
+      end
+
+      def if_blank
+        return @if_blank if @if_blank_set
+        @if_blank_set = true
+        @if_blank = @source_metadata.fetch(:if_blank, nil)
+      end
+
+      def blank_handler(value)
+        return value unless value.blank?
+
+        if if_blank.respond_to? :to_proc
+          if_blank.to_proc.call(value)
+        else
+          if_blank
+        end
+      end
+
+      def transform(value)
+        if value.blank?
+          blank_handler(value)
+        else
+          case type
+          when :string
+            value
+          when :integer
+            Integer(value)
+          when :float
+            Float(value)
+          when :decimal
+            Float("%.#{scale}f" % Float(value))
+          when :date
+            Date.strptime(value, in_format)
+          when :datetime
+            Time.strptime(value, in_format)
+          else
+            raise ArgumentError, "Unknown type enforcement: #{type}"
+          end
+        end
       end
     end
 

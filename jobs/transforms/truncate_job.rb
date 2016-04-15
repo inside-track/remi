@@ -13,7 +13,7 @@ class TruncateJob
   define_transform :main, sources: :source_data, targets: :target_data do
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(:my_field) .target(:truncated_field)
-        .transform(Remi::Transform[:truncate].(params[:truncate_len].to_i))
+        .transform(Remi::Transform::Truncate.new(params[:truncate_len].to_i))
     end
   end
 end

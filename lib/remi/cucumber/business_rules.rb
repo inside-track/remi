@@ -250,14 +250,14 @@ module Remi::BusinessRules
   class DataSubject
     def initialize(name, subject)
       @name = name
-      @data_obj = subject
+      @data_subject = subject
       @fields = DataFieldCollection.new
 
       stub_data
     end
 
     attr_reader :name
-    attr_reader :data_obj
+    attr_reader :data_subject
 
     def add_field(field_name)
       @fields.add_field(self, field_name)
@@ -272,17 +272,17 @@ module Remi::BusinessRules
     end
 
     def size
-      @data_obj.df.size
+      @data_subject.df.size
     end
 
     def get_attrib(name)
-      @data_obj.send(name)
+      @data_subject.send(name)
     end
 
     # Public: Converts the data subject to a hash where the keys are the table
     # columns and the values are an array for the value of column for each row.
     def column_hash
-      @data_obj.df.to_hash.reduce({}) do |h, (k,v)|
+      @data_subject.df.to_h.reduce({}) do |h, (k,v)|
         h[k.symbolize] = v.to_a
         h
       end
@@ -290,7 +290,7 @@ module Remi::BusinessRules
 
     # For debugging only
     def _df
-      @data_obj.df
+      @data_subject.df
     end
 
 
@@ -298,7 +298,7 @@ module Remi::BusinessRules
     # Need more robust duping to make that feasible.
     # Don't use results for anything more than size.
     def where(field_name, operation)
-      @data_obj.df.where(@data_obj.df[field_name.symbolize(@data_obj.field_symbolizer)].recode { |v| operation.call(v) })
+      @data_subject.df.where(@data_subject.df[field_name.symbolize(@data_subject.field_symbolizer)].recode { |v| operation.call(v) })
     end
 
     def where_is(field_name, value)
@@ -324,29 +324,29 @@ module Remi::BusinessRules
 
 
     def stub_data
-      @data_obj.stub_df if @data_obj.respond_to? :stub_df
+      @data_subject.stub_df if @data_subject.respond_to? :stub_df
     end
 
     def example_to_df(example)
-      example.to_df(@data_obj.df.row[0].to_hash, field_symbolizer: @data_obj.field_symbolizer)
+      example.to_df(@data_subject.df.row[0].to_h, field_symbolizer: @data_subject.field_symbolizer)
     end
 
     def stub_data_with(example)
       stub_data
-      @data_obj.df = example_to_df(example)
+      @data_subject.df = example_to_df(example)
     end
 
     def append_data_with(example)
-      @data_obj.df = @data_obj.df.concat example_to_df(example)
+      @data_subject.df = @data_subject.df.concat example_to_df(example)
     end
 
 
     def replicate_rows(n_rows)
-      replicated_df = Daru::DataFrame.new([], order: @data_obj.df.vectors.to_a)
-      @data_obj.df.each do |vector|
+      replicated_df = Daru::DataFrame.new([], order: @data_subject.df.vectors.to_a)
+      @data_subject.df.each do |vector|
         replicated_df[vector.name] = vector.to_a * n_rows
       end
-      @data_obj.df = replicated_df
+      @data_subject.df = replicated_df
     end
 
     def cumulative_dist_from_freq_table(table, freq_field: 'frequency')
@@ -378,31 +378,31 @@ module Remi::BusinessRules
 
     def distribute_values(table)
       cumulative_dist = cumulative_dist_from_freq_table(table)
-      generated_data = generate_values_from_cumulative_dist(@data_obj.df.size, cumulative_dist)
+      generated_data = generate_values_from_cumulative_dist(@data_subject.df.size, cumulative_dist)
 
       generated_data.each do |field_name, data_array|
         vector_name = fields[field_name].field_name
-        @data_obj.df[vector_name] = Daru::Vector.new(data_array, index: @data_obj.df.index)
+        @data_subject.df[vector_name] = Daru::Vector.new(data_array, index: @data_subject.df.index)
       end
     end
 
     def freq_by(*field_names)
-      @data_obj.df.group_by(field_names).size * 1.0 / @data_obj.df.size
+      @data_subject.df.group_by(field_names).size * 1.0 / @data_subject.df.size
     end
 
     def mock_extractor(filestore)
-      extractor = class << @data_obj.extractor; self; end
+      extractor = class << @data_subject.extractor; self; end
 
       extractor.send(:define_method, :all_entries, ->() { filestore.sftp_entries })
       extractor.send(:define_method, :download, ->(to_download) { to_download.map { |e| e.name } })
     end
 
     def extract
-      @data_obj.extractor.extract
+      @data_subject.extractor.extract
     end
 
     def csv_options
-      @data_obj.csv_options
+      @data_subject.csv_options
     end
 
   end
@@ -456,7 +456,7 @@ module Remi::BusinessRules
     def initialize(subject, name)
       @subject = subject
       @name = name
-      @field_name = name.symbolize(subject.data_obj.field_symbolizer)
+      @field_name = name.symbolize(subject.data_subject.field_symbolizer)
     end
 
     attr_reader :name
@@ -468,11 +468,11 @@ module Remi::BusinessRules
     end
 
     def metadata
-      @subject.data_obj.fields[@field_name]
+      @subject.data_subject.fields[@field_name]
     end
 
     def vector
-      @subject.data_obj.df[@field_name]
+      @subject.data_subject.df[@field_name]
     end
 
     def value
