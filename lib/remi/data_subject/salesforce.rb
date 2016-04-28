@@ -108,6 +108,7 @@ module Remi
     def load!
       @logger.info "Performing Salesforce #{@operation} on object #{@sfo}"
 
+      df_as_array_of_hashes = df.to_a[0] # This probably wouldn't work with a non-Daru df
       if @operation == :update
         Remi::SfBulkHelper::SfBulkUpdate.update(restforce_client, @sfo, df_as_array_of_hashes, logger: @logger)
       elsif @operation == :create
