@@ -110,7 +110,7 @@ Given /^the (source|target) file contains at least the following headers in no p
     field = row.first
     step "the #{st} field '#{field}'"
   end
-  expect(@brt.send(st.to_sym).data_obj.fields.keys).to include(*@brt.send(st.to_sym).fields.field_names)
+  expect(@brt.send(st.to_sym).data_subject.df.vectors.to_a).to include(*@brt.send(st.to_sym).fields.field_names)
 end
 
 Given /^the (source|target) file contains all of the following headers in this order:$/ do |st, table|
@@ -120,7 +120,7 @@ Given /^the (source|target) file contains all of the following headers in this o
   end
 
   @brt.run_transforms if st == 'target'
-  expect(@brt.send(st.to_sym).data_obj.fields.keys).to eq @brt.send(st.to_sym).fields.field_names
+  expect(@brt.send(st.to_sym).data_subject.df.vectors.to_a).to eq @brt.send(st.to_sym).fields.field_names
 end
 
 
@@ -188,7 +188,7 @@ Given /^the source field '([^']+)' is parsed with the date format "([^"]*)"$/ do
   step "the source field '#{source_field}'"
 
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
-  expect(@brt.sources[source_name].fields[source_field_name].metadata[:format]).to eq date_format
+  expect(@brt.sources[source_name].fields[source_field_name].metadata[:in_format]).to eq date_format
 end
 
 Given /^the source field is parsed with the date format "([^"]*)"$/ do |date_format|
@@ -452,8 +452,8 @@ Then /^the target field '([^']+)' is populated from the source field '([^']+)' u
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
   target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
 
-  source_format = @brt.sources[source_name].fields[source_field_name].metadata[:format]
-  source_reformatted = Remi::Transform[:format_date].(from_fmt: source_format, to_fmt: target_format)
+  source_format = @brt.sources[source_name].fields[source_field_name].metadata[:in_format]
+  source_reformatted = Remi::Transform::FormatDate.new(in_format: source_format, out_format: target_format).to_proc
     .call(@brt.sources[source_name].fields[source_field_name].value)
 
   @brt.run_transforms
@@ -592,7 +592,7 @@ Then /^only the following fields should be present on the target:$/ do |table|
   end
 
   @brt.run_transforms
-  expect(@brt.target.data_obj.fields.keys).to match_array @brt.target.fields.field_names
+  expect(@brt.target.data_subject.df.vectors.to_a).to match_array @brt.target.fields.field_names
 end
 
 ### Record-level expectations

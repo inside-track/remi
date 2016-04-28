@@ -6,8 +6,6 @@ require 'remi'
 
 module AllJobsShared
   include Remi::Job
-  include Remi::Refinements::Daru
-  using Remi::Refinements::Daru
 
   define_param :sftp, {
     host: 'example.com',

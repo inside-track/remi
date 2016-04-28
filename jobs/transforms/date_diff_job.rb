@@ -15,7 +15,7 @@ class DateDiffJob
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(:date1, :date2) .target(:difference)
         .transform(->(d1,d2) { [Date.strptime(d1), Date.strptime(d2)] })
-        .transform(Remi::Transform[:date_diff].(params[:measure]))
+        .transform(Remi::Transform::DateDiff.new(params[:measure]))
     end
   end
 end

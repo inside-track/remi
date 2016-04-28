@@ -2,7 +2,6 @@ require_relative 'all_jobs_shared'
 
 class AggregateJob
   include AllJobsShared
-  using Remi::Refinements::Daru
 
   define_source :source_data, Remi::DataSource::DataFrame
   define_target :target_data, Remi::DataTarget::DataFrame

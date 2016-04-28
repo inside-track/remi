@@ -2,7 +2,6 @@ require_relative 'all_jobs_shared'
 
 class SftpFileTargetJob
   include AllJobsShared
-  using Remi::Refinements::Daru
 
 
   define_target :some_file, Remi::DataTarget::SftpFile,

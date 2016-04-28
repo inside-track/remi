@@ -13,7 +13,7 @@ class PrefixJob
   define_transform :main, sources: :source_data, targets: :target_data do
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(:my_field) .target(:prefixed_field)
-        .transform(Remi::Transform[:prefix].(params[:prefix]))
+        .transform(Remi::Transform::Prefix.new(params[:prefix]))
     end
   end
 end
