@@ -13,7 +13,7 @@ module Remi
 
       def define_source(name, type_class, **options)
         @sources ||= []
-        @sources << name
+        @sources << name unless @sources.include? name
 
         define_method(name) do
           iv_name = instance_variable_get("@#{name}")
@@ -26,7 +26,7 @@ module Remi
 
       def define_target(name, type_class, **options)
         @targets ||= []
-        @targets << name
+        @targets << name unless @targets.include? name
 
         define_method(name) do
           iv_name = instance_variable_get("@#{name}")
