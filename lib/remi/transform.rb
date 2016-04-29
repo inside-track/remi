@@ -117,7 +117,7 @@ module Remi
       end
 
       def transform(value)
-        value.slice(0,@len)
+        (value || '').slice(0,@len)
       end
     end
 
@@ -387,7 +387,7 @@ module Remi
       end
 
       def transform(value)
-        value.gsub(@to_replace, @replace_with)
+        (value || '').gsub(@to_replace, @replace_with)
       end
     end
 
