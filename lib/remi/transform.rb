@@ -493,5 +493,206 @@ module Remi
       end
     end
 
+
+
+
+
+    # Public: Converts strings into booleans.
+    # Uses a regex to convert strings representing booleans to actual booleans.
+    # The truthy regex is /^(t|true|y|yes|1)$/i and the falsey regex is /^(f|false|n|no|0)$/i
+    #
+    # allow_nils - Specifies whether to allow the result to include nils.  If this is set
+    #              to false, then the value is only checked against the truthy regex and
+    #              the returned value is false if it doesn't match.  If allow_nils
+    #              is set to true, the both the truthy and the falsey regex are checked.
+    #              If neither match, then the result is nil.  (Default: false).
+    #
+    # Examples:
+    #
+    # Truthy.new.to_proc.call('True')                         # => true
+    # Truthy.new.to_proc.call('Yes')                          # => true
+    # Truthy.new.to_proc.call('y')                            # => true
+    # Truthy.new.to_proc.call('Yessire')                      # => false
+    # Truthy.new.to_proc.call('0')                            # => false
+    # Truthy.new.to_proc.call('Pineapple')                    # => false
+    # Truthy.new(allow_nils: false).to_proc.call('Pineapple') # => nil
+    class Truthy < Transform
+      def initialize(*args, allow_nils: false, **kargs, &block)
+        super
+        @allow_nils = allow_nils
+
+        @true_regex = /^(t|true|y|yes|1)$/i
+        @false_regex = /^(f|false|n|no|0)$/i
+      end
+
+      def match_true(value)
+        !!value.match(@true_regex)
+      end
+
+      def match_false(value)
+        !!value.match(@false_regex)
+      end
+
+      def transform(value)
+        value = value.to_s
+
+        if @allow_nils
+          if match_true(value)
+            true
+          elsif match_false(value)
+            false
+          else
+            nil
+          end
+        else
+          match_true(value)
+        end
+      end
+    end
+
+
+    # Public: Applies a DataFrame grouping sieve.
+    #
+    # The DataFrame sieve can be used to simplify very complex nested
+    # if-then logic to group data into buckets.  Given a DataFrame
+    # with N columns, the first N-1 columns represent the variables
+    # needed to group data into buckets.  The last column is the
+    # desired group.  The sieve then progresses down the rows of the
+    # DataFrame and checks to see if the input data matches the values
+    # in the columns of the sieve.  Nils in the sieve are treated as
+    # wildcards and match anything.  The first row that matches wins
+    # and the sieve progression stops.
+    #
+    # sieve_df - The sieve, defined as a dataframe.  The arguments
+    #            to the transform must appear in the same order as the
+    #            first N-1 columns of the sieve.
+    #
+    #
+    # Examples:
+    #
+    #   # This sieve captures the following business logic
+    #   # 1 - All Non-Graduate Nursing, regardless of contact, gets assigned to the :intensive group.
+    #   # 2 - All Undergraduate programs with contact get assigned to the :intensive group.
+    #   # 3 - All Undergraduate programs without a contact get assigned to the :base group.
+    #   # 4 - All Graduate engineering programs with a contact get assigned to the :intensive group.
+    #   # 5 - All other programs get assigned to the :base group
+    #   sieve_df = Daru::DataFrame.new([
+    #     [ 'Undergrad' , 'NURS' , nil   , :intensive ],
+    #     [ 'Undergrad' , nil    , true  , :intensive ],
+    #     [ 'Undergrad' , nil    , false , :base ],
+    #     [ 'Grad'      , 'ENG'  , true  , :intensive ],
+    #     [ nil         , nil    , nil   , :base ],
+    #     ].transpose,
+    #     order: [:level, :program, :contact, :group]
+    #     )
+    #
+    #   test_df = Daru::DataFrame.new([
+    #     ['Undergrad' , 'CHEM' , false],
+    #     ['Undergrad' , 'CHEM' , true],
+    #     ['Grad'      , 'CHEM' , true],
+    #     ['Undergrad' , 'NURS' , false],
+    #     ['Unknown'   , 'CHEM' , true],
+    #     ].transpose,
+    #     order: [:level, :program, :contact]
+    #   )
+    #
+    #   Remi::SourceToTargetMap.apply(test_df) do
+    #     map source(:level, :program, :contact,) .target(:group)
+    #     .transform(Remi::Transform::DataFrameSieve.new(sieve_df))
+    #   end
+    #
+    #   test_df
+    #   # =>  #<Daru::DataFrame:70099624408400 @name = d30888fd-6ca8-48dd-9be3-558f81ae1015 @size = 5>
+    #             level    program    contact      group
+    #      0  Undergrad       CHEM        nil       base
+    #      1  Undergrad       CHEM       true  intensive
+    #      2       Grad       CHEM       true       base
+    #      3  Undergrad       NURS        nil  intensive
+    #      4    Unknown       CHEM       true       base
+    class DataFrameSieve < Transform
+      def initialize(sieve_df, *args, **kargs, &block)
+        super
+        @sieve_df = sieve_df.transpose.to_h.values
+      end
+
+      def transform(*values)
+        sieve_keys = @sieve_df.first.index.to_a
+        sieve_result_key = sieve_keys.pop
+
+        @sieve_df.each.find do |sieve_row|
+          match_row = true
+          sieve_keys.each_with_index do |key,idx|
+            match_row &&= sieve_row[key].nil? || sieve_row[key] == values[idx]
+          end
+          match_row
+        end[sieve_result_key]
+      end
+    end
+
+
+    # Public: Used to partition elements into groups (buckets).
+    #
+    # buckets            - A hash where the keys are groups and the values are weights or percentages.
+    # current_population - A hashable object holding a count of the current number of
+    #                      elements in each bucket.
+    #
+    # Example:
+    #
+    #   # The current population has 2 record in the A bucket and 3 in B
+    #   current_pop = Daru::Vector.new([2,3], index: ['A', 'B'])
+    #
+    #   # We want to generate 7 new records that will evenly populate the A, B, and C buckets, given the current populations.
+    #   part = Remi::Transform::Partitioner.new(buckets: { 'A' => 1, 'B' => 1,'C' => 1 }, initial_population: current_pop)
+    #
+    #   1.upt(7).map { |iter| part.call } # => ["C", "C", "A", "C", "C", "B", "A"]
+    class Partitioner < Transform
+      def initialize(buckets:, initial_population: {}, **kargs, &block)
+        super
+        @buckets = buckets
+        @current_population = sanitize_initial_population(buckets, initial_population)
+      end
+
+      def transform(*values)
+        get_next_value
+      end
+
+      def size
+        @size ||= @current_population.reduce(0) { |sum, (group, n)| sum += n }
+      end
+
+      def total_weight
+        @total_weight ||= @buckets.reduce(0) { |sum, (bucket, weight)| sum += 1.0 * weight }
+      end
+
+      def get_next_value
+        assigned = @buckets.max_by do |(group, weight)|
+          expected = @buckets[group] / total_weight * size
+          actual = @current_population[group]
+
+          diff = expected - actual
+          if diff > 0
+            rand**(1.0 / diff)
+          else
+            -rand**(- 1.0 / @buckets[group])
+          end
+        end.first
+
+        @current_population[assigned] += 1
+        @size += 1
+
+        assigned
+      end
+
+      private
+
+      def sanitize_initial_population(buckets, dist)
+        dist = dist.to_h
+
+        zero_distribution = buckets.keys.reduce({}) { |h, group| h[group] = 0; h }
+        zero_distribution.merge(dist.select { |k,v| buckets.keys.include? k })
+      end
+    end
+
+
   end
 end
