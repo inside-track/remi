@@ -1,6 +1,6 @@
 GIT
   remote: git@github.com:inside-track/daru.git
-  revision: ad71b644c8e26789e3ab2258f046d5bc68b8df71
+  revision: c116599f746b74278d3c07fb3f4b455f7d2bb75f
   branch: itk-master
   specs:
     daru (0.1.2)

@@ -526,7 +526,14 @@ module Remi::BusinessRules
       df = Daru::DataFrame.new([], order: seed_hash.keys | table_headers)
       @table.hashes.each do |example_row|
         example_row_sym = example_row.reduce({}) do |h, (k,v)|
-          h[k.symbolize(field_symbolizer)] = ParseFormula.parse(v)
+          formula_value = ParseFormula.parse(v)
+          value = case formula_value
+            when '\nil'
+              nil
+            else
+              formula_value
+            end
+          h[k.symbolize(field_symbolizer)] = value
           h
         end
         df.add_row(seed_hash.merge(example_row_sym))
