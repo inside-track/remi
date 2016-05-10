@@ -84,7 +84,7 @@ module Remi
 
     def do_map_single_source_and_target_vector
       @target_df[@target_vectors.first] = @source_df[@source_vectors.first].recode do |vector_value|
-        @transform_procs.reduce(vector_value) { |value, tform| tform.call(*(value || [nil])) }
+        @transform_procs.reduce(vector_value) { |value, tform| tform.call(*(value.nil? ? [nil] : value)) }
       end
     end
 
@@ -100,7 +100,7 @@ module Remi
       end
 
       work_vector.recode! do |vector_value|
-        @transform_procs.reduce(vector_value) { |value, tform| tform.call(*(value || [nil])) }
+        @transform_procs.reduce(vector_value) { |value, tform| tform.call(*(value.nil? ? [nil] : value)) }
       end
 
       @target_vectors.each_with_index do |target_vector, vector_idx|

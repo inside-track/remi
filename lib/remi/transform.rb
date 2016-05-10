@@ -483,7 +483,7 @@ module Remi
           when :decimal
             Float("%.#{scale}f" % Float(value))
           when :date
-            Date.strptime(value, in_format)
+            value.is_a?(Date) ? value : Date.strptime(value, in_format) # value.is_a?(Date) is only needed becuase we stub date types with actual dates, rather than strings like we probably should
           when :datetime
             Time.strptime(value, in_format)
           else
@@ -651,6 +651,9 @@ module Remi
         @buckets = buckets
         @current_population = sanitize_initial_population(buckets, initial_population)
       end
+
+      attr_reader :buckets
+      attr_reader :current_population
 
       def transform(*values)
         get_next_value

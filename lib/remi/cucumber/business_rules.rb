@@ -390,6 +390,12 @@ module Remi::BusinessRules
       @data_subject.df.group_by(field_names).size * 1.0 / @data_subject.df.size
     end
 
+    def unique_integer_field(field_name)
+      vector_name = fields[field_name].field_name
+      i = 0
+      @data_subject.df[vector_name].recode! { |v| i += 1 }
+    end
+
     def mock_extractor(filestore)
       extractor = class << @data_subject.extractor; self; end
 
