@@ -65,6 +65,9 @@ Then /^the file with the latest date stamp will be downloaded for processing$/ d
   expect(@brt.source.extract).to match_array Array(@brt.filestore.latest)
 end
 
+Then /^files will be downloaded for processing$/ do
+end
+
 Then /^no files will be downloaded for processing$/ do
   @brt.filestore.generate
   @brt.source.mock_extractor(@brt.filestore)
@@ -415,13 +418,16 @@ Then /^the source field '([^']+)' is prefixed with "([^"]*)" and loaded into the
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
   target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
 
-  prefixed_source = "#{prefix}#{@brt.sources[source_name].fields[source_field_name].value}"
+  prefixed_source = @brt.sources[source_name].fields[source_field_name].values.map do |value|
+    "#{prefix}#{value}"
+  end.uniq.sort
 
   @brt.run_transforms
-  Array(target_names).each do |target_name|
-    expect(@brt.targets[target_name].fields[target_field_name].value).to eq prefixed_source
-  end
+  results = Array(target_names).map do |target_name|
+    @brt.targets[target_name].fields[target_field_name].values.uniq
+  end.flatten.uniq.sort
 
+  expect(results).to eq prefixed_source
 end
 
 Then /^the source field is prefixed with "([^"]*)" and loaded into the target field '([^']+)'$/ do |prefix, target_field|
@@ -632,6 +638,15 @@ Then /^a target record is not created$/ do
   expect(@brt.targets.total_size).to be 0
 end
 
+
+### Setting up data for multiple records
+
+Given /^the source field '([^']+)' is a unique integer$/ do |source_field|
+  step "the source field '#{source_field}'"
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+
+  @brt.sources[source_name].unique_integer_field(source_field_name)
+end
 
 ### Record counting
 
