@@ -334,6 +334,7 @@ end
 ### Transforms
 
 Then /^the target field '([^']+)' is a concatenation of the source fields '(.+)', delimited by "([^"]*)"$/ do |target_field, source_field_list, delimiter|
+  delimiter = delimiter.gsub(/(\\n|\\t)/, '\n' => "\n", '\t' => "t" )
   source_fields = "'#{source_field_list}'".gsub(' and ', ', ').split(',').map do |field_with_quotes|
     full_field_name = field_with_quotes.match(/'(.+)'/)[1]
 
