@@ -71,7 +71,7 @@ module Remi
 
     def extractor=(arg)
       case arg
-      when Extractor::SftpFile, Extractor::LocalFile
+      when Extractor::SftpFile, Extractor::LocalFile, Extractor::S3File
         @extractor = arg
       when String
         @extractor = Extractor::LocalFile.new(path: arg)
