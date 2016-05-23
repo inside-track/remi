@@ -19,7 +19,7 @@ GIT
 PATH
   remote: .
   specs:
-    remi (0.2.31)
+    remi (0.2.32)
       activesupport (~> 4.2)
       bond (~> 0.5)
       cucumber (~> 2.1)
