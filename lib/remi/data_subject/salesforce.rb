@@ -110,11 +110,11 @@ module Remi
 
       df_as_array_of_hashes = df.to_a[0] # This probably wouldn't work with a non-Daru df
       if @operation == :update
-        Remi::SfBulkHelper::SfBulkUpdate.update(restforce_client, @sfo, df_as_array_of_hashes, logger: @logger)
+        Remi::SfBulkHelper::SfBulkUpdate.update(restforce_client, @sfo, df_as_array_of_hashes, batch_size: @batch_size, logger: @logger)
       elsif @operation == :create
-        Remi::SfBulkHelper::SfBulkCreate.create(restforce_client, @sfo, df_as_array_of_hashes, logger: @logger)
+        Remi::SfBulkHelper::SfBulkCreate.create(restforce_client, @sfo, df_as_array_of_hashes, batch_size: @batch_size, logger: @logger)
       elsif @operation == :upsert
-        Remi::SfBulkHelper::SfBulkUpsert.upsert(restforce_client, @sfo, df_as_array_of_hashes, external_id: @external_id, logger: @logger)
+        Remi::SfBulkHelper::SfBulkUpsert.upsert(restforce_client, @sfo, df_as_array_of_hashes, batch_size: @batch_size, external_id: @external_id, logger: @logger)
       else
         raise ArgumentError, "Unknown operation: #{@operation}"
       end
@@ -124,9 +124,10 @@ module Remi
 
     private
 
-    def init_salesforce(*args, object:, operation:, credentials:, external_id: 'Id', api: :bulk, **kargs, &block)
+    def init_salesforce(*args, object:, operation:, credentials:, batch_size: 5000, external_id: 'Id', api: :bulk, **kargs, &block)
       @sfo = object
       @operation = operation
+      @batch_size = batch_size
       @external_id = external_id
       @credentials = credentials
       @api = api
