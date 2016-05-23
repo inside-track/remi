@@ -622,7 +622,13 @@ module Remi
         @sieve_df.each.find do |sieve_row|
           match_row = true
           sieve_keys.each_with_index do |key,idx|
-            match_row &&= sieve_row[key].nil? || sieve_row[key] == values[idx]
+            match_value = if sieve_row[key].is_a?(Regexp)
+              !!sieve_row[key].match(values[idx])
+            else
+              sieve_row[key] == values[idx]
+            end
+
+            match_row &&= sieve_row[key].nil? || match_value
           end
           match_row
         end[sieve_result_key]

@@ -22,6 +22,10 @@ class DataFrameSieveJob
   define_target :target_data, Remi::DataTarget::DataFrame
 
   define_transform :main, sources: :source_data, targets: :target_data do
+
+    # Hack to convert example to regex
+    sieve.df[:program].recode! { |v| (v || '').match(/\A\/.*\/\Z/) ? /#{v[1...-1]}/ : v }
+
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(:level, :program, :contact) .target(:group)
         .transform(Remi::Transform::DataFrameSieve.new(sieve.df))

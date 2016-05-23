@@ -18,7 +18,7 @@ Feature: Tests the DataFrameSieve transform
       | Undergrad   | NURS    | \\nil   | intensive |
       | Undergrad   | \\nil   | true    | intensive |
       | Undergrad   | \\nil   | false   | base      |
-      | Grad        | ENG     | true    | intensive |
+      | Grad        | /ENG/   | true    | intensive | # regex
       | \\nil       | \\nil   | \\nil   | base      |
 
     And the following example for 'Source Data':
@@ -28,6 +28,7 @@ Feature: Tests the DataFrameSieve transform
       | 3  | Grad        | CHEM    | true    |
       | 4  | Undergrad   | NURS    | false   |
       | 5  | Unknown     | CHEM    | true    |
+      | 6  | Grad        | ENGL    | true    |
 
     Then the target should match the example:
       | id | level       | program | contact | group     |
@@ -36,3 +37,4 @@ Feature: Tests the DataFrameSieve transform
       | 3  | Grad        | CHEM    | true    | base      |
       | 4  | Undergrad   | NURS    | false   | intensive |
       | 5  | Unknown     | CHEM    | true    | base      |
+      | 6  | Grad        | ENGL    | true    | intensive |
