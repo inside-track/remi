@@ -656,6 +656,13 @@ Then /^the target has (\d+) record(?:s|)$/ do |nrecords|
   step "the target '#{target_name}' has #{nrecords} records"
 end
 
+Then /^the targets have (\d+) record(?:s|)$/ do |nrecords|
+  @brt.run_transforms
+
+  obs_nrecords = @brt.targets.keys.reduce(0) { |sum, target_name| sum += @brt.targets[target_name].size }
+  expect(obs_nrecords).to eq nrecords.to_i
+end
+
 Then /^the target '([[:alnum:]\s\-_]+)' has (\d+) record(?:s|)$/ do |target_name, nrecords|
   @brt.run_transforms
   expect(@brt.targets[target_name].size).to eq nrecords.to_i
