@@ -54,7 +54,8 @@ module Remi
       result_df = nil
       extract.each_with_index do |filename, idx|
         @logger.info "Converting #{filename} to a dataframe"
-        csv_df = Daru::DataFrame.from_csv filename, @csv_options
+        processed_filename = preprocess(filename)
+        csv_df = Daru::DataFrame.from_csv processed_filename, @csv_options
 
         csv_df[@filename_field] = Daru::Vector.new([filename] * csv_df.size, index: csv_df.index) if @filename_field
         if idx == 0
@@ -104,12 +105,31 @@ module Remi
     end
 
 
+
     private
 
-    def init_csv_file(*args, extractor:, csv_options: {}, filename_field: nil, **kargs, &block)
+    def preprocess(filename)
+      return filename unless @preprocessor
+      @logger.info "Preprocessing #{filename}"
+      tmp_filename = File.join(Remi::Settings.work_dir, "#{Pathname.new(filename).basename}-#{SecureRandom.uuid}")
+
+      dirname = Pathname.new(tmp_filename).dirname
+      FileUtils.mkdir_p(dirname) unless File.directory? dirname
+
+      File.open(tmp_filename, 'w') do |outfile|
+        File.foreach(filename) do |in_line|
+          outfile.write @preprocessor.call(in_line)
+        end
+      end
+
+      tmp_filename
+    end
+
+    def init_csv_file(*args, extractor:, csv_options: {}, filename_field: nil, preprocessor: nil, **kargs, &block)
       self.extractor = extractor
       @csv_options = self.class.default_csv_options.merge(csv_options)
       @filename_field = filename_field
+      @preprocessor = preprocessor
     end
   end
 
