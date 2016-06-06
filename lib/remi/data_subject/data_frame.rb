@@ -12,7 +12,7 @@ module Remi
     #
     # Returns data in a format that can be used to create a dataframe.
     def extract!
-      @extract = []
+      @extract = @data.transpose
     end
 
     # Public: Converts extracted data to a dataframe
@@ -24,7 +24,8 @@ module Remi
 
     private
 
-    def init_df(*args, **kargs, &block)
+    def init_df(*args, data: [], **kargs, &block)
+      @data = data
     end
   end
 
