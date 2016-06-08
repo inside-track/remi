@@ -11,6 +11,14 @@ Before do
   # Restart the random number generator prior to each scenario to
   # ensure we have reproducibility of random output
   Kernel.srand(35983958269835333)
+
+  # Monkey patch faker gem so that dummy random dates and ranges are generated consistently
+  class Faker::Base
+    def self.rand_in_range(from, to)
+      from, to = to, from if to < from
+      Random.rand(from..to)
+    end
+  end
 end
 
 After do
