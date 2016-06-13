@@ -150,6 +150,19 @@ Given /^the source field (?:has|is set to) the value "([^"]*)"$/ do |value|
   end
 end
 
+Given /^the source field '([^']+)' (?:has|is set to) the json value$/ do |source_field, value|
+  step "the source field '#{source_field}'"
+
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  @brt.sources[source_name].fields[source_field_name].value = JSON.parse(value)
+end
+
+Given /^the source field (?:has|is set to) the json value$/ do |value|
+  @brt.sources.fields.each do |field|
+    step "the source field '#{field.full_name}' is set to the json value \"#{value}\""
+  end
+end
+
 When /^the source field '([^']+)' (?:has an empty value|is blank)$/ do |source_field|
   step "the source field '#{source_field}'"
 
