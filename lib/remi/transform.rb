@@ -18,7 +18,7 @@ module Remi
     attr_accessor :target_metadata
 
     # Public: Set to true if the transform expects multiple arguments (default: false)
-    attr_reader :multi_arg
+    attr_reader :multi_args
 
     # Public: Defines the operation of this transform class.
     #
@@ -36,7 +36,7 @@ module Remi
     #
     # Returns the transformed value.
     def call(*values)
-      if @multi_arg
+      if @multi_args
         to_proc.call(*values)
       else
         to_proc.call(Array(values).first)
