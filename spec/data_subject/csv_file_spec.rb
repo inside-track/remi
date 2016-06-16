@@ -22,7 +22,8 @@ describe DataSource::CsvFile do
       filename_field: :from_file
     )
 
-    expect(csv.df[:from_file].to_a).to eq ['spec/fixtures/basic.csv'] * 2
+    expected_files = [Pathname.new('spec/fixtures/basic.csv').realpath.to_s] * 2
+    expect(csv.df[:from_file].to_a).to eq expected_files
   end
 
   it "preprocesses records when required" do
@@ -56,12 +57,11 @@ describe DataSource::CsvFile do
     expect(csv.df.to_a).to eq expected_df.to_a
   end
 
-  # Do this when I retire the old LocalFile
-  it "combines multiple csv files into a single dataframe", skip: 'TODO' do
+  it "combines multiple csv files into a single dataframe" do
     csv = Remi::DataSource::CsvFile.new(
       extractor: Remi::Extractor::LocalFile.new(
         remote_path: 'spec/fixtures',
-        pattern: 'basic(|2)\.csv'
+        pattern: /basic(|2)\.csv/
       )
     )
 
@@ -69,9 +69,10 @@ describe DataSource::CsvFile do
       {
         column_a: ['value 1A', 'value 2A', 'value 1A', 'value 2A'],
         column_b: ['value 1B', 'value 2B', nil, nil],
-        columb_c: [nil, nil, 'value 1C', 'value 2C']
+        column_c: [nil, nil, 'value 1C', 'value 2C']
       }
     )
+
     expect(csv.df.to_a).to eq expected_df.to_a
   end
 

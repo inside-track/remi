@@ -44,34 +44,11 @@ end
 ### Source file processing
 
 Given /^files with names matching the pattern \/(.*)\/$/ do |pattern|
-  @brt.filestore.pattern(Regexp.new(pattern))
-end
-
-Given /^files with names that do not match the pattern \/(.*)\/$/ do |pattern|
-  @brt.filestore.anti_pattern(Regexp.new(pattern))
-end
-
-Given /^files delivered within the last (\d+) hours$/ do |hours|
-  @brt.filestore.delivered_since(Time.now - hours.to_i * 3600)
-end
-
-Given /^files were delivered more than (\d+) hours ago$/ do |hours|
-  @brt.filestore.delivered_before(Time.now - hours.to_i * 3600)
+  expect(@brt.source.data_subject.extractor.pattern).to eq Regexp.new(pattern)
 end
 
 Then /^the file with the latest date stamp will be downloaded for processing$/ do
-  @brt.filestore.generate
-  @brt.source.mock_extractor(@brt.filestore)
-  expect(@brt.source.extract).to match_array Array(@brt.filestore.latest)
-end
-
-Then /^files will be downloaded for processing$/ do
-end
-
-Then /^no files will be downloaded for processing$/ do
-  @brt.filestore.generate
-  @brt.source.mock_extractor(@brt.filestore)
-  expect { @brt.source.extract }.to raise_error Remi::Extractor::SftpFile::FileNotFoundError
+  expect(@brt.source.data_subject.extractor.most_recent_by).to eq :create_time
 end
 
 Then /^the file is uploaded to the remote path "([^"]+)"$/ do |remote_path|

@@ -53,6 +53,8 @@ module Remi
       # Assumes that each file has exactly the same structure
       result_df = nil
       extract.each_with_index do |filename, idx|
+        filename = filename.to_s
+
         @logger.info "Converting #{filename} to a dataframe"
         processed_filename = preprocess(filename)
         csv_df = Daru::DataFrame.from_csv processed_filename, @csv_options
@@ -71,16 +73,7 @@ module Remi
 
 
     def extractor=(arg)
-      case arg
-      when Extractor::SftpFile, Extractor::LocalFile, Extractor::S3File
-        @extractor = arg
-      when String
-        @extractor = Extractor::LocalFile.new(path: arg)
-      when Regexp
-        raise "Adding regex matching to local files would be easy, not done yet"
-      else
-        raise "Unknown extractor of type #{arg.class}: #{arg}"
-      end
+      @extractor = arg.respond_to?(:extract) ? arg : Extractor::LocalFile.new(remote_path: arg.to_s)
     end
 
     # Only going to support single file for now

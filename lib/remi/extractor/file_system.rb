@@ -18,7 +18,6 @@ module Remi
 
 
     class FileSystem
-
       class FileNotFoundError < StandardError; end
 
       def initialize(*args, remote_path:, pattern: /.*/, local_path: Settings.work_dir, most_recent_only: false, group_by: nil, most_recent_by: :create_time, logger: Remi::Settings.logger, **kargs, &block)
@@ -31,6 +30,12 @@ module Remi
         @logger = logger
       end
 
+      attr_reader :remote_path
+      attr_reader :pattern
+      attr_reader :local_path
+      attr_reader :most_recent_only
+      attr_reader :group_by
+      attr_reader :most_recent_by
       attr_reader :logger
 
       # Public: Called to extract files from the source filesystem.
