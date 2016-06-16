@@ -33,10 +33,6 @@ Feature: This is a sample feature file.
     And files with names matching the pattern /^SampleFile_(\d+)\.txt/
     Then the file with the latest date stamp will be downloaded for processing
 
-    Given files with names that do not match the pattern /^SampleFile_(\d+)\.txt/
-    Then no files will be downloaded for processing
-
-
   Scenario: In order to be parsed and properly processed, the file must conform
     to expectations about its structure and content.
 

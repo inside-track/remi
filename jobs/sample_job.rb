@@ -27,8 +27,8 @@ class SampleJob
   define_source :sample_file, Remi::DataSource::CsvFile,
     extractor: Remi::Extractor::SftpFile.new(
       credentials: params[:sftp],
-      remote_file: /^SampleFile_(\d+)\.txt/,
-      remote_folder: '/',
+      remote_path: '/',
+      pattern: /^SampleFile_(\d+)\.txt/,
       most_recent_only: true
     ),
     csv_options: {

@@ -1,125 +1,84 @@
 require 'remi_spec'
 
 describe Extractor::SftpFile do
+  let(:remote_path) { '' }
+  let(:credentials) {
+    {
+      host: 'host',
+      username: 'username',
+      password: 'password'
+    }
+  }
+
+  let(:sftp_file) {
+    Extractor::SftpFile.new(
+      credentials: credentials,
+      remote_path: remote_path
+    )
+  }
+
+  let(:remote_filenames) { ['file1.csv', 'file2.csv'] }
+  let(:sftp_session) { instance_double('Net:SFTP::Session') }
+
   before do
-    now = Time.new
+    sftp_dir = instance_double('Net::SFTP::Operations::Dir')
 
-    example_files = [
-      { name: "ApplicantsA-9.csv", createtime: now - 10.minutes },
-      { name: "ApplicantsA-3.csv", createtime: now - 5.minutes },
-      { name: "ApplicantsA-5.csv", createtime: now - 1.minutes },
-      { name: "ApplicantsB-7.csv", createtime: now - 10.minutes },
-      { name: "ApplicantsB-6.csv", createtime: now - 5.minutes },
-      { name: "ApplicantsB-2.csv", createtime: now - 1.minutes },
-      { name: "ApplicantsB-2.txt", createtime: now - 0.minutes },
-      { name: "Apples.csv", createtime: now - 1.minutes },
-    ]
+    allow(Net::SFTP).to receive(:start).and_yield sftp_session
+    allow(sftp_session).to receive(:dir).and_return sftp_dir
 
-    allow_any_instance_of(Extractor::SftpFile).to receive(:all_entries) do
-      example_files.map do |file|
-        Net::SFTP::Protocol::V04::Name.new(
-          file[:name],
-          Net::SFTP::Protocol::V04::Attributes.new(createtime: file[:createtime])
-        )
-      end
-    end
-
-    @params = { credentials: nil }
+    allow(sftp_dir).to receive(:entries).and_return(remote_filenames.map { |fname|
+      Net::SFTP::Protocol::V04::Name.new(
+        fname,
+        Net::SFTP::Protocol::V04::Attributes.new(createtime: Time.new.to_i, mtime: Time.new.to_i)
+      )
+    })
   end
 
-  let(:sftpfile) { Extractor::SftpFile.new(**@params) }
-
-
-
-
-  context 'extracting all files matching a pattern' do
-    before do
-      @params[:remote_file] = /ApplicantsA-\d+\.csv/
+  context '.new' do
+    it 'creates an instance with valid parameters' do
+      sftp_file
     end
 
-    it 'does not extract non-matching files' do
-      expect(sftpfile.to_download.map(&:name)).not_to include "Apples.csv"
+    it 'requires a hostname' do
+      credentials.delete(:host)
+      expect { sftp_file }.to raise_error KeyError
     end
 
-    it 'extracts all matching files' do
-      expect(sftpfile.to_download.map(&:name)).to match_array([
-       "ApplicantsA-9.csv",
-       "ApplicantsA-3.csv",
-       "ApplicantsA-5.csv"
-      ])
+    it 'requires a username' do
+      credentials.delete(:username)
+      expect { sftp_file }.to raise_error KeyError
+    end
+
+    it 'requires a password' do
+      credentials.delete(:password)
+      expect { sftp_file }.to raise_error KeyError
+    end
+
+    it 'defaults to using port 22' do
+      expect(sftp_file.port).to eq '22'
+    end
+
+    it 'allows the port to be defined in the credentials' do
+      credentials[:port] = '1234'
+      expect(sftp_file.port).to eq '1234'
     end
   end
 
-
-  context 'extracting only the most recent matching a pattern' do
-    before do
-      @params.merge!({
-        remote_file: /ApplicantsA-\d+\.csv/,
-        most_recent_only: true
-      })
-    end
-
-    it 'extracts only the most recent matching file' do
-      expect(sftpfile.to_download.map(&:name)).to match_array([
-       "ApplicantsA-5.csv"
-      ])
-    end
-
-    context 'using filename instead of createtime' do
-      before do
-        @params[:most_recent_by] = :filename
-      end
-
-      it 'extracts only the most recent matching file' do
-        expect(sftpfile.to_download.map(&:name)).to match_array([
-         "ApplicantsA-9.csv"
-        ])
-      end
+  context '#all_entires' do
+    it 'returns all entries' do
+      expect(sftp_file.all_entries.map(&:name)).to eq remote_filenames
     end
   end
 
-
-  context 'extracting files matching a pattern with a by group' do
-    before do
-      @params.merge!({
-        credentials: nil,
-        remote_file: /^Applicants(A|B)-\d+\.csv/,
-        group_by: /^Applicants(A|B)/
-      })
+  context '#extract' do
+    it 'downloads files from the ftp' do
+      expect(sftp_session).to receive(:download!).exactly(remote_filenames.size).times
+      sftp_file.extract
     end
 
-    it 'extracts the most recent file that matches a particular regex' do
-      expect(sftpfile.to_download.map(&:name)).to match_array([
-       "ApplicantsA-5.csv",
-       "ApplicantsB-2.csv"
-      ])
+    it 'creates local files with the right names' do
+      allow(sftp_session).to receive(:download!)
+      expect(sftp_file.extract.map { |f| Pathname.new(f).basename.to_s }).to eq remote_filenames
     end
-
-    context 'with a minimally selective pre-filter' do
-      before do
-        @params[:remote_file] = /^Applicants/
-      end
-
-      it 'extracts the most recent file that matches a particular regex' do
-        expect(sftpfile.to_download.map(&:name)).to match_array([
-         "ApplicantsA-5.csv",
-         "ApplicantsB-2.txt"
-        ])
-      end
-    end
-
-    context 'using filename instead of createtime' do
-      before do
-        @params[:most_recent_by] = :filename
-      end
-
-      it 'extracts only the most recent matching file' do
-        expect(sftpfile.to_download.map(&:name)).to match_array([
-         "ApplicantsA-9.csv",
-         "ApplicantsB-7.csv"
-        ])
-      end
-    end
-
   end
 end

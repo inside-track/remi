@@ -121,8 +121,6 @@ module Remi::BusinessRules
       @sources = DataSubjectCollection.new
       @targets = DataSubjectCollection.new
       @examples = DataExampleCollection.new
-
-      @filestore = Filestore.new
     end
 
     attr_reader :job
@@ -131,7 +129,6 @@ module Remi::BusinessRules
     attr_reader :sources
     attr_reader :targets
     attr_reader :examples
-    attr_reader :filestore
 
     def add_job_source(name)
       raise "Unknown source #{name} for job" unless @job.methods.include? name.symbolize
@@ -396,17 +393,6 @@ module Remi::BusinessRules
       @data_subject.df[vector_name].recode! { |v| i += 1 }
     end
 
-    def mock_extractor(filestore)
-      extractor = class << @data_subject.extractor; self; end
-
-      extractor.send(:define_method, :all_entries, ->() { filestore.sftp_entries })
-      extractor.send(:define_method, :download, ->(to_download) { to_download.map { |e| e.name } })
-    end
-
-    def extract
-      @data_subject.extractor.extract
-    end
-
     def csv_options
       @data_subject.csv_options
     end
@@ -555,77 +541,6 @@ module Remi::BusinessRules
           (h[k.symbolize] ||= []) << v
         end
         h
-      end
-    end
-  end
-
-
-  class Filestore
-    def initialize
-      @files = []
-      @delivered = {}
-    end
-
-    attr_reader :sftp_entries
-
-    def pattern(pattern)
-      @pattern = pattern
-    end
-
-    def anti_pattern(pattern)
-      @pattern = /^ThisBetterNeverMatchAnythingOrIWillShootYou\d{8}Times$/
-    end
-
-    def delivered_since(date_time)
-      @delivered = { :since => date_time }
-    end
-
-    def delivered_before(date_time)
-      @delivered = { :before => date_time }
-    end
-
-    def latest
-      @files.max_by { |f| f[:attributes][:createdtime] }[:name]
-    end
-
-    def generate
-      psuedorand = Random.new(4985674985672348954987589429)
-
-      generate_files_with_pattern
-      @files.map! do |file|
-        date_method = @delivered.keys.first
-        if date_method == :since
-          file[:attributes][:createdtime] = @delivered[:since] + 10 + psuedorand.rand * 100
-        elsif date_method == :before
-          file[:attributes][:createdtime] = @delivered[:since] - 10 - psuedorand.rand * 100
-        else
-          file[:attributes][:createdtime] = Time.now - 10 - psuedorand.rand * 100
-        end
-        file
-      end
-    end
-
-    def sftp_entries
-      @files.map do |file|
-        Net::SFTP::Protocol::V04::Name.new(
-          file[:name],
-          Net::SFTP::Protocol::V04::Attributes.new(createtime: file[:attributes][:createdtime])
-        )
-      end
-    end
-
-    private
-
-    def generate_files_with_pattern
-      filenames = 1.upto(5).map { |f| @pattern.random_example }.uniq
-
-      @files = filenames.map do |fname|
-        {
-          name: fname,
-          attributes: {
-            createdtime: nil
-          }
-        }
       end
     end
   end

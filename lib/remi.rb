@@ -42,8 +42,9 @@ require 'remi/field_symbolizers'
 
 require 'remi/refinements/symbolizer'
 
-require 'remi/extractor/sftp_file' # deprecated
 require 'remi/extractor/file_system'
+require 'remi/extractor/local_file'
+require 'remi/extractor/sftp_file'
 require 'remi/extractor/s3_file'
 
 
