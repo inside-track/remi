@@ -47,8 +47,20 @@ Given /^files with names matching the pattern \/(.*)\/$/ do |pattern|
   expect(@brt.source.data_subject.extractor.pattern).to eq Regexp.new(pattern)
 end
 
+Given /^download groups defined by the pattern \/(.*)\/$/ do |pattern|
+  expect(@brt.source.data_subject.extractor.group_by).to eq Regexp.new(pattern)
+end
+
 Then /^the file with the latest date stamp will be downloaded for processing$/ do
   expect(@brt.source.data_subject.extractor.most_recent_by).to eq :create_time
+end
+
+Then /^all files matching the pattern will be downloaded for processing$/ do
+  expect(@brt.source.data_subject.extractor.most_recent_only).to eq false
+end
+
+Then /^the file that comes last in an alphanumeric sort by group will be downloaded for processing$/ do
+  expect(@brt.source.data_subject.extractor.most_recent_by).to eq :name
 end
 
 Then /^the file is uploaded to the remote path "([^"]+)"$/ do |remote_path|
