@@ -10,6 +10,14 @@ module Remi
       @work_dir = arg
     end
 
+    def jobs_dir
+      @jobs_dir ||= Pathname.new('jobs').realpath
+    end
+
+    def jobs_dir=(arg)
+      @jobs_dir = Pathname.new(arg).realpath
+    end
+
     def log_level
       @log_level ||= Logger::INFO
     end

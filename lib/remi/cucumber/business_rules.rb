@@ -113,6 +113,7 @@ module Remi::BusinessRules
 
     def initialize(job_name)
       job_class_name = "#{job_name.gsub(/\s/,'')}Job"
+      require_job_file(job_class_name)
       @job = Object.const_get(job_class_name).new
 
       @job_sources = DataSubjectCollection.new
@@ -129,6 +130,13 @@ module Remi::BusinessRules
     attr_reader :sources
     attr_reader :targets
     attr_reader :examples
+
+    def require_job_file(job_class_name)
+      job_file = Dir["#{Remi::Settings.jobs_dir}/**/*_job.rb"].map do |fname|
+        fname if File.basename(fname) == "#{job_class_name.underscore}.rb"
+      end.compact.pop
+      require job_file
+    end
 
     def add_job_source(name)
       raise "Unknown source #{name} for job" unless @job.methods.include? name.symbolize

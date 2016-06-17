@@ -6,6 +6,7 @@ require 'remi'
 require 'remi/cucumber'
 
 Remi::Settings.log_level = Logger::ERROR
+Remi::Settings.jobs_dir = File.join(__dir__, '../../jobs')
 
 Before do
   # Restart the random number generator prior to each scenario to
