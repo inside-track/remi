@@ -35,11 +35,11 @@ module Remi
       end
 
       def all_entries!
-        sftp_entries = connection { |sftp| sftp.dir.entries(@remote_path.dirname) }
+        sftp_entries = connection { |sftp| sftp.dir.entries(@remote_path) }
         sftp_entries.map do |entry|
           # Early versions of the protocol don't support create time, fake it with modified time?
           FileSystemEntry.new(
-            pathname: File.join(@remote_path.dirname, entry.name),
+            pathname: File.join(@remote_path, entry.name),
             create_time: entry.attributes.respond_to?(:createtime) ? entry.attributes.createtime : entry.attributes.mtime,
             modified_time: entry.attributes.mtime
           )
