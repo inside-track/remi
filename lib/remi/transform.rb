@@ -35,11 +35,11 @@ module Remi
     # values - The values to be transformed.
     #
     # Returns the transformed value.
-    def call(*values)
-      if @multi_args
-        to_proc.call(*values)
+    def call(*args)
+      if to_proc.arity == 0
+        to_proc.call
       else
-        to_proc.call(Array(values).first)
+        to_proc.call(*args)
       end
     end
 
@@ -135,8 +135,9 @@ module Remi
         @delimiter = delimiter
       end
 
-      def transform(*values)
-        Array(values).join(@delimiter)
+      def transform(row)
+        row = SourceToTargetMap::Row[row]
+        row.each_source.map { |key, value| value.blank? ? nil : value }.compact.join(@delimiter)
       end
     end
 
@@ -188,8 +189,9 @@ module Remi
         @default = default
       end
 
-      def transform(*values)
-        Array(values).find(->() { @default }) { |arg| !arg.blank? }
+      def transform(row)
+        row = SourceToTargetMap::Row[row]
+        row.each_source.find(->() { [nil, @default] }) { |key, value| !value.blank? }[1]
       end
     end
 
@@ -338,7 +340,10 @@ module Remi
         @measure = measure
       end
 
-      def transform(from_date, to_date)
+      def transform(row)
+        row = SourceToTargetMap::Row[row]
+        from_date = row[row.keys[0]]
+        to_date = row[row.keys[1]]
 
         case @measure.to_sym
         when :days
@@ -366,7 +371,7 @@ module Remi
         @constant = constant
       end
 
-      def transform(values)
+      def transform
         @constant
       end
     end
@@ -563,9 +568,10 @@ module Remi
     # wildcards and match anything.  The first row that matches wins
     # and the sieve progression stops.
     #
-    # sieve_df - The sieve, defined as a dataframe.  The arguments
-    #            to the transform must appear in the same order as the
-    #            first N-1 columns of the sieve.
+    # sieve_df - The sieve, defined as a dataframe.  The names of the
+    #            sieve vectors must correspond to the names of the
+    #            vectors in the dataframe source to target map.  The
+    #            last vector in the sieve_df is used as the result of the sieve.
     #
     #
     # Examples:
@@ -612,23 +618,26 @@ module Remi
     class DataFrameSieve < Transform
       def initialize(sieve_df, *args, **kargs, &block)
         super
-        @sieve_df = sieve_df.transpose.to_h.values
+        @sieve_table = sieve_df.transpose.to_h.values
       end
 
-      def transform(*values)
-        sieve_keys = @sieve_df.first.index.to_a
+
+      def transform(row)
+        sieve_keys = @sieve_table.first.index.to_a
         sieve_result_key = sieve_keys.pop
 
-        @sieve_df.each.find do |sieve_row|
-          match_row = true
-          sieve_keys.each_with_index do |key,idx|
-            match_value = if sieve_row[key].is_a?(Regexp)
-              !!sieve_row[key].match(values[idx])
-            else
-              sieve_row[key] == values[idx]
-            end
+        raise ArgumentError, "#{sieve_keys - row.source_keys} not found in row" unless (sieve_keys - row.source_keys).size == 0
 
-            match_row &&= sieve_row[key].nil? || match_value
+        @sieve_table.each.find do |sieve_row|
+          match_row = true
+          sieve_keys.each do |sieve_key|
+            match_value = if sieve_row[sieve_key].is_a?(Regexp)
+                            !!sieve_row[sieve_key].match(row[sieve_key])
+                          else
+                            sieve_row[sieve_key] == row[sieve_key]
+                          end
+
+            match_row &&= sieve_row[sieve_key].nil? || match_value
           end
           match_row
         end[sieve_result_key]
@@ -661,7 +670,7 @@ module Remi
       attr_reader :buckets
       attr_reader :current_population
 
-      def transform(*values)
+      def transform
         get_next_value
       end
 

@@ -48,6 +48,84 @@ Examples setting up a job class with
 * parameters
 * maps
 
+
+### Transform cardinality
+
+Within a source-to-target map block, there are a few different
+possible transform cardinalities: one-to-one, many-to-one, one-to-many,
+many-to-many, zero-to-one, and zero-to-many.  The lambda functions that
+are supplied to `#transfrom` method must satisfy different conditions based
+on cardinality.
+
+For all of the following examples, we'll assume that a dataframe exists defined by
+````ruby
+  df = Remi::DataFrame::Daru.new(
+    [
+      ['a1','b1','c1', ['d',1]],
+      ['a2','b2','c2', ['d',2]],
+      ['a3','b3','c3', ['d',3]],
+    ].transpose,
+    order: [:a, :b, :c, :d]
+  )
+````
+
+**one-to-one** - These maps expect a lambda that accepts the value of a
+field as an argument and returns the result of some operation, which
+is used to populate the target.
+
+````ruby
+Remi::SourceToTargetMap.apply(df) do
+  map source(:a) .target(:aprime)
+    .transform(->(v) { "#{v}prime" })
+end
+
+df[:aprime].to_a #=> ['a1prime', 'a2prime', 'a3prime']
+````
+
+**many-to-one** - These maps expect that the lambda accepts a row object as an argument
+and returns the result of the operation, which is used to populate the target.
+
+````ruby
+Remi::SourceToTargetMap.apply(df) do
+  map source(:a, :b) .target(:ab)
+    .transform(->(row) { "#{row[:a]}#{row[:b]}" })
+end
+
+df[:ab].to_a #=> ['a1b1', 'a2b2', 'a3b3']
+````
+
+**zero-to-many/one-to-many/many-to-many** - These maps expect that the
+lambda accepts a row object as an argument.  The row object is then
+modified in place, which is used to populate the targets.  The return
+value of the lambda is ignored.
+
+````ruby
+Remi::SourceToTargetMap.apply(df) do
+  map source(:a, :b) .target(:aprime, :ab)
+    .transform(->(row) {
+      row[:aprime] = row[:a]
+      row[:ab] = "#{row[:a]}#{row[:b]}" })
+    })
+end
+
+df[:aprime].to_a #=> ['a1prime', 'a2prime', 'a3prime']
+df[:ab].to_a #=> ['a1b1', 'a2b2', 'a3b3']
+````
+
+**zero-to-one** - These maps expect that the lambda accepts no arguments and returns the
+result of some operation, which is used to populate the target.
+
+````ruby
+Remi::SourceToTargetMap.apply(df) do
+  counter = 1.upto(3).to_a
+  map target(:counter)
+    .transform(->() { counter.pop })
+end
+
+df[:counter].to_a #=> [1, 2, 3]
+````
+
+
 ## Business Rules
 
 TODO: Description of writing Business Rules.

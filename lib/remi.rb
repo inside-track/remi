@@ -38,6 +38,8 @@ require 'remi/version.rb'
 require 'remi/settings'
 require 'remi/job'
 require 'remi/source_to_target_map'
+require 'remi/source_to_target_map/map'
+require 'remi/source_to_target_map/row'
 require 'remi/field_symbolizers'
 
 require 'remi/refinements/symbolizer'
