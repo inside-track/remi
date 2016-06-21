@@ -293,12 +293,6 @@ module Remi::BusinessRules
       end
     end
 
-    # For debugging only
-    def _df
-      @data_subject.df
-    end
-
-
     # Would like to have this return a new DataSubject and not a dataframe.
     # Need more robust duping to make that feasible.
     # Don't use results for anything more than size.
@@ -333,7 +327,13 @@ module Remi::BusinessRules
     end
 
     def example_to_df(example)
-      example.to_df(@data_subject.df.row[0].to_h, field_symbolizer: @data_subject.field_symbolizer)
+      df = example.to_df(@data_subject.df.row[0].to_h, field_symbolizer: @data_subject.field_symbolizer)
+      data_subject.fields.each do |vector, metadata|
+        if metadata[:type] == :json
+          df[vector].recode! { |v| JSON.parse(v) rescue v }
+        end
+      end
+      df
     end
 
     def stub_data_with(example)
@@ -486,7 +486,13 @@ module Remi::BusinessRules
     end
 
     def value=(arg)
-      vector.recode! { |v| arg }
+      typed_arg = if metadata[:type] == :json
+        JSON.parse(arg)
+      else
+        arg
+      end
+
+      vector.recode! { |_v| typed_arg }
     end
   end
 

@@ -139,16 +139,16 @@ Given /^the source field (?:has|is set to) the value "([^"]*)"$/ do |value|
   end
 end
 
-Given /^the source field '([^']+)' (?:has|is set to) the json value$/ do |source_field, value|
+Given /^the source field '([^']+)' (?:has|is set to) the multiline value$/ do |source_field, value|
   step "the source field '#{source_field}'"
 
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
-  @brt.sources[source_name].fields[source_field_name].value = JSON.parse(value)
+  @brt.sources[source_name].fields[source_field_name].value = Remi::BusinessRules::ParseFormula.parse(value)
 end
 
-Given /^the source field (?:has|is set to) the json value$/ do |value|
+Given /^the source field (?:has|is set to) the multiline value$/ do |value|
   @brt.sources.fields.each do |field|
-    step "the source field '#{field.full_name}' is set to the json value \"#{value}\""
+    step "the source field '#{field.full_name}' has the multiline value #{value}"
   end
 end
 
@@ -254,6 +254,8 @@ Then /^the target field is copied from the source field$/ do
 end
 
 Then /^the target field '([^']+)' is (?:set to the value|populated with) "([^"]*)"$/ do |target_field, value|
+  value = value.gsub(/(\\n|\\t)/, '\n' => "\n", '\t' => "\t" )
+
   expect_cucumber {
     target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
 
@@ -336,7 +338,7 @@ end
 ### Transforms
 
 Then /^the target field '([^']+)' is a concatenation of the source fields '(.+)', delimited by "([^"]*)"$/ do |target_field, source_field_list, delimiter|
-  delimiter = delimiter.gsub(/(\\n|\\t)/, '\n' => "\n", '\t' => "t" )
+  delimiter = delimiter.gsub(/(\\n|\\t)/, '\n' => "\n", '\t' => "\t" )
   source_fields = "'#{source_field_list}'".gsub(' and ', ', ').split(',').map do |field_with_quotes|
     full_field_name = field_with_quotes.match(/'(.+)'/)[1]
 
