@@ -28,7 +28,7 @@ class PartitionerJob
     current_population_hash = current_population.df.map(:row) { |row| [row[:group], row[:count].to_i] }.to_h
 
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
-      map source(nil) .target(:group)
+      map target(:group)
         .transform(Remi::Transform::Partitioner.new(buckets: distribution_hash, initial_population: current_population_hash))
     end
   end

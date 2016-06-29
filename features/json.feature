@@ -7,7 +7,6 @@ Feature: This tests using json data in tests.
     And the source 'Source Data'
     And the target 'Target Data'
 
-
   Scenario: Using JSON data in an example record.
 
     Given the following example record for 'Source Data':

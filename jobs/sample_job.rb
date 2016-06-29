@@ -92,9 +92,12 @@ class SampleJob
     Remi::SourceToTargetMap.apply(all_contacts.df) do
 
       # Prefixes source id record and then looks up existing salesforce Id
+      prefixer = Remi::Transform::Prefix.new('SAMP')
       map source(:student_id) .target(:External_ID__c, :Id)
-        .transform(Remi::Transform::Prefix.new('SAMP'))
-        .transform(->(v) { [v, Remi::Transform::Lookup.new(student_id_to_sf_id).call(v)] })
+        .transform(->(row) {
+          row[:External_ID__c] = prefixer.call(row[:student_id])
+          row[:Id] = student_id_to_sf_id[row[:External_ID__c]]
+        })
     end
   end
 
@@ -102,9 +105,11 @@ class SampleJob
   define_transform :map_creates, sources: :all_contacts, targets: :contact_creates do
 
     work_contact_creates = all_contacts.df.where(all_contacts.df[:Id].eq(nil))
+
     Remi::SourceToTargetMap.apply(work_contact_creates) do
 
       map source(:school_id)           .target(:School_ID__c)
+
       map source(:school_name)         .target(:School_Name__c)
       map source(:first_name)          .target(:FirstName)
         .transform(Remi::Transform::IfBlank.new('Not Provided'))
@@ -122,16 +127,20 @@ class SampleJob
         .transform(Remi::Transform::FormatDate.new(in_format: sample_file.fields[:applied_date][:in_format]))
 
       map source(:mailing_address_line_1, :mailing_address_line_2) .target(:MailingStreet)
-        .transform(->(line_1, line_2) {
-           Remi::Transform::IfBlank.new(nil).call(line_1).nil? ? [] : [line_1, line_2]
-           })
-        .transform(Remi::Transform::Concatenate.new(', '))
+        .transform(->(row) {
+          if row[:mailing_address_line_1].blank?
+            ''
+          else
+            [row[:mailing_address_line_1], row[:mailing_address_line_2]].join(', ')
+          end
+        })
 
+      if_blank_unknown = Remi::Transform::IfBlank.new("Unknown")
       map source(:school_id, :school_name) .target(:School__c)
-        .transform(->(id, name) {[
-            Remi::Transform::IfBlank.new("Unknown").call(id),
-            Remi::Transform::IfBlank.new("Unknown").call(name)
-          ]})
+        .transform(->(row) {
+          row[:school_id] = if_blank_unknown.call(row[:school_id])
+          row[:school_name] = if_blank_unknown.call(row[:school_name])
+        })
         .transform(Remi::Transform::Concatenate.new('-'))
 
       map source(:current_email)       .target(:Email)

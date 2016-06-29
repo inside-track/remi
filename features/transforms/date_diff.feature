@@ -8,8 +8,7 @@ Feature: Tests the date_diff transform
     And the source 'Source Data'
     And the target 'Target Data'
 
-
-  Scenario Outline: Calculating date difference in days2.
+  Scenario Outline: Calculating date difference in days.
     Given the job parameter 'measure' is "days"
     And the source field 'Date1' has the value "<Date1>"
     And the source field 'Date2' has the value "<Date2>"
