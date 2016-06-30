@@ -45,9 +45,8 @@ module Remi
       #               sources for a row transformation
       def initialize(index, values, source_keys: nil)
         @index = index
-        @inverted_index = index.invert
         @values = values
-        @source_keys = source_keys || index.keys
+        @source_keys = source_keys
       end
 
       # Public: Returns the value of the row array for the given key
@@ -62,15 +61,18 @@ module Remi
 
       # Public: Makes Row enumerable, and acts like a hash.
       def each &block
-        @values.each_with_index { |value, idx| block.call([@inverted_index[idx], value]) }
+        inverted_index = @index.invert
+        @values.each_with_index { |value, idx| block.call([inverted_index[idx], value]) }
       end
 
+      # Public: Enumerates over each source value
       def each_source &block
         Enumerator.new do |y|
           source_keys.each { |key| y << [key, self[key]] }
         end
       end
 
+      # Public: Enumerates over each target value
       def each_target &block
         Enumerator.new do |y|
           target_keys.each { |key| y << [key, self[key]] }
@@ -87,10 +89,12 @@ module Remi
         @index.keys
       end
 
+      # Public: Returns all source keys
       def source_keys
-        @source_keys
+        @source_keys ||= @index.keys
       end
 
+      # Public: Returns all target keys
       def target_keys
         @target_keys ||= keys - source_keys
       end
