@@ -1,4 +1,5 @@
 require_relative 'all_jobs_shared'
+ENV['TZ'] = 'UTC'
 
 class MetadataJob
   include AllJobsShared
@@ -11,7 +12,7 @@ class MetadataJob
       :activity_type    => { from: 'in', in: true, type: :string, valid_values: ['A', 'B', 'C'], cdc_type: 2 },
       :activity_counter => { from: 'in', in: true, type: :integer, cdc_type: 2 },
       :activity_score   => { from: 'in', in: true, type: :float, cdc_type: 2 },
-      :activity_cost    => { from: 'in', in: true, type: :decimal, precision: 16, scale: 2, cdc_type: 2 },
+      :activity_cost    => { from: 'in', in: true, type: :decimal, precision: 8, scale: 2, cdc_type: 2 },
       :activity_date    => { from: 'in', in: true, type: :datetime, in_format: '%m/%d/%Y %H:%M:%S', out_format: '%Y-%m-%dT%H:%M:%S', cdc_type: 2 },
       :source_filename  => { from: 'in', in: true, type: :string, cdc_type: 1 }
     }
@@ -25,36 +26,28 @@ class MetadataJob
       :activity_type    => { from: 'out', out: true, type: :string, valid_values: ['A', 'B', 'C'] },
       :activity_counter => { from: 'out', out: true, type: :integer },
       :activity_score   => { from: 'out', out: true, type: :float },
-      :activity_cost    => { from: 'out', out: true, type: :decimal, precision: 16, scale: 2 },
+      :activity_cost    => { from: 'out', out: true, type: :decimal, precision: 8, scale: 2 },
       :activity_date    => { from: 'out', out: true, type: :datetime, in_format: '%m/%d/%Y %H:%M:%S', out_format: '%Y-%m-%dT%H:%M:%S' },
       :source_filename  => { from: 'out', out: true, type: :string, cdc_type: 1 }
     }
 
   define_transform :main do
+    source_data.enforce_types
 
-=begin
-    source_data.df = Remi::DataFrame.daru([
-      ['1','1','3/3/1998','A','1','3.8','12.23','1/3/2016 03:22:36','one.csv'],
-      ['2','1','3/3/1998','B','3','4.2','10.53','1/3/2016 03:58:22','one.csv'],
-      ['2','1','','B','2','4.23','10.539','1/3/2016 03:58:22','one.csv']
-    ].transpose, order: [
-      :activity_id,
-      :student_id,
-      :student_dob,
-      :activity_type,
-      :activity_counter,
-      :activity_score,
-      :activity_cost,
-      :activity_date,
-      :source_filename
-    ])
-=end
-
-    Remi::SourceToTargetMap.apply(source_data.df, target_data.df, source_metadata: source_data.fields) do
+    Remi::SourceToTargetMap.apply(source_data.df, target_data.df, source_metadata: source_data.fields, target_metadata: target_data.fields) do
       target_data.fields.keys.each do |field|
         map source(field) .target(field)
-          .transform(Remi::Transform::EnforceType.new)
+
+        map source(field) .target("#{field}_class".to_sym)
+          .transform(->(v) { v.class })
       end
+
+      map source(:activity_cost) .target(:activity_cost_precision, :activity_cost_scale)
+        .transform(->(row) {
+          components = row[:activity_cost].to_s.split('.')
+          row[:activity_cost_precision] = components.first.size
+          row[:activity_cost_scale] = components.last.size
+        })
     end
   end
 end

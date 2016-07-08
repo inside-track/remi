@@ -218,6 +218,7 @@ module Remi
     # This transform is metadata aware and will use :in_format metadata
     # from the source
     #
+    # type      - Specify either :date, or :datetime type (default: date)
     # in_format - The date format to use to convert the string (default: uses :in_format
     #             from the source metadata.  If that is not defined, use '%Y-%m-%d').
     # if_blank  - Value to use if the the incoming value is blank (default: uses :if_blank
@@ -232,18 +233,31 @@ module Remi
     #  tform.source_metadata = { in_format: '%m/%d/%Y' }
     #  tform.to_proc.call('02/22/2013') # => Date.new(2013,2,22)
     class ParseDate < Transform
-      def initialize(*args, in_format: nil, if_blank: nil, **kargs, &block)
+      def initialize(*args, type: nil, in_format: nil, if_blank: nil, **kargs, &block)
         super
+        @type      = type
         @in_format = in_format
         @if_blank  = if_blank
       end
 
+      def type
+        @type ||= @source_metadata.fetch(:type, :date)
+      end
+
       def in_format
-        @in_format ||= @source_metadata.fetch(:in_format, '%Y-%m-%d')
+        @in_format ||= @source_metadata.fetch(:in_format, default_date_format)
       end
 
       def if_blank
         @if_blank ||= @source_metadata.fetch(:if_blank, nil)
+      end
+
+      def default_date_format
+        if type == :datetime
+          '%Y-%m-%d %H:%M:%S'
+        else
+          '%Y-%m-%d'
+        end
       end
 
       def transform(value)
@@ -260,15 +274,19 @@ module Remi
         end
       end
 
+      def class_type
+        @class_type ||= type == :datetime ? Time : Date
+      end
+
       def string_to_date(value)
-        Date.strptime(value, in_format)
+        class_type.strptime(value, in_format)
       end
 
       def blank_handler(value)
         if if_blank == :low
-          Date.new(1900,01,01)
+          class_type.new(1900,01,01)
         elsif if_blank == :high
-          Date.new(2999,12,31)
+          class_type.new(2999,12,31)
         elsif if_blank.respond_to? :call
           if_blank.call(value)
         else
@@ -282,6 +300,7 @@ module Remi
     # This transform is metadata aware and will use :in_format/:out_format metadata
     # from the source.
     #
+    # type       - Specify either :date, or :datetime type (default: date)
     # in_format  - The date format to used to parse the input value.  If the input value
     #              is a date, then then parameter is ignored.  (default: uses :in_format
     #              from the source metadata.  If that is not defined, use '%Y-%m-%d')
@@ -297,18 +316,35 @@ module Remi
     #  tform.source_metadata = { in_format: '%m/%d/%Y', out_format: '%Y-%m-%d' }
     #  tform.to_proc.call('02/22/2013') # => "2013-02-22"
     class FormatDate < Transform
-      def initialize(*args, in_format: nil, out_format: nil, **kargs, &block)
+      def initialize(*args, type: nil, in_format: nil, out_format: nil, **kargs, &block)
         super
+        @type       = type
         @in_format  = in_format
         @out_format = out_format
       end
 
+      def type
+        @type ||= @source_metadata.fetch(:type, :date)
+      end
+
       def in_format
-        @in_format ||= @source_metadata.fetch(:in_format, '%Y-%m-%d')
+        @in_format ||= @source_metadata.fetch(:in_format, default_date_format)
       end
 
       def out_format
-        @out_format ||= @source_metadata.fetch(:out_format, '%Y-%m-%d')
+        @out_format ||= @source_metadata.fetch(:out_format, default_date_format)
+      end
+
+      def default_date_format
+        if type == :datetime
+          '%Y-%m-%d %H:%M:%S'
+        else
+          '%Y-%m-%d'
+        end
+      end
+
+      def class_type
+        @class_type ||= type == :datetime ? Time : Date
       end
 
       def transform(value)
@@ -318,7 +354,7 @@ module Remi
           elsif value.respond_to? :strftime
             value.strftime(out_format)
           else
-            Date.strptime(value, in_format).strftime(out_format)
+            class_type.strptime(value, in_format).strftime(out_format)
           end
         rescue ArgumentError => err
           raise err, "Error parsing date (#{value.class}): '#{value}' using the format #{in_format} => #{out_format}"
@@ -461,7 +497,7 @@ module Remi
       def if_blank
         return @if_blank if @if_blank_set
         @if_blank_set = true
-        @if_blank = @source_metadata.fetch(:if_blank, nil)
+        @if_blank = @source_metadata.fetch(:if_blank, default_if_blank)
       end
 
       def blank_handler(value)
@@ -474,8 +510,12 @@ module Remi
         end
       end
 
+      def default_if_blank
+        type == :string ? '' : nil
+      end
+
       def transform(value)
-        if value.blank?
+        if value.blank? && type != :json
           blank_handler(value)
         else
           case type
@@ -488,9 +528,15 @@ module Remi
           when :decimal
             Float("%.#{scale}f" % Float(value))
           when :date
-            value.is_a?(Date) ? value : Date.strptime(value, in_format) # value.is_a?(Date) is only needed becuase we stub date types with actual dates, rather than strings like we probably should
+            value.is_a?(Date) ? value : Date.strptime(value, in_format)
           when :datetime
-            Time.strptime(value, in_format)
+            value.is_a?(Time) ? value : Time.strptime(value, in_format)
+          when :json
+            if value.blank? && value != [] && value != {}
+              blank_handler(value)
+            else
+              value.is_a?(Hash) || value.is_a?(Array) ? value : JSON.parse(value)
+            end
           else
             raise ArgumentError, "Unknown type enforcement: #{type}"
           end
