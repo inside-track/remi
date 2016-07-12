@@ -12,6 +12,7 @@ Feature: Tests the parse_date transform
     Given the source field 'Date String' has the value "<Date String>"
     And the job parameter 'format' is "<Format>"
     Then the target field 'Parsed Date' is set to the value "<Parsed Date>"
+
     Examples:
       | Date String | Format   | Parsed Date |
       | 2015-10-21  | %Y-%m-%d | 2015-10-21  |

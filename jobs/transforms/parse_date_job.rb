@@ -22,7 +22,7 @@ class ParseDateJob
         .transform(Remi::Transform::ParseDate.new(in_format: params[:format], if_blank: params[:if_blank]))
 
       map source(:stubbed_date) .target(:parsed_stubbed_date)
-        .transform(Remi::Transform::ParseDate.new(in_format: params[:format], if_blank: params[:if_blank]))
+        .transform(Remi::Transform::ParseDate.new(in_format: source_data.fields[:stubbed_date][:in_format], if_blank: params[:if_blank]))
     end
   end
 end

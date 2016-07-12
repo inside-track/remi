@@ -26,8 +26,7 @@ module Remi
 
 
 
-  class DataSource::CsvFile < Remi::DataSubject
-    include Remi::DataSubject::DataSource
+  class DataSource::CsvFile < DataSource
     include Remi::DataSubject::CsvFile
 
     def initialize(*args, **kargs, &block)
@@ -130,8 +129,7 @@ module Remi
 
 
 
-  class DataTarget::CsvFile < Remi::DataSubject
-    include ::Remi::DataSubject::DataTarget
+  class DataTarget::CsvFile < DataTarget
     include ::Remi::DataSubject::CsvFile
 
     default_csv_options[:row_sep] = "\n"

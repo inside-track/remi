@@ -4,7 +4,7 @@
 ### Job and background setup
 
 Given /^the job is '([[:alnum:]\s]+)'$/ do |arg|
-  @brt = Remi::BusinessRules::Tester.new(arg)
+  @brt = Remi::Testing::BusinessRules::Tester.new(arg)
 end
 
 Given /^the job source '([[:alnum:]\s\-_]+)'$/ do |arg|
@@ -64,13 +64,13 @@ Then /^the file that comes last in an alphanumeric sort by group will be downloa
 end
 
 Then /^the file is uploaded to the remote path "([^"]+)"$/ do |remote_path|
-  expect(@brt.target.get_attrib(:remote_path)).to eq Remi::BusinessRules::ParseFormula.parse(remote_path)
+  expect(@brt.target.get_attrib(:remote_path)).to eq Remi::Testing::BusinessRules::ParseFormula.parse(remote_path)
 end
 
 ## CSV Options
 
 Given /^the (source|target) file is delimited with a (\w+)$/ do |st, delimiter|
-  expect(@brt.send(st.to_sym).csv_options[:col_sep]).to eq Remi::BusinessRules.csv_opt_map[delimiter]
+  expect(@brt.send(st.to_sym).csv_options[:col_sep]).to eq Remi::Testing::BusinessRules.csv_opt_map[delimiter]
 end
 
 Given /^the (source|target) file is encoded using "([^"]+)" format$/ do |st, encoding|
@@ -78,15 +78,15 @@ Given /^the (source|target) file is encoded using "([^"]+)" format$/ do |st, enc
 end
 
 Given /^the (source|target) file uses a ([\w ]+) to quote embedded delimiters$/ do |st, quote_char|
-  expect(@brt.send(st.to_sym).csv_options[:quote_char]).to eq Remi::BusinessRules.csv_opt_map[quote_char]
+  expect(@brt.send(st.to_sym).csv_options[:quote_char]).to eq Remi::Testing::BusinessRules.csv_opt_map[quote_char]
 end
 
 Given /^the (source|target) file uses a preceding ([\w ]+) to escape an embedded quoting character$/ do |st, escape_char|
-  expect(@brt.send(st.to_sym).csv_options[:quote_char]).to eq Remi::BusinessRules.csv_opt_map[escape_char]
+  expect(@brt.send(st.to_sym).csv_options[:quote_char]).to eq Remi::Testing::BusinessRules.csv_opt_map[escape_char]
 end
 
 Given /^the (source|target) file uses ([\w ]+) line endings$/ do |st, line_endings|
-  expect(@brt.send(st.to_sym).csv_options[:row_sep]).to eq Remi::BusinessRules.csv_opt_map[line_endings]
+  expect(@brt.send(st.to_sym).csv_options[:row_sep]).to eq Remi::Testing::BusinessRules.csv_opt_map[line_endings]
 end
 
 Given /^the (source|target) file uses "([^"]+)" as a record separator$/ do |st, line_endings|
@@ -130,7 +130,7 @@ Given /^the source field '([^']+)' (?:has|is set to) the value "([^"]*)"$/ do |s
   step "the source field '#{source_field}'"
 
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
-  @brt.sources[source_name].fields[source_field_name].value = Remi::BusinessRules::ParseFormula.parse(value)
+  @brt.sources[source_name].fields[source_field_name].value = Remi::Testing::BusinessRules::ParseFormula.parse(value)
 end
 
 Given /^the source field (?:has|is set to) the value "([^"]*)"$/ do |value|
@@ -143,7 +143,7 @@ Given /^the source field '([^']+)' (?:has|is set to) the multiline value$/ do |s
   step "the source field '#{source_field}'"
 
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
-  @brt.sources[source_name].fields[source_field_name].value = Remi::BusinessRules::ParseFormula.parse(value)
+  @brt.sources[source_name].fields[source_field_name].value = Remi::Testing::BusinessRules::ParseFormula.parse(value)
 end
 
 Given /^the source field (?:has|is set to) the multiline value$/ do |value|
@@ -266,7 +266,7 @@ Then /^the target field '([^']+)' is (?:set to the value|populated with) "([^"]*
       @brt.run_transforms
     }.not_to raise_error
     Array(target_names).each do |target_name|
-      expect(@brt.targets[target_name].fields[target_field_name].values.uniq).to eq [Remi::BusinessRules::ParseFormula.parse(value)]
+      expect(@brt.targets[target_name].fields[target_field_name].values.uniq).to eq [Remi::Testing::BusinessRules::ParseFormula.parse(value)]
     end
   }
 end

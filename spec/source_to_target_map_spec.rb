@@ -49,7 +49,7 @@ describe SourceToTargetMap do
       it_behaves_like 'one-to-one map'
     end
 
-    context 'without any transforms', wip: true do
+    context 'without any transforms' do
       before { map.source(:a) .target(:aprime) }
 
       let(:result) do

@@ -21,8 +21,7 @@ module Remi
   end
 
 
-  class DataSource::Salesforce < Remi::DataSubject
-    include Remi::DataSubject::DataSource
+  class DataSource::Salesforce < DataSource
     include Remi::DataSubject::Salesforce
 
     def initialize(*args, **kargs, &block)
@@ -92,8 +91,7 @@ module Remi
   end
 
 
-  class DataTarget::Salesforce < Remi::DataSubject
-    include Remi::DataSubject::DataTarget
+  class DataTarget::Salesforce < DataTarget
     include Remi::DataSubject::Salesforce
 
     def initialize(*args, **kargs, &block)
