@@ -1,4 +1,4 @@
-module Remi::BusinessRules
+module Remi::Testing::BusinessRules
   using Remi::Refinements::Symbolizer
 
   def self.csv_opt_map

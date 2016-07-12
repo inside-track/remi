@@ -13,8 +13,7 @@ module Remi
   end
 
 
-  class DataSource::Postgres < Remi::DataSubject
-    include Remi::DataSubject::DataSource
+  class DataSource::Postgres < DataSource
     include Remi::DataSubject::Postgres
 
 
@@ -65,8 +64,7 @@ module Remi
 
   # VERY PRELIMINARY IMPLEMENTAtION - ONLY LOADS TO TEMP TABLES
   # IT IS THEN UP TO THE USER TO DO ELT TO LOAD THE FINAL TABLE
-  class DataTarget::Postgres < Remi::DataSubject
-    include Remi::DataSubject::DataTarget
+  class DataTarget::Postgres < DataTarget
     include Remi::DataSubject::Postgres
 
     def initialize(*args, **kargs, &block)

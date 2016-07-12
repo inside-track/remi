@@ -1,7 +1,6 @@
 module Remi
 
-  class DataTarget::SftpFile < Remi::DataSubject
-    include Remi::DataSubject::DataTarget
+  class DataTarget::SftpFile < DataTarget
 
     def initialize(*args, **kargs, &block)
       super

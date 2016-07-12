@@ -1,7 +1,6 @@
 module Remi
 
-  class DataSource::DataFrame < Remi::DataSubject
-    include Remi::DataSubject::DataSource
+  class DataSource::DataFrame < DataSource
 
     def initialize(*args, **kargs, &block)
       super
@@ -30,8 +29,7 @@ module Remi
   end
 
 
-  class DataTarget::DataFrame < Remi::DataSubject
-    include Remi::DataSubject::DataTarget
+  class DataTarget::DataFrame < DataTarget
 
     def initialize(*args, **kargs, &block)
       super

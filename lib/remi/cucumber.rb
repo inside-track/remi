@@ -3,5 +3,9 @@ require 'cucumber/rspec/doubles'
 
 require 'regexp-examples'
 
-require_relative 'cucumber/data_source'
-require_relative 'cucumber/business_rules'
+require_relative 'testing/data_stub'
+require_relative 'testing/business_rules'
+
+class Remi::DataSource
+  include Remi::Testing::DataStub
+end
