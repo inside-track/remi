@@ -36,7 +36,7 @@ describe DataSubject do
       expect { data_subject.enforce_types }.to raise_error ArgumentError
     end
 
-    it 'does not create new vectors during enforcement', wip: true do
+    it 'does not create new vectors during enforcement' do
       data_subject.enforce_types
       expect(dataframe.vectors.to_a).to eq [:my_date]
     end
