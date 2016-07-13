@@ -1,4 +1,8 @@
 # Remi - Ruby Extract Map Integrate
+**Warning:** This project is very much in the development stage
+and all features are subject to change.  Documentation is skimpy
+at best.  Test coverage is light but improving.
+
 
 **Purpose:** Remi is a Ruby-based ETL package that provides an
 expressive data transformation language and facilitates the
