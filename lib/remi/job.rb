@@ -1,176 +1,308 @@
 module Remi
-  module Job
-    module JobClassMethods
-      attr_accessor :params
-      attr_accessor :sources
-      attr_accessor :targets
-      attr_accessor :transforms
 
-      def define_param(key, value)
-        @params ||= Hash.new { |h, key| raise "Parameter #{key} is not defined" }
-        @params[key] = value
-      end
+  # The Job class is the foundation for all Remi ETL jobs.  It
+  # provides a DSL for defining Remi jobs in a way that is natural for
+  # ETL style applications.  In a Remi job, the user defines all of
+  # the sources, transforms, and targets necessary to transform data.
+  # Any number of sources, transforms, and targets can be defined.
+  # Transforms can call other parameterized sub-transforms.  Jobs can
+  # collect data from other parameterized sub-jobs, pass data to other
+  # sub-jobs, or both pass and collect data from other sub-jobs.
+  #
+  # Jobs are executed by calling the `#execute` method in an instance
+  # of the job.  This triggers all transforms to be executed in the
+  # order they are defined.  Sub-transforms are only executed if they
+  # are referenced in a transform.  After all transforms have
+  # executed, the targets are loaded in the order they are defined.
+  #
+  #
+  #
+  # @example
+  #
+  #   class MyJob < Remi::Job
+  #     source :my_csv_file do
+  #       # TODO: document how to define sources
+  #     end
+  #
+  #     target :my_transformed_file do
+  #       # TODO: document how to define targets
+  #     end
+  #
+  #     transform :transform_data do
+  #       # Data sources are converted into a dataframe the first time the #df method is called.
+  #       transform_work = my_csv_file.df.dup # => a copy of the my_csv_file.df dataframe
+  #
+  #       # Any arbitrary Ruby is allowed in a transform block.  Remi provides a convenient
+  #       # source to target map DSL to map fields from sources to targets
+  #       Remi::SourceToTargetMap.apply(transform_work, my_transformed_file.df) do
+  #         map source(:source_field_id) .target(:prefixed_id)
+  #           .transform(->(v) { "PREFIX#{v}" })
+  #       end
+  #     end
+  #   end
+  #
+  #   # The job is executed when `#execute` is called on an instance of the job.
+  #   # Transforms are executed in the order they are defined.  Targets are loaded
+  #   # in the order they are defined after all transforms have been executed.
+  #   job = MyJob.new
+  #   job.execute
+  #
+  #
+  #
+  # @todo MOAR Examples!  Subtransforms, subjobs, parameters, references to even more
+  #   complete sample jobs.
+  class Job
+    class << self
 
-      def define_source(name, type_class, **options)
-        @sources ||= []
-        @sources << name unless @sources.include? name
-
-        define_method(name) do
-          iv_name = instance_variable_get("@#{name}")
-          return iv_name if iv_name
-
-          source = type_class.new(options)
-          instance_variable_set("@#{name}", source)
-        end
-      end
-
-      def define_target(name, type_class, **options)
-        @targets ||= []
-        @targets << name unless @targets.include? name
-
-        define_method(name) do
-          iv_name = instance_variable_get("@#{name}")
-          return iv_name if iv_name
-
-          target = type_class.new(options)
-          instance_variable_set("@#{name}", target)
-        end
-      end
-
-      def define_transform(name, sources: [], targets: [], &block)
-        @transforms ||= {}
-        @transforms[name] = { sources: Array(sources), targets: Array(targets) }
-
-        define_method(name) do
-          instance_eval { @logger.info "Running transformation #{__method__}" }
-          instance_eval(&block)
-        end
-      end
-
+      # @return [Hash] all parameters defined at the class level
       def params
-        @params || {}
+        @params ||= Hash.new { |_, key| raise ArgumentError, "Job parameter #{key} is not defined" }
       end
 
-      def sources
-        @sources || []
+      # Defines a job parameter.
+      # @example
+      #
+      #   class MyJob < Job
+      #     param :my_param, 'the best parameter'
+      #   end
+      #
+      #   job = MyJob.new
+      #   job.params[:my_param] #=> 'the best parameter'
+      def param(name, value)
+        params[name] = value
       end
 
-      def targets
-        @targets || []
-      end
-
+      # @return [Array<Symbol>] the list of transform names
       def transforms
-        @transforms || {}
+        @transforms ||= []
       end
 
+      # Defines a transform.
+      # @example
+      #
+      #   class MyJob < Job
+      #     transform :my_transform do
+      #       puts "hello from my_transform!"
+      #     end
+      #   end
+      #
+      #   job = MyJob.new
+      #   job.my_transform.execute #=>(stdout) 'hello from my_transform!'
+      def transform(name, &block)
+        transforms << name unless transforms.include? name
+        attr_accessor name
 
-      def work_dir
-        Settings.work_dir
+        define_method("__init_#{name}__".to_sym) do
+          transform = Transform.new(self, name: name, &block)
+          instance_variable_set("@#{name}", transform)
+        end
       end
 
-      def self.extended(receiver)
+      # Defines a sub-transform.
+      # @example
+      #
+      #   class MyJob < Job
+      #     sub_transform :my_sub_transform, greeting: 'hello' do
+      #       puts "#{params[:greeting]} from my_sub_transform!"
+      #     end
+      #
+      #     transform :my_transform do
+      #       import :my_sub_transform, greeting: 'bonjour' do
+      #       end
+      #     end
+      #   end
+      #
+      #   job = MyJob.new
+      #   job.my_transform.execute #=>(stdout) 'bonjour from my_sub_transform!'
+      def sub_transform(name, **kargs, &block)
+        define_method(name) do
+          Transform.new(self, name: name, **kargs, &block)
+        end
       end
-
-      def included(receiver)
-        receiver.extend(JobClassMethods)
-        receiver.params     = self.params.merge(receiver.params)
-        receiver.sources    = self.sources + receiver.sources
-        receiver.targets    = self.targets + receiver.targets
-        receiver.transforms = self.transforms.merge(receiver.transforms)
-      end
     end
 
-    def self.included(receiver)
-      receiver.extend(JobClassMethods)
-    end
-
-
-    def params
-      self.class.params
-    end
-
-    def sources
-      self.class.sources
-    end
-
-    def targets
-      self.class.targets
-    end
-
-    def transforms
-      self.class.transforms
-    end
-
-
-
-    def initialize(runtime_params: {}, delete_work_dir: true, logger: Settings.logger)
-      @runtime_params = runtime_params
-      @delete_work_dir = delete_work_dir
+    # Initializes the job
+    #
+    # @param work_dir [String, Path] sets the working directory for this job
+    # @param logger sets the logger for the job
+    # @param [Hash] Optional job parameters (can be referenced in the job via `#params`)
+    def initialize(work_dir: Settings.work_dir, logger: Settings.logger, **kargs)
+      @work_dir = work_dir
       @logger = logger
-      create_work_dir
+      @params = self.class.params.dup
+      add_params **kargs
+
+      __init_transforms__
     end
 
-    attr_accessor :runtime_params
+    # @return [String] the working directory used for temporary data
+    attr_reader :work_dir
 
-    def work_dir
-      self.class.work_dir
-    end
+    # The logging object
+    attr_reader :logger
 
-    def finalize
-      delete_work_dir
-    end
+    # @return [Array] list of transforms defined in the job
+    attr_reader :transforms
 
-    def delete_work_dir
-      if @delete_work_dir && (work_dir.match /^#{Dir.tmpdir}/)
-        @logger.info "Deleting temporary directory #{work_dir}"
-        FileUtils.rm_r work_dir
-      else
-        @logger.debug "Not going to delete working directory #{work_dir}"
-        nil
-      end
-    end
+    # @return [Hash] parameters defined at the class level or during instantiation
+    attr_reader :params
 
-    def create_work_dir
-      @logger.info "Creating working directory #{work_dir}"
-      FileUtils.mkdir_p work_dir
-    end
 
-    # Public: Runs any transforms that use the sources and targets selected.  If
-    # source and target is not specified, then all transforms will be run.
-    # If only the source is specified, then all transforms that use any of the
-    # sources will be run.  Same for specified transforms.
-    #
-    # sources - Array of source names
-    # targets - Array of target names
-    #
-    # Returns an array containing the result of each transform.
-    def run_transforms_using(sources: nil, targets: nil)
-      transforms.map do |t, st|
-        selected_sources = (st[:sources] & Array(sources || st[:sources])).size > 0
-        selected_targets = (st[:targets] & Array(targets || st[:targets])).size > 0
-        self.send(t) if selected_sources && selected_targets
-      end
-    end
-
-    def run_all_transforms
-      transforms.map { |t, st| self.send(t) }
-    end
-
-    def load_all_targets
-      targets.each do |target|
-        @logger.info "Loading target #{target}"
-        self.send(target).tap { |t| t.respond_to?(:load) ? t.load : nil }
-      end
-    end
-
-    # Public: Runs all transforms defined in the job.
-    #
-    # Returns the job instance.
-    def run
-      # Do all of the stuff here
-      run_all_transforms
-      load_all_targets
+    # @return [self] the job object (needed to reference parent job in transform DSL)
+    def job
       self
     end
+
+    # Execute the specified components of the job.
+    #
+    # @param [Array<symbol>] *components list of components to execute (e.g., `:transforms`, `:load_targets`)
+    #
+    # @return [self]
+    def execute(*components)
+      execute_transforms if components.empty? || components.include?(:transforms)
+      execute_load_targets if components.empty? || components.include?(:load_targets)
+      self
+    end
+
+    private
+
+    def __init_transforms__
+      @transforms = self.class.transforms
+      @transforms.each do |transform|
+        send("__init_#{transform}__".to_sym)
+      end
+    end
+
+    # Executes all transforms defined
+    def execute_transforms
+      transforms.map { |t| send(t).execute }
+      self
+    end
+
+    # Loads all targets defined
+    def execute_load_targets
+      self
+    end
+
+    # Adds all parameters listed to the job parameters
+    def add_params(**kargs)
+      params.merge! kargs
+    end
+
+
+
+    # A Transform contains a block of code that is executed in a context.
+    # Transforms are usually defined in a Job, according to the Job DSL.
+    #
+    # Transforms may optionally have a mapping defined that links a
+    # local definition of a data frame to a definition of the data
+    # frame in the associated context.
+    # @example
+    #
+    #   # Transforms should typically be defined using the Job DSL
+    #   job = MyJob.new
+    #   tform = Job::Transform.new(job) do
+    #     # ... stuff to do in the context of the job
+    #   end
+    #   tform.execute
+    class Transform
+
+      # Initializes a transform
+      #
+      # @param context [Object, Job] sets the context in which the block will be executed
+      # @param name [String, Symbol] optionally gives the transform a name
+      # @param kargs [Hash] any keyword arguments are accessable within the block as `#params` (e.g., `params[:my_custom_param]`)
+      # @param block [Proc] a block of code to execute in the context
+      def initialize(context, name: 'NOT DEFINED', **kargs, &block)
+        @context = context
+        @name = name
+        @block = block
+        params.merge! kargs
+
+        @sources = []
+        @targets = []
+      end
+
+      attr_accessor :context, :name, :sources, :targets
+
+      # Executes the transform block
+      # @return [Object] the context of the transform after executing
+      def execute
+        context.logger.info "Running transformation #{@name}"
+        Dsl.dsl_eval(self, @context, &@block)
+      end
+
+      # @return [Hash] the parameters defined during initialization of the transform
+      def params
+        @params ||= Hash.new { |_, key| raise ArgumentError, "Transform parameter #{key} is not defined" }
+      end
+
+      # Validates that a data source used in the transform has been defined
+      # @param name [Symbol] the name of a data source used in the transform
+      # @param fields [Array<Symbol>] a list of fields used by the transform for this data source
+      # @raise [ArgumentError] if the transform source is not defined
+      def source(name, fields)
+        raise ArgumentError, "Need to map fields to source #{name}" unless sources.include? name
+      end
+
+      # Validates that a data target used in the transform has been defined
+      # @param name [Symbol] the name of a data target used in the transform
+      # @param fields [Array<Symbol>] a list of fields used by the transform for this data target
+      # @raise [ArgumentError] if the transform target is not defined
+      def target(name, fields)
+        raise ArgumentError, "Need to map fields to target #{name}" unless targets.include? name
+      end
+
+      # Maps data sources and fields from the transform context to the local transform
+      # @param from_source [Symbol] name of the source data in the context
+      # @param to_source [Symbol] name of the source data local to the transform
+      # @param field_maps [Hash] mapping of the key names from the context source to the local source
+      def map_source_fields(from_source, to_source, field_maps)
+        map_fields(:sources, to_source, from_source, field_maps)
+      end
+
+      # Maps data targets and fields from the local tarnsform to the transform context
+      # @param from_target [Symbol] name of the target data local to the transform
+      # @param to_target [Symbol] name of the target data in the context
+      # @param field_maps [Hash] mapping of the key names from the local transform target to the context target
+      def map_target_fields(from_target, to_target, field_maps)
+        map_fields(:targets, from_target, to_target, field_maps)
+      end
+
+      # Imports another transform to be executed as part of this transform.  The block
+      # is used to perform any source/target field mapping.
+      #
+      # @param sub_transform [Job::Transform] the transform to import into this one
+      # @param block [Proc] a block of code to be executed prior to the execution of the
+      #                     imported transform.  This is where field mapping would be defined.
+      # @example
+      #
+      #   sub_transform = Job::Transform.new('arbitrary') do
+      #     source :sub_transform_source, [] # validate that this source has been defined
+      #     # do stuff to sub_transform_source here
+      #   end
+      #
+      #   job = MyJob.new
+      #   my_transform = Job::Transform.new(job) do
+      #     import sub_transform do
+      #       map_source_fields :some_method_in_my_job, :sub_sub_transform_source, { :job_id => :sub_transform_id }
+      #     end
+      #   end
+      def import(sub_transform, &block)
+        sub_transform.context = context
+        Dsl.dsl_eval(sub_transform, self, &block)
+        sub_transform.execute
+      end
+
+      private
+
+      def map_fields(type, local, remote, fields)
+        send(type) << local unless send(type).include? local
+        define_singleton_method(local) do
+          context.send(remote)
+        end
+      end
+    end
+
   end
 end

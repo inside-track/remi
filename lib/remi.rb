@@ -36,6 +36,7 @@ require 'active_support/core_ext/time/calculations'
 require 'remi/version.rb'
 
 require 'remi/settings'
+require 'remi/dsl'
 require 'remi/job'
 require 'remi/source_to_target_map'
 require 'remi/source_to_target_map/map'
@@ -62,3 +63,7 @@ require 'remi/data_subject/sftp_file'
 require 'remi/data_subject/data_frame'
 
 require 'remi/transform'
+
+# Remi is Ruby Extract Modify and Integrate, a framework for writing ETL job in Ruby.
+module Remi
+end

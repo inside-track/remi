@@ -69,6 +69,7 @@ GEM
     faraday_middleware (0.10.0)
       faraday (>= 0.7.4, < 0.10)
     gherkin (3.2.0)
+    github-markup (1.4.0)
     hashie (3.4.3)
     i18n (0.7.0)
     iruby (0.2.7)
@@ -99,6 +100,7 @@ GEM
     prawn-svg (0.9.1.11)
       prawn (>= 0.8.4)
     rbczmq (1.7.9)
+    redcarpet (3.3.4)
     regex_sieve (0.1.0)
     regexp-examples (1.2.0)
     reportbuilder (1.4.2)
@@ -132,6 +134,7 @@ GEM
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     xml-simple (1.1.5)
+    yard (0.9.0)
 
 PLATFORMS
   ruby
@@ -139,10 +142,13 @@ PLATFORMS
 DEPENDENCIES
   aws-sdk (~> 2.3)
   daru (= 0.1.2)!
+  github-markup
   iruby (= 0.2.7)
+  redcarpet
   remi!
   restforce (~> 2.1)
   salesforce_bulk_api!
+  yard
 
 BUNDLED WITH
    1.11.2

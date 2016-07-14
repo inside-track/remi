@@ -110,7 +110,7 @@ Remi::SourceToTargetMap.apply(df) do
   map source(:a, :b) .target(:aprime, :ab)
     .transform(->(row) {
       row[:aprime] = row[:a]
-      row[:ab] = "#{row[:a]}#{row[:b]}" })
+      row[:ab] = "#{row[:a]}#{row[:b]}"
     })
 end
 
