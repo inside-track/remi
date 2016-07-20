@@ -72,6 +72,61 @@ module Remi
         params[name] = value
       end
 
+
+      # @return [Array<Symbol>] the list of data source names
+      def sources
+        @sources ||= []
+      end
+
+      # Defines a data source.
+      # @example
+      #
+      #   class MyJob < Job
+      #     source :my_source do
+      #       extractor my_extractor
+      #       parser my_parser
+      #     end
+      #   end
+      #
+      #   job = MyJob.new
+      #   job.my_source.df #=> a dataframe generated after extracting and parsing
+      def source(name, &block)
+        sources << name unless sources.include? name
+        attr_accessor name
+
+        define_method("__init_#{name}__".to_sym) do
+          source = DataSource.new(self, name: name, &block)
+          instance_variable_set("@#{name}", source)
+        end
+      end
+
+      # @return [Array<Symbol>] the list of data target names
+      def targets
+        @targets ||= []
+      end
+
+      # Defines a data target.
+      # @example
+      #
+      #   class MyJob < Job
+      #     target :my_target do
+      #       extractor my_extractor
+      #       parser my_parser
+      #     end
+      #   end
+      #
+      #   job = MyJob.new
+      #   job.my_target.df #=> a dataframe generated after extracting and parsing
+      def target(name, &block)
+        targets << name unless targets.include? name
+        attr_accessor name
+
+        define_method("__init_#{name}__".to_sym) do
+          target = DataTarget.new(self, name: name, &block)
+          instance_variable_set("@#{name}", target)
+        end
+      end
+
       # @return [Array<Symbol>] the list of transform names
       def transforms
         @transforms ||= []
@@ -124,22 +179,30 @@ module Remi
     # Initializes the job
     #
     # @param work_dir [String, Path] sets the working directory for this job
-    # @param logger sets the logger for the job
-    # @param [Hash] Optional job parameters (can be referenced in the job via `#params`)
+    # @param logger [Object] sets the logger for the job
+    # @param kargs [Hash] Optional job parameters (can be referenced in the job via `#params`)
     def initialize(work_dir: Settings.work_dir, logger: Settings.logger, **kargs)
       @work_dir = work_dir
       @logger = logger
       @params = self.class.params.dup
       add_params **kargs
 
+      __init_sources__
+      __init_targets__
       __init_transforms__
     end
 
     # @return [String] the working directory used for temporary data
     attr_reader :work_dir
 
-    # The logging object
+    # @return [Object] the logging object
     attr_reader :logger
+
+    # @return [Array] list of sources defined in the job
+    attr_reader :sources
+
+    # @return [Array] list of targets defined in the job
+    attr_reader :targets
 
     # @return [Array] list of transforms defined in the job
     attr_reader :transforms
@@ -155,7 +218,7 @@ module Remi
 
     # Execute the specified components of the job.
     #
-    # @param [Array<symbol>] *components list of components to execute (e.g., `:transforms`, `:load_targets`)
+    # @param components [Array<symbol>] list of components to execute (e.g., `:transforms`, `:load_targets`)
     #
     # @return [self]
     def execute(*components)
@@ -173,6 +236,21 @@ module Remi
       end
     end
 
+    def __init_sources__
+      @sources = self.class.sources
+      @sources.each do |source|
+        send("__init_#{source}__".to_sym)
+      end
+    end
+
+    def __init_targets__
+      @targets = self.class.targets
+      @targets.each do |target|
+        send("__init_#{target}__".to_sym)
+      end
+    end
+
+
     # Executes all transforms defined
     def execute_transforms
       transforms.map { |t| send(t).execute }
@@ -181,6 +259,7 @@ module Remi
 
     # Loads all targets defined
     def execute_load_targets
+      targets.each { |t| send(t).load }
       self
     end
 

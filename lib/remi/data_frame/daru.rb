@@ -13,7 +13,7 @@ module Remi
 
 
       # Public: Returns the type of DataFrame
-      def remi_df_type
+      def df_type
         :daru
       end
 

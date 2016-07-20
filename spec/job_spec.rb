@@ -93,7 +93,100 @@ describe Job do
       end
     end
 
+    describe '.source' do
+      before do
+        class MyJob
+          source :my_source do
+            'I am a source'
+          end
+        end
+      end
+
+      it 'adds a data source to the list of data sources' do
+        expect(job.sources).to eq [:my_source]
+      end
+
+      it 'gives the data source a name' do
+        expect(job.my_source.name).to eq :my_source
+      end
+
+      it 'appends a newly defined data source to the list of data sources' do
+        expect {
+          class MyJob
+            source :my_source2 do
+              'I am another source'
+            end
+          end
+        }.to change { job.sources.size }.from(1).to(2)
+      end
+
+      it 'does not add the same data source to the list' do
+        expect {
+          class MyJob
+            source :my_source do
+              'I am a modified source'
+            end
+          end
+        }.not_to change { job.sources.size }
+      end
+
+      it 'returns a data source' do
+        expect(job.my_source).to be_a DataSource
+      end
+
+      it 'returns a data soruce with the context of the job' do
+        expect(job.my_source.context).to eq job
+      end
+    end
+
+    describe '.target' do
+      before do
+        class MyJob
+          target :my_target do
+            'I am a target'
+          end
+        end
+      end
+
+      it 'adds a data target to the list of data targets' do
+        expect(job.targets).to eq [:my_target]
+      end
+
+      it 'gives the data target a name' do
+        expect(job.my_target.name).to eq :my_target
+      end
+
+      it 'appends a newly defined data target to the list of data targets' do
+        expect {
+          class MyJob
+            target :my_target2 do
+              'I am another target'
+            end
+          end
+        }.to change { job.targets.size }.from(1).to(2)
+      end
+
+      it 'does not add the same data target to the list' do
+        expect {
+          class MyJob
+            target :my_target do
+              'I am a modified target'
+            end
+          end
+        }.not_to change { job.targets.size }
+      end
+
+      it 'returns a data target' do
+        expect(job.my_target).to be_a DataTarget
+      end
+
+      it 'returns a data soruce with the context of the job' do
+        expect(job.my_target.context).to eq job
+      end
+    end
+
   end
+
 
   context '#params' do
     before do
@@ -139,6 +232,12 @@ describe Job do
 
         transform :transform_two do
         end
+
+        target :target_one do
+        end
+
+        target :target_two do
+        end
       end
     end
 
@@ -169,12 +268,20 @@ describe Job do
       end
     end
 
-    context '#execute(:load_targets)', skip: 'TODO' do
-      it 'loads all targets'
+    context '#execute(:load_targets)', wip: true do
+      it 'loads all targets' do
+        [:target_one, :target_two].each do |target_name|
+          target = instance_double(DataTarget)
+          expect(target).to receive(:load)
+          expect(job).to receive(target_name) .and_return(target)
+        end
+
+        job.execute(:load_targets)
+      end
 
       it 'does not execute all transforms' do
         expect(job).not_to receive(:execute_transforms)
-        job.execute
+        job.execute(:load_targets)
       end
     end
   end
