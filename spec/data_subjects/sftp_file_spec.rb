@@ -71,7 +71,7 @@ describe Extractor::SftpFile do
   end
 
   context '#extract' do
-    it 'downloads files from the ftp' do
+    it 'downloads files from the ftp', wip: true do
       expect(sftp_session).to receive(:download!).exactly(remote_filenames.size).times
       sftp_file.extract
     end
@@ -80,5 +80,21 @@ describe Extractor::SftpFile do
       allow(sftp_session).to receive(:download!)
       expect(sftp_file.extract.map { |f| Pathname.new(f).basename.to_s }).to eq remote_filenames
     end
+  end
+end
+
+
+describe Loader::SftpFile, wip: true do
+  let(:loader) { Loader::SftpFile.new(credentials: {}, remote_path: 'some_path') }
+  let(:data) { double('some_data') }
+  let(:sftp_session) { instance_double('Net:SFTP::Session') }
+
+  before do
+    allow(Net::SFTP).to receive(:start).and_yield sftp_session
+  end
+
+  it 'loads a csv to a target sftp filesystem' do
+    expect(sftp_session).to receive(:upload!).with(data, 'some_path')
+    loader.load data
   end
 end

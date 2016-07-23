@@ -45,22 +45,25 @@ require 'remi/field_symbolizers'
 
 require 'remi/refinements/symbolizer'
 
-require 'remi/extractor/file_system'
-require 'remi/extractor/local_file'
-require 'remi/extractor/sftp_file'
-require 'remi/extractor/s3_file'
+require 'remi/extractor'
+require 'remi/parser'
+require 'remi/encoder'
+require 'remi/loader'
 
+require 'remi/data_subject'
+require 'remi/data_subjects/file_system'
+require 'remi/data_subjects/local_file'
+require 'remi/data_subjects/sftp_file'
+require 'remi/data_subjects/s3_file'
+require 'remi/data_subjects/csv_file'
+#require 'remi/data_subjects/salesforce' # intentionally not included by default
+require 'remi/data_subjects/postgres'
+require 'remi/data_subjects/data_frame'
 
 require 'remi/fields'
 require 'remi/data_frame'
 require 'remi/data_frame/daru'
 
-require 'remi/data_subject'
-require 'remi/data_subject/csv_file'
-#require 'remi/data_subject/salesforce' # intentionally not included by default
-require 'remi/data_subject/postgres'
-require 'remi/data_subject/sftp_file'
-require 'remi/data_subject/data_frame'
 
 require 'remi/transform'
 

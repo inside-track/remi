@@ -8,25 +8,27 @@ describe DataSubject do
       DataSubject.new(name: :awesome_dsl_subject) do
         fields :id => {}
         enforce_types
+        field_symbolizer :salesforce
       end
     end
 
     it 'defines the fields' do
-      dsl_data_subject.send(:dsl_eval)
-      expect(dsl_data_subject.fields).to eq({ :id => {} })
+      expect(dsl_data_subject.dsl_eval.fields).to eq({ :id => {} })
     end
 
     it 'declares that types will be enforced' do
       expect(dsl_data_subject).to receive :enforce_types
-      dsl_data_subject.send(:dsl_eval)
+      dsl_data_subject.dsl_eval
+    end
+
+    it 'sets the field symbolizer' do
+      expect(dsl_data_subject.dsl_eval.field_symbolizer).to eq(Remi::FieldSymbolizers[:salesforce])
     end
   end
-
 
   it 'has a name' do
     expect(data_subject.name).to eq :awesome_subject
   end
-
 
   context '#df_type' do
     it 'returns the dataframe type' do
@@ -55,6 +57,11 @@ describe DataSubject do
   context '#field_symbolizer' do
     it 'returns the field symbolizer defined for this source' do
       expect(data_subject.field_symbolizer).to eq Remi::FieldSymbolizers[:standard]
+    end
+
+    it 'sets the field symbolizer' do
+      data_subject.field_symbolizer :salesforce
+      expect(data_subject.field_symbolizer).to eq Remi::FieldSymbolizers[:salesforce]
     end
   end
 
@@ -136,7 +143,8 @@ describe DataSource do
 
   let(:my_extractor) { double('my_extractor') }
   let(:my_extractor2) { double('my_extractor2') }
-  let(:my_parser) { double('my_parser') }
+  let(:my_parser) { Remi::Parser.new }
+
 
   before do
     allow(my_extractor).to receive(:extract) .and_return 'result_1'
@@ -176,6 +184,44 @@ describe DataSource do
         dsl_data_source.df
       end
     end
+
+    context '#field_symbolizer' do
+      context 'field_symbolizer called before parser' do
+        let(:before_parser) do
+          scoped_my_parser = my_parser
+          DataSource.new do
+            field_symbolizer :salesforce
+            parser scoped_my_parser
+          end
+        end
+
+        it 'is used to set the field_symbolizer of the parser' do
+          expect {
+            before_parser.dsl_eval
+          }.to change {
+            my_parser.field_symbolizer
+          }.from(Remi::FieldSymbolizers[:standard]).to(Remi::FieldSymbolizers[:salesforce])
+        end
+      end
+
+      context 'field_symbolizer called after parser' do
+        let(:after_parser) do
+          scoped_my_parser = my_parser
+          DataSource.new do
+            parser scoped_my_parser
+            field_symbolizer :salesforce
+          end
+        end
+
+        it 'sets the field symbolizer of the parser for any parsers defined above' do
+          expect {
+            after_parser.dsl_eval
+          }.to change {
+            my_parser.field_symbolizer
+          }.from(Remi::FieldSymbolizers[:standard]).to(Remi::FieldSymbolizers[:salesforce])
+        end
+      end
+    end
   end
 
   context '#extractor' do
@@ -192,15 +238,24 @@ describe DataSource do
   end
 
   context '#parser' do
-    before { data_source.parser 'my_parser' }
+    let(:my_parser) { Remi::Parser.new }
+    before do
+      data_source.parser my_parser
+    end
 
     it 'sets the parser' do
-      expect(data_source.parser).to eq 'my_parser'
+      expect(data_source.parser).to eq my_parser
     end
 
     it 'only allows one parser to be defined' do
-      data_source.parser 'my_new_parser'
-      expect(data_source.parser).to eq 'my_new_parser'
+      my_new_parser = my_parser.clone
+      data_source.parser my_new_parser
+      expect(data_source.parser).to eq my_new_parser
+    end
+
+    it 'sets the context of parser' do
+      data_source.parser my_parser
+      expect(my_parser.context).to eq data_source
     end
   end
 
@@ -225,7 +280,7 @@ describe DataSource do
 
     context '#parse' do
       it 'uses the specified parser to parse the extracted data' do
-        expect(my_parser).to receive(:parse) .with(['result_1', 'result_2'])
+        expect(my_parser).to receive(:parse) .with('result_1', 'result_2')
         data_source.parse
       end
     end
@@ -283,26 +338,111 @@ end
 
 describe DataTarget do
   let(:data_target) { DataTarget.new }
+
+  let(:my_encoder) { Remi::Encoder.new }
   let(:my_loader) { double('my_loader') }
   let(:my_loader2) { double('my_loader2') }
 
+  before do
+    allow(my_loader).to receive(:load)
+    allow(my_loader2).to receive(:load)
+    allow(my_encoder).to receive(:encode) .and_return 'encoded data'
+  end
+
   context 'DSL' do
     let(:dsl_data_target) do
+      scoped_my_encoder = my_encoder
       scoped_my_loader = my_loader
       scoped_my_loader2 = my_loader2
 
       DataTarget.new do
+        encoder scoped_my_encoder
         loader scoped_my_loader
         loader scoped_my_loader2
       end
     end
 
     it 'adds loaders to the list of loaders' do
+      expect(dsl_data_target.dsl_eval.loaders).to eq [my_loader, my_loader2]
+    end
+
+    it 'sets the encoder' do
+      expect(dsl_data_target.dsl_eval.encoder).to eq my_encoder
     end
 
     context '#load' do
-      it 'loads all of the targets' do
+      it 'executes the DSL commands that have been declared' do
+        df_double = double('df')
+        allow(df_double).to receive(:size) .and_return(1)
+
+        allow(dsl_data_target).to receive(:df) .and_return(df_double)
+
+        expect(my_encoder).to receive :encode
+        expect(my_loader).to receive :load
+        expect(my_loader2).to receive :load
+        dsl_data_target.load
       end
+    end
+
+
+    context '#field_symbolizer' do
+      context 'field_symbolizer called before encoder' do
+        let(:before_encoder) do
+          scoped_my_encoder = my_encoder
+          DataTarget.new do
+            field_symbolizer :salesforce
+            encoder scoped_my_encoder
+          end
+        end
+
+        it 'is used to set the field_symbolizer of the encoder' do
+          expect {
+            before_encoder.dsl_eval
+          }.to change {
+            my_encoder.field_symbolizer
+          }.from(Remi::FieldSymbolizers[:standard]).to(Remi::FieldSymbolizers[:salesforce])
+        end
+      end
+
+      context 'field_symbolizer called after encoder' do
+        let(:after_encoder) do
+          scoped_my_encoder = my_encoder
+          DataTarget.new do
+            encoder scoped_my_encoder
+            field_symbolizer :salesforce
+          end
+        end
+
+        it 'sets the field symbolizer of the encoder for any encoders defined above' do
+          expect {
+            after_encoder.dsl_eval
+          }.to change {
+            my_encoder.field_symbolizer
+          }.from(Remi::FieldSymbolizers[:standard]).to(Remi::FieldSymbolizers[:salesforce])
+        end
+      end
+    end
+  end
+
+  context '#encoder', wip: true do
+    let(:my_encoder) { Remi::Encoder.new }
+    before do
+      data_target.encoder my_encoder
+    end
+
+    it 'sets the encoder' do
+      expect(data_target.encoder).to eq my_encoder
+    end
+
+    it 'only allows one encoder to be defined' do
+      my_new_encoder = my_encoder.clone
+      data_target.encoder my_new_encoder
+      expect(data_target.encoder).to eq my_new_encoder
+    end
+
+    it 'sets the context of encoder' do
+      data_target.encoder my_encoder
+      expect(my_encoder.context).to eq data_target
     end
   end
 
@@ -319,8 +459,9 @@ describe DataTarget do
     end
   end
 
-  context '#load', wip: true  do
+  context '#load' do
     before do
+      data_target.encoder my_encoder
       data_target.loader my_loader
       data_target.loader my_loader2
 
@@ -328,6 +469,17 @@ describe DataTarget do
       allow(df_double).to receive(:size) .and_return(1)
 
       allow(data_target).to receive(:df) .and_return(df_double)
+    end
+
+    it 'encodes data represented in the dataframe' do
+      expect(my_encoder).to receive(:encode).once
+      data_target.load
+    end
+
+    it 'passes encoded data to each of the loaders' do
+      expect(my_loader).to receive(:load).with('encoded data')
+      expect(my_loader2).to receive(:load).with('encoded data')
+      data_target.load
     end
 
     it 'triggers a load for all of the loaders' do

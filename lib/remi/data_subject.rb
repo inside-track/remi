@@ -22,6 +22,7 @@ module Remi
       @block = block
       @df_type = :daru
       @fields = Remi::Fields.new
+      @field_symbolizer = Remi::FieldSymbolizers[:standard]
     end
 
     attr_accessor :context, :name
@@ -47,13 +48,18 @@ module Remi
       @fields = Remi::Fields.new(arg)
     end
 
-
-    # THIS PROBABLY BELONGS IN THE PARSER?
-    # Default field symbolizer used to convert field names which may be strings into sybmols.
+    # Field symbolizer used to convert field names into symbols.  This method sets
+    # the symbolizer for the data subject and also sets the symbolizers for
+    # any associated parser and encoders.
     #
-    # @return [Proc] the default method for symbolizing field names
-    def field_symbolizer
-      Remi::FieldSymbolizers[:standard]
+    # @return [Proc] the method for symbolizing field names
+    def field_symbolizer(arg = nil)
+      return @field_symbolizer unless arg
+      @field_symbolizer = if arg.is_a? Symbol
+                            Remi::FieldSymbolizers[arg]
+                          else
+                            arg
+                          end
     end
 
     # @return [Remi::DataFrame] the dataframe associated with this DataSubject
@@ -144,6 +150,8 @@ module Remi
     # @return [Object] the parser set for this data source
     def parser(obj = nil)
       return @parser unless obj
+      obj.context = self
+
       @parser = obj
     end
 
@@ -156,7 +164,7 @@ module Remi
     # Converts all of the extracted data to a dataframe
     # @return [Remi::DataFrame]
     def parse
-      parser.parse extract
+      parser.parse *extract
     end
 
     # The dataframe will only be extracted and parsed once, and only if it
@@ -164,7 +172,7 @@ module Remi
     #
     # @return [Remi::DataFrame] the dataframe associated with this DataSubject
     def df
-      @dataframe ||= to_dataframe
+      @dataframe ||= parsed_as_dataframe
     end
 
     # @return [Array<Object>] all of the data extracted from the extractors (memoized).
@@ -177,7 +185,7 @@ module Remi
 
     # Runs the DSL definitions and all extracts, parses, and enforced types
     # @return [Remi::DataFrame] the source extracted and parsed as a dataframe
-    def to_dataframe
+    def parsed_as_dataframe
       dsl_eval if @block
       dataframe = parse
       enforce_types!(dataframe)
@@ -192,12 +200,22 @@ module Remi
   # @example
   #
   #   my_data_target = DataTarget.new do
+  #     encoder some_encoder
   #     loader some_loader
   #   end
   #
   #   my_data_target.df = some_great_dataframe
   #   my_data_target.load #=> loads data from the dataframe into some target defined by some_loader
   class DataTarget < DataSubject
+
+    # @param obj [Object] sets the encoder for this data target
+    # @return [Object] the encoder set for this data source
+    def encoder(obj = nil)
+      return @encoder unless obj
+      obj.context = self
+
+      @encoder = obj
+    end
 
     # @return [Array] the list of loaders associated with the this data target
     def loaders
@@ -217,6 +235,8 @@ module Remi
     # @return [true] if successful
     def load
       return nil if @loaded || df.size == 0
+      dsl_eval if @block
+
       load!
       @loaded = true
     end
@@ -226,8 +246,16 @@ module Remi
     #
     # @return [nil] nothing
     def load!
-      loaders.each { |l| l.load df }
+      loaders.each { |l| l.load encoded_dataframe }
       true
     end
+
+    private
+
+    # @return [Object] the encoded data suitable for the loaders
+    def encoded_dataframe
+      @encoded_dataframe ||= encoder.encode df
+    end
+
   end
 end

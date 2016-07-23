@@ -21,11 +21,13 @@ module Remi
   #
   #   class MyJob < Remi::Job
   #     source :my_csv_file do
-  #       # TODO: document how to define sources
+  #       extractor my_extractor
+  #       parser my_parser
+  #       enforce_types
   #     end
   #
   #     target :my_transformed_file do
-  #       # TODO: document how to define targets
+  #       loader my_loader
   #     end
   #
   #     transform :transform_data do
@@ -186,6 +188,7 @@ module Remi
       @logger = logger
       @params = self.class.params.dup
       add_params **kargs
+      create_work_dir
 
       __init_sources__
       __init_targets__
@@ -209,6 +212,12 @@ module Remi
 
     # @return [Hash] parameters defined at the class level or during instantiation
     attr_reader :params
+
+    # Creates a temporary working directory for the job
+    def create_work_dir
+      @logger.info "Creating working directory #{work_dir}"
+      FileUtils.mkdir_p work_dir
+    end
 
 
     # @return [self] the job object (needed to reference parent job in transform DSL)
