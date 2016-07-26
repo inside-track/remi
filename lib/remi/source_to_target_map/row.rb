@@ -59,11 +59,12 @@ module Remi
         @values[@index[key]] = value
       end
 
-      # Public: Makes Row enumerable, and acts like a hash.
+      # Public: Makes Row enumerable, acts like a hash
       def each &block
-        inverted_index = @index.invert
-        @values.each_with_index { |value, idx| block.call([inverted_index[idx], value]) }
+        return enumerate_row_variables unless block_given?
+        enumerate_row_variables.each { |k,v| block.call(k,v) }
       end
+
 
       # Public: Enumerates over each source value
       def each_source &block
@@ -97,6 +98,15 @@ module Remi
       # Public: Returns all target keys
       def target_keys
         @target_keys ||= keys - source_keys
+      end
+
+      private
+
+      def enumerate_row_variables
+        inverted_index = @index.invert
+        Enumerator.new do |y|
+          @values.each_with_index { |value, idx| y << [inverted_index[idx], value] }
+        end
       end
     end
   end
