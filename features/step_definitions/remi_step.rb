@@ -26,7 +26,7 @@ Given /^the following example(?: record| records|) called '([[:alnum:]\s\-_]+)':
 end
 
 Given /^the following example(?: record| records|) for '([[:alnum:]\s\-_]+)':$/ do |source_name, example_table|
-  example_name = source_name
+  example_name = SecureRandom.uuid
   @brt.add_example example_name, example_table
   @brt.job_sources[source_name].stub_data_with(@brt.examples[example_name])
 end
