@@ -70,9 +70,9 @@ module Remi
             block.call
             break
           rescue RuntimeError => err
-            raise err unless itry < ntry
+            raise err unless itry < N_RETRY
             @logger.error "Download failed with error: #{err.message}"
-            @logger.error "Retry attempt #{itry}/#{ntry-1}"
+            @logger.error "Retry attempt #{itry}/#{N_RETRY-1}"
             sleep(1)
           end
         end
