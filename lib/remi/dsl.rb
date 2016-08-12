@@ -65,5 +65,10 @@ module Remi
       dsl
     end
     module_function :dsl_eval
+
+    def dsl_return(dsl, fallback_dsl, *args, &block)
+      exec_in_proxy_context(dsl, fallback_dsl, Docile::FallbackContextProxy, *args, &block)
+    end
+    module_function :dsl_return
   end
 end

@@ -15,12 +15,20 @@ describe Job do
     describe '.param' do
       before do
         class MyJob
-          param :my_param, 'I am my_param'
+          param(:my_param) { 'I am my_param' }
         end
       end
 
       it 'adds a parameter to the parameter hash' do
-        expect(job.params.keys).to include :my_param
+        expect(job.params.to_h.keys).to include :my_param
+      end
+
+      it 'can be accessed at the class level' do
+        expect(MyJob.params[:my_param]).to eq 'I am my_param'
+      end
+
+      it 'can be accessed at the job level' do
+        expect(MyJob.new.params[:my_param]).to eq 'I am my_param'
       end
     end
 
@@ -191,7 +199,7 @@ describe Job do
   context '#params' do
     before do
       class MyJob
-        param :my_param, 'I am my_param'
+        param(:my_param) { 'I am my_param' }
       end
     end
 
@@ -285,6 +293,74 @@ describe Job do
       end
     end
   end
+
+
+
+  describe Job::Parameters do
+    let(:params) { Job::Parameters.new }
+
+    context '#[]' do
+      let(:some_method) { double('some_method') }
+
+      before do
+        allow(some_method).to receive(:poke) { 'poked' }
+        scoped_some_method = some_method
+        params.__define__(:my_param) { scoped_some_method.poke }
+      end
+
+      it 'fails if the parameter has not been defined' do
+        expect { params[:not_defined] }.to raise_error ArgumentError
+      end
+
+      it 'returns the evaluated value of the parameter' do
+        expect(params[:my_param]).to eq 'poked'
+      end
+
+      it 'does not evaluate the parameter block on subsequent calls' do
+        expect(some_method).to receive(:poke).once
+        params[:my_param]
+        params[:my_param]
+      end
+
+      it 'evaluates parameters in the context defined' do
+        params.__define__(:poke_context) { poke }
+
+        some_context = double('some_context')
+        allow(some_context).to receive(:poke) { 'poked some_context' }
+        params.context = some_context
+
+        expect(params[:poke_context]).to eq 'poked some_context'
+      end
+    end
+
+    context '#[]=' do
+      it 'set the value of the parameter' do
+        params[:my_param] = 'my boring parameter'
+        expect(params[:my_param]).to eq 'my boring parameter'
+      end
+
+      it 'overwrites an existing parameter' do
+        params[:my_param] = 'my boring parameter'
+        params[:my_param] = 'my fun parameter'
+        expect(params[:my_param]).to eq 'my fun parameter'
+      end
+    end
+
+    context '#to_h' do
+      it 'returns the parameters hash' do
+        expect(params.to_h).to be_a Hash
+      end
+    end
+
+    context '#clone' do
+      it 'creates a new parameter hash' do
+        new_params = params.clone
+        expect(new_params.to_h).not_to be params.to_h
+      end
+    end
+  end
+
+
 
 
   describe Job::Transform do
