@@ -6,10 +6,13 @@ describe Job do
     Object.send(:remove_const, :MyJob) if Object.constants.include?(:MyJob)
     class MyJob < Job
     end
+
+    Object.send(:remove_const, :MySubJob) if Object.constants.include?(:MySubJob)
+    class MySubJob < Job
+    end
   end
 
   let(:job) { MyJob.new }
-
 
   context 'DSL' do
     describe '.param' do
@@ -31,6 +34,50 @@ describe Job do
         expect(MyJob.new.params[:my_param]).to eq 'I am my_param'
       end
     end
+
+    describe '.sub_job' do
+      before do
+        class MyJob
+          sub_job(:my_sub_job) { MySubJob.new }
+        end
+      end
+
+      it 'adds the sub-job to the list of sub-jobs' do
+        expect(job.sub_jobs).to eq [:my_sub_job]
+      end
+
+      it 'gives the sub-job a name' do
+        expect(job.my_sub_job.name).to eq :my_sub_job
+      end
+
+      it 'appends a newly defined sub-job to the list of sub-jobs' do
+        expect {
+          class MyJob
+            sub_job(:my_sub_job2) { MySubJob.new }
+          end
+        }.to change { job.sub_jobs.size }.from(1).to(2)
+      end
+
+      it 'does not add the same sub-job to the list' do
+        expect {
+          class MyJob
+            sub_job(:my_sub_job) { MySubJob.new }
+          end
+        }.not_to change { job.sub_jobs.size }
+      end
+
+      it 'raises an error if the return value is not a Remi job' do
+        class MyJob
+          sub_job(:my_sub_job) { 'something' }
+        end
+        expect { job }.to raise_error ArgumentError
+      end
+
+      it 'returns a Remi job' do
+        expect(job.my_sub_job.job).to be_a Remi::Job
+      end
+    end
+
 
     describe '.transform' do
       before do
@@ -276,7 +323,7 @@ describe Job do
       end
     end
 
-    context '#execute(:load_targets)', wip: true do
+    context '#execute(:load_targets)' do
       it 'loads all targets' do
         [:target_one, :target_two].each do |target_name|
           target = instance_double(DataTarget)
@@ -360,6 +407,35 @@ describe Job do
     end
   end
 
+
+
+  describe Job::SubJob, wip: true do
+    let(:sub_job) { MySubJob.new }
+    let(:job_sub_job) do
+      scoped_sub_job = sub_job
+      Job::SubJob.new { scoped_sub_job }
+    end
+
+    context '#job' do
+      it 'returns the job instance for the sub job' do
+        expect(job_sub_job.job).to eq sub_job
+      end
+    end
+
+    context '#execute' do
+      it 'executes the sub job' do
+        expect(sub_job).to receive(:execute)
+        job_sub_job.execute
+      end
+    end
+
+    context '#execute_transforms' do
+      it 'executes the sub job transforms' do
+        expect(sub_job).to receive(:execute) .with(:transforms)
+        job_sub_job.execute_transforms
+      end
+    end
+  end
 
 
 

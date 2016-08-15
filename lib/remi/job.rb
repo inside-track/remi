@@ -79,6 +79,32 @@ module Remi
         @sources ||= []
       end
 
+
+      # @return [Array<Symbol>] the list of sub-jobs
+      def sub_jobs
+        @sub_jobs ||= []
+      end
+
+      # Defines a sub job resource for this job.
+      # Note that the return value of the DSL block must be an instance of a Remi::Job
+      # @example
+      #
+      #   class MyJob < Job
+      #     sub_job(:my_sub_job) { MySubJob.new }
+      #   end
+      #
+      #   job = MyJob.new
+      #   job.sub_job.job #=> An instance of MySubJob
+      def sub_job(name, &block)
+        sub_jobs << name unless sub_jobs.include? name
+        attr_accessor name
+
+        define_method("__init_#{name}__".to_sym) do
+          sub_job = Job::SubJob.new(self, name: name, &block)
+          instance_variable_set("@#{name}", sub_job)
+        end
+      end
+
       # Defines a data source.
       # @example
       #
@@ -188,6 +214,7 @@ module Remi
       create_work_dir
 
       __init_params__ **kargs
+      __init_sub_jobs__
       __init_sources__
       __init_targets__
       __init_transforms__
@@ -199,6 +226,12 @@ module Remi
     # @return [Object] the logging object
     attr_reader :logger
 
+    # @return [Job::Parameters] parameters defined at the class level or during instantiation
+    attr_reader :params
+
+    # @return [Array] list of sub_jobs defined in the job
+    attr_reader :sub_jobs
+
     # @return [Array] list of sources defined in the job
     attr_reader :sources
 
@@ -208,8 +241,6 @@ module Remi
     # @return [Array] list of transforms defined in the job
     attr_reader :transforms
 
-    # @return [Hash] parameters defined at the class level or during instantiation
-    attr_reader :params
 
     # Creates a temporary working directory for the job
     def create_work_dir
@@ -242,10 +273,10 @@ module Remi
       params.context = self
     end
 
-    def __init_transforms__
-      @transforms = self.class.transforms
-      @transforms.each do |transform|
-        send("__init_#{transform}__".to_sym)
+    def __init_sub_jobs__
+      @sub_jobs = self.class.sub_jobs
+      @sub_jobs.each do |sub_job|
+        send("__init_#{sub_job}__".to_sym)
       end
     end
 
@@ -263,6 +294,12 @@ module Remi
       end
     end
 
+    def __init_transforms__
+      @transforms = self.class.transforms
+      @transforms.each do |transform|
+        send("__init_#{transform}__".to_sym)
+      end
+    end
 
     # Executes all transforms defined
     def execute_transforms
@@ -280,215 +317,5 @@ module Remi
     def add_params(**kargs)
       kargs.each { |k,v| params[k] = v }
     end
-
-
-
-
-
-    # A job parameter adds flexiblity to defining job templates.  An
-    # instance of Parameters contains a collection of parameters that
-    # are evaluatin in the context of a job.  It functions very
-    # similarly to Rspec's #let, in that in can be defined using a
-    # block of code that is only evaluated the first time it is used,
-    # and cached for later use.
-    #
-    # Parameters should only be used in the context of a job.
-    # @example
-    #   class MyJob < Remi::Job
-    #     param(:my_param) { 'some parameter' }
-    #     param :my_calculated_param do
-    #       1.upto(1000).size
-    #     end
-    #
-    #     transform :something do
-    #       puts "my_param is #{job.params[:my_param]}"
-    #       puts "my_calculated_param is #{job.params[:my_calculated_param]}"
-    #     end
-    #   end
-    #
-    #   job1 = MyJob.new
-    #   job1.execute
-    #   #=> my_param is some parameter
-    #   #=> my_calculated_param is 1000
-    #
-    #   job2 = MyJob.new
-    #   job2.params[:my_param] = 'override'
-    #   job2.execute
-    #   #=> my_param is override
-    #   #=> my_calculated_param is 1000
-    #
-    #   job3 = MyJob.new(my_param: 'constructor override', my_calculated_param: 322)
-    #   job3.execute
-    #   #=> my_param is constructor override
-    #   #=> my_calculated_param is 322
-    class Parameters
-      def initialize(context=nil)
-        @context = context
-        @params = {}
-      end
-
-      # @return [Object] The context in which parameter blocks will be evaluated
-      attr_accessor :context
-
-      # Get the value of a parameter
-      #
-      # @param name [Symbol] The name of the parameter
-      #
-      # @return [Object] The value of the parameter
-      def [](name)
-        return send(name) if respond_to?(name)
-        raise ArgumentError, "Job parameter #{name} is not defined"
-      end
-
-
-      # Set the value of a parameter
-      #
-      # @param name [Symbol] The name of the parameter
-      # @param value [Object] The new value of the parameter
-      #
-      # @return [Object] The new value of the parameter
-      def []=(name, value)
-        __define__(name) { value } unless respond_to? name
-        @params[name] = value
-      end
-
-      # @return [Hash] The parameters as a hash
-      def to_h
-        @params
-      end
-
-      # @return [Job::Parameters] A clone of this parameter set
-      def clone
-        the_clone = super
-        the_clone.instance_variable_set(:@params, @params.dup)
-        the_clone
-      end
-
-      def __define__(name, &block)
-        @params[name] = nil
-        define_singleton_method name do
-          @params[name] ||= Remi::Dsl.dsl_return(self, @context, &block)
-        end
-      end
-    end
-
-
-
-
-
-
-    # A Transform contains a block of code that is executed in a context.
-    # Transforms are usually defined in a Job, according to the Job DSL.
-    #
-    # Transforms may optionally have a mapping defined that links a
-    # local definition of a data frame to a definition of the data
-    # frame in the associated context.
-    # @example
-    #
-    #   # Transforms should typically be defined using the Job DSL
-    #   job = MyJob.new
-    #   tform = Job::Transform.new(job) do
-    #     # ... stuff to do in the context of the job
-    #   end
-    #   tform.execute
-    class Transform
-
-      # Initializes a transform
-      #
-      # @param context [Object, Job] sets the context in which the block will be executed
-      # @param name [String, Symbol] optionally gives the transform a name
-      # @param kargs [Hash] any keyword arguments are accessable within the block as `#params` (e.g., `params[:my_custom_param]`)
-      # @param block [Proc] a block of code to execute in the context
-      def initialize(context, name: 'NOT DEFINED', **kargs, &block)
-        @context = context
-        @name = name
-        @block = block
-        params.merge! kargs
-
-        @sources = []
-        @targets = []
-      end
-
-      attr_accessor :context, :name, :sources, :targets
-
-      # Executes the transform block
-      # @return [Object] the context of the transform after executing
-      def execute
-        context.logger.info "Running transformation #{@name}"
-        Dsl.dsl_eval(self, @context, &@block)
-      end
-
-      # @return [Hash] the parameters defined during initialization of the transform
-      def params
-        @params ||= Hash.new { |_, key| raise ArgumentError, "Transform parameter #{key} is not defined" }
-      end
-
-      # Validates that a data source used in the transform has been defined
-      # @param name [Symbol] the name of a data source used in the transform
-      # @param fields [Array<Symbol>] a list of fields used by the transform for this data source
-      # @raise [ArgumentError] if the transform source is not defined
-      def source(name, fields)
-        raise ArgumentError, "Need to map fields to source #{name}" unless sources.include? name
-      end
-
-      # Validates that a data target used in the transform has been defined
-      # @param name [Symbol] the name of a data target used in the transform
-      # @param fields [Array<Symbol>] a list of fields used by the transform for this data target
-      # @raise [ArgumentError] if the transform target is not defined
-      def target(name, fields)
-        raise ArgumentError, "Need to map fields to target #{name}" unless targets.include? name
-      end
-
-      # Maps data sources and fields from the transform context to the local transform
-      # @param from_source [Symbol] name of the source data in the context
-      # @param to_source [Symbol] name of the source data local to the transform
-      # @param field_maps [Hash] mapping of the key names from the context source to the local source
-      def map_source_fields(from_source, to_source, field_maps)
-        map_fields(:sources, to_source, from_source, field_maps)
-      end
-
-      # Maps data targets and fields from the local tarnsform to the transform context
-      # @param from_target [Symbol] name of the target data local to the transform
-      # @param to_target [Symbol] name of the target data in the context
-      # @param field_maps [Hash] mapping of the key names from the local transform target to the context target
-      def map_target_fields(from_target, to_target, field_maps)
-        map_fields(:targets, from_target, to_target, field_maps)
-      end
-
-      # Imports another transform to be executed as part of this transform.  The block
-      # is used to perform any source/target field mapping.
-      #
-      # @param sub_transform [Job::Transform] the transform to import into this one
-      # @param block [Proc] a block of code to be executed prior to the execution of the
-      #                     imported transform.  This is where field mapping would be defined.
-      # @example
-      #
-      #   sub_transform = Job::Transform.new('arbitrary') do
-      #     source :sub_transform_source, [] # validate that this source has been defined
-      #     # do stuff to sub_transform_source here
-      #   end
-      #
-      #   job = MyJob.new
-      #   my_transform = Job::Transform.new(job) do
-      #     import sub_transform do
-      #       map_source_fields :some_method_in_my_job, :sub_sub_transform_source, { :job_id => :sub_transform_id }
-      #     end
-      #   end
-      def import(sub_transform, &block)
-        sub_transform.context = context
-        Dsl.dsl_eval(sub_transform, self, &block)
-        sub_transform.execute
-      end
-
-      private
-
-      def map_fields(type, local, remote, fields)
-        send(type) << local unless send(type).include? local
-        define_singleton_method(local) do
-          context.send(remote)
-        end
-      end
-    end
-
   end
 end

@@ -239,23 +239,30 @@ describe DataSource do
 
   context '#parser' do
     let(:my_parser) { Remi::Parser.new }
-    before do
-      data_source.parser my_parser
+
+    context 'default parser' do
+      it 'uses the None parser' do
+        expect(data_source.parser).to be_a Parser::None
+      end
     end
 
-    it 'sets the parser' do
-      expect(data_source.parser).to eq my_parser
-    end
+    context 'defining a parser' do
+      before { data_source.parser my_parser }
 
-    it 'only allows one parser to be defined' do
-      my_new_parser = my_parser.clone
-      data_source.parser my_new_parser
-      expect(data_source.parser).to eq my_new_parser
-    end
+      it 'sets the parser' do
+        expect(data_source.parser).to eq my_parser
+      end
 
-    it 'sets the context of parser' do
-      data_source.parser my_parser
-      expect(my_parser.context).to eq data_source
+      it 'only allows one parser to be defined' do
+        my_new_parser = my_parser.clone
+        data_source.parser my_new_parser
+        expect(data_source.parser).to eq my_new_parser
+      end
+
+      it 'sets the context of parser' do
+        data_source.parser my_parser
+        expect(my_parser.context).to eq data_source
+      end
     end
   end
 
@@ -330,6 +337,14 @@ describe DataSource do
           expect(data_source).not_to receive :extract!
           data_source.df
         end
+      end
+    end
+
+    context '#reset', skip: 'todo' do
+      it 'clears the current dataframe' do
+      end
+
+      it 'allows the source data to be extracted and parsed again' do
       end
     end
   end
@@ -424,25 +439,32 @@ describe DataTarget do
     end
   end
 
-  context '#encoder', wip: true do
+  context '#encoder' do
     let(:my_encoder) { Remi::Encoder.new }
-    before do
-      data_target.encoder my_encoder
+
+    context 'default encoder' do
+      it 'uses the None encoder' do
+        expect(data_target.encoder).to be_a Encoder::None
+      end
     end
 
-    it 'sets the encoder' do
-      expect(data_target.encoder).to eq my_encoder
-    end
+    context 'defining an encoder' do
+      before { data_target.encoder my_encoder }
 
-    it 'only allows one encoder to be defined' do
-      my_new_encoder = my_encoder.clone
-      data_target.encoder my_new_encoder
-      expect(data_target.encoder).to eq my_new_encoder
-    end
+      it 'sets the encoder' do
+        expect(data_target.encoder).to eq my_encoder
+      end
 
-    it 'sets the context of encoder' do
-      data_target.encoder my_encoder
-      expect(my_encoder.context).to eq data_target
+      it 'only allows one encoder to be defined' do
+        my_new_encoder = my_encoder.clone
+        data_target.encoder my_new_encoder
+        expect(data_target.encoder).to eq my_new_encoder
+      end
+
+      it 'sets the context of encoder' do
+        data_target.encoder my_encoder
+        expect(my_encoder.context).to eq data_target
+      end
     end
   end
 

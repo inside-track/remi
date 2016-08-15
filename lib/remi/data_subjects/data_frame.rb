@@ -31,7 +31,7 @@ module Remi
     # @param data [Array<Array>] An array of arrays representing rows of a dataframe.
     def initialize(*args, **kargs, &block)
       super
-      init_dataframe_extractor(*args, **kargs, &block)
+      init_data_frame_extractor(*args, **kargs, &block)
     end
 
     attr_accessor :data
@@ -43,7 +43,7 @@ module Remi
 
     private
 
-    def init_dataframe_extractor(*args, data: [], **kargs, &block)
+    def init_data_frame_extractor(*args, data: [], **kargs, &block)
       @data = data
     end
 
@@ -86,10 +86,10 @@ module Remi
 
   # DataFrame encoder
   class Encoder::DataFrame < Encoder
-    # @param dataframe [Remi::DataFrame] The dataframe to be encoded
-    # @return [Object] The dataframe
-    def encode(dataframe)
-      dataframe
+    # @param data_frame [Remi::DataFrame] The data_frame to be encoded
+    # @return [Object] The data_frame
+    def encode(data_frame)
+      data_frame
     end
   end
 

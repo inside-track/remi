@@ -134,6 +134,11 @@ module Remi
   #                     #   from some_extractor and parsing it using some_parser.
   class DataSource < DataSubject
 
+    def initialize(*args, **kargs, &block)
+      @parser = Parser::None.new
+      @parser.context = self
+      super
+    end
 
     # @return [Array] the list of extractors that are defined for this data source
     def extractors
@@ -175,6 +180,16 @@ module Remi
       @dataframe ||= parsed_as_dataframe
     end
 
+    # This clears any previously extracted and parsed results.
+    # A subsequent call to #df will redo the extract and parse.
+    #
+    # @return [Remi::DataFrame] the dataframe associated with this DataSubject
+    def reset
+      @block = nil
+      @dataframe = nil
+      @extract = nil
+    end
+
     # @return [Array<Object>] all of the data extracted from the extractors (memoized).
     def extract
       @extract ||= extract!
@@ -207,6 +222,12 @@ module Remi
   #   my_data_target.df = some_great_dataframe
   #   my_data_target.load #=> loads data from the dataframe into some target defined by some_loader
   class DataTarget < DataSubject
+
+    def initialize(*args, **kargs, &block)
+      @encoder = Encoder::None.new
+      @encoder.context = self
+      super
+    end
 
     # @param obj [Object] sets the encoder for this data target
     # @return [Object] the encoder set for this data source
