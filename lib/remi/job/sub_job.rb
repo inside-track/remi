@@ -16,6 +16,10 @@ module Remi
         sub_job
       end
 
+      def fields(data_subject)
+        job.send(data_subject).dsl_eval.fields
+      end
+
       def execute
         job.execute
       end

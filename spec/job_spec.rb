@@ -192,6 +192,13 @@ describe Job do
       it 'returns a data soruce with the context of the job' do
         expect(job.my_source.context).to eq job
       end
+
+      it 'does not require a block' do
+        class MyJob
+          source :another_source
+        end
+        expect(job.sources).to include :another_source
+      end
     end
 
     describe '.target' do
@@ -238,8 +245,14 @@ describe Job do
       it 'returns a data soruce with the context of the job' do
         expect(job.my_target.context).to eq job
       end
-    end
 
+      it 'does not require a block' do
+        class MyJob
+          target :another_target
+        end
+        expect(job.targets).to include :another_target
+      end
+    end
   end
 
 
@@ -409,7 +422,7 @@ describe Job do
 
 
 
-  describe Job::SubJob, wip: true do
+  describe Job::SubJob do
     let(:sub_job) { MySubJob.new }
     let(:job_sub_job) do
       scoped_sub_job = sub_job
@@ -419,6 +432,20 @@ describe Job do
     context '#job' do
       it 'returns the job instance for the sub job' do
         expect(job_sub_job.job).to eq sub_job
+      end
+    end
+
+    context '#fields' do
+      before do
+        class MySubJob
+          source :some_source do
+            fields({ :some_field => {} })
+          end
+        end
+      end
+
+      it 'gets the fields from the specified data subject' do
+        expect(job_sub_job.fields(:some_source)).to eq({ :some_field => {} })
       end
     end
 

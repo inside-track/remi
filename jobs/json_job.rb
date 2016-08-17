@@ -1,21 +1,25 @@
 require_relative 'all_jobs_shared'
 
-class JsonJob
-  include AllJobsShared
+class JsonJob < Remi::Job
+  source :source_data do
+    fields(
+      {
+        :json_array => { type: :json },
+        :json_hash  => { type: :json }
+      }
+    )
+  end
 
-  define_source :source_data, Remi::DataSource::DataFrame,
-    fields: {
-      :json_array => { type: :json },
-      :json_hash  => { type: :json }
-    }
+  target :target_data do
+    fields(
+      {
+        :second_element => {},
+        :name_field     => {}
+      }
+    )
+  end
 
-  define_target :target_data, Remi::DataTarget::DataFrame,
-    fields: {
-      :second_element => {},
-      :name_field     => {}
-    }
-
-  define_transform :main do
+  transform :main do
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df, source_metadata: source_data.fields) do
       map source(:json_array) .target(:second_element)
         .transform(->(values) { values[1] })

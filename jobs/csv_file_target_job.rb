@@ -1,15 +1,16 @@
 require_relative 'all_jobs_shared'
 
-class CsvFileTargetJob
-  include AllJobsShared
+class CsvFileTargetJob < Remi::Job
+  target :some_csv_file do
+    encoder Remi::Encoder::CsvFile.new(
+      path: "#{Remi::Settings.work_dir}/some_file.csv",
+      csv_options: {
+        col_sep: '|'
+      }
+    )
+  end
 
-  define_target :some_csv_file, Remi::DataTarget::CsvFile,
-    path: "#{Remi::Settings.work_dir}/some_file.csv",
-    csv_options: {
-      col_sep: '|'
-    }
-
-  define_transform :main do
+  transform :main do
     some_csv_file.df = Daru::DataFrame.new({
       col3: Faker::Hipster.words(10),
       col1: Faker::Hipster.words(10),

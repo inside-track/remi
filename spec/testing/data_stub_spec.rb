@@ -137,11 +137,13 @@ describe Testing::DataStub do
 
 
   context 'stubbed dataframe data' do
-    let(:stub_tester) do
-      StubTester.new(fields: {
+    let(:stub_tester) { StubTester.new }
+
+    before do
+      stub_tester.fields = {
         my_date: { type: :date, in_format: '%m/%d/%Y' },
         my_str: {}
-      })
+      }
     end
 
     context '#empty_stub_df' do

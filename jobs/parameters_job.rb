@@ -1,22 +1,25 @@
 require_relative 'all_jobs_shared'
 
-class ParametersJob
-  include AllJobsShared
+class ParametersJob < Remi::Job
+  param(:myparam) {}
+  param(:test_parameter) { "my test parameter value" }
 
-  define_param :test_parameter, "my test parameter value"
+  source :source_data do
+    fields(
+      {
+        :parameter_name => {}
+      }
+    )
+  end
 
-  define_target :source_data, Remi::DataSource::DataFrame,
-    fields: {
-      :parameter_name => {}
-    }
-  define_target :target_data, Remi::DataTarget::DataFrame
+  target :target_data
 
-  define_transform :main do
+  transform :main do
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map target(:myparam)
-        .transform(Remi::Transform::Constant.new(params[:myparam]))
+        .transform(Remi::Transform::Constant.new(job.params[:myparam]))
       map source(:parameter_name) .target(:parameter_name)
-        .transform(->(v) { params[v.to_sym] })
+        .transform(->(v) { job.params[v.to_sym] })
     end
   end
 

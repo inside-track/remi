@@ -1,21 +1,25 @@
 require_relative '../all_jobs_shared'
 
-class NvlJob
-  include AllJobsShared
+class NvlJob < Remi::Job
 
-  define_param :default, ''
-  define_source :source_data, Remi::DataSource::DataFrame,
-    fields: {
-      :field1 => {},
-      :field2 => {},
-      :field3 => {}
-    }
-  define_target :target_data, Remi::DataTarget::DataFrame
+  param(:default) { '' }
 
-  define_transform :main, sources: :source_data, targets: :target_data do
+  source :source_data do
+    fields(
+      {
+        :field1 => {},
+        :field2 => {},
+        :field3 => {}
+      }
+    )
+  end
+
+  target :target_data
+
+  transform :main do
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(:field1, :field2, :field3) .target(:result_field)
-        .transform(Remi::Transform::Nvl.new(params[:default]))
+        .transform(Remi::Transform::Nvl.new(job.params[:default]))
     end
   end
 end

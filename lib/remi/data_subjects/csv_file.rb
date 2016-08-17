@@ -149,6 +149,9 @@ module Remi
 
     default_csv_options[:row_sep] = "\n"
 
+    # @return [Hash] Csv options hash
+    attr_reader :csv_options
+
     # Converts the dataframe to a CSV file stored in the local work directory.
     #
     # @param dataframe [Remi::DataFrame] The dataframe to be encoded

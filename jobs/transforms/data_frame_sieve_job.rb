@@ -1,31 +1,36 @@
 require_relative '../all_jobs_shared'
 
-class DataFrameSieveJob
-  include AllJobsShared
+class DataFrameSieveJob < Remi::Job
 
-  define_source :source_data, Remi::DataSource::DataFrame,
-    fields: {
-      :id      => {},
-      :level   => {},
-      :program => {},
-      :contact => {}
-    }
+  source :source_data do
+    fields(
+      {
+        :id      => {},
+        :level   => {},
+        :program => {},
+        :contact => {}
+      }
+    )
+  end
 
-  define_source :sieve, Remi::DataSource::DataFrame,
-    fields: {
-      :level   => {},
-      :program => {},
-      :contact => {},
-      :group   => {}
-    }
+  source :sieve do
+    fields(
+      {
+        :level   => {},
+        :program => {},
+        :contact => {},
+        :group   => {}
+      }
+    )
+  end
 
-  define_target :target_data, Remi::DataTarget::DataFrame
+  target :target_data
 
-  define_transform :main, sources: :source_data, targets: :target_data do
-
+  transform :main do
     # Hack to convert example to regex
     sieve.df[:program].recode! { |v| (v || '').match(/\A\/.*\/\Z/) ? /#{v[1...-1]}/ : v }
 
+    target_data.df = source_data.df.dup
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(:level, :program, :contact) .target(:group)
         .transform(Remi::Transform::DataFrameSieve.new(sieve.df))

@@ -7,18 +7,12 @@ describe DataSubject do
     let(:dsl_data_subject) do
       DataSubject.new(name: :awesome_dsl_subject) do
         fields :id => {}
-        enforce_types
         field_symbolizer :salesforce
       end
     end
 
     it 'defines the fields' do
       expect(dsl_data_subject.dsl_eval.fields).to eq({ :id => {} })
-    end
-
-    it 'declares that types will be enforced' do
-      expect(dsl_data_subject).to receive :enforce_types
-      dsl_data_subject.dsl_eval
     end
 
     it 'sets the field symbolizer' do
@@ -97,39 +91,36 @@ describe DataSubject do
     before do
       data_subject.fields = fields
       data_subject.df = dataframe
-      data_subject.enforce_types
     end
 
     it 'converts a date string to a date using an in_format' do
-      data_subject.enforce_types!
+      data_subject.enforce_types
       expect(data_subject.df[:my_date].to_a).to eq [Date.new(2015, 10, 21)]
     end
 
     it 'converts types when explicitly specified' do
       data_subject.enforce_types(:date)
-      data_subject.enforce_types!
       expect(data_subject.df[:my_date].to_a).to eq [Date.new(2015, 10, 21)]
     end
 
     it 'does not do any conversion if the field has no type specified' do
       fields[:my_date].delete(:type)
-      data_subject.enforce_types!
+      data_subject.enforce_types
       expect(data_subject.df[:my_date].to_a).to eq ['10/21/2015']
     end
 
     it 'does not do any conversion if field metadata does not match the selected enforcement type' do
       data_subject.enforce_types(:decimal)
-      data_subject.enforce_types!
       expect(data_subject.df[:my_date].to_a).to eq ['10/21/2015']
     end
 
     it 'throws an error if the data does not conform to its type' do
       dataframe[:my_date].recode! { |v| '2015-10-21' }
-      expect { data_subject.enforce_types! }.to raise_error ArgumentError
+      expect { data_subject.enforce_types }.to raise_error ArgumentError
     end
 
     it 'does not create new vectors during enforcement' do
-      data_subject.enforce_types!
+      data_subject.enforce_types
       expect(dataframe.vectors.to_a).to eq [:my_date]
     end
   end
@@ -163,7 +154,6 @@ describe DataSource do
         extractor scoped_my_extractor
         extractor scoped_my_extractor2
         parser scoped_my_parser
-        enforce_types
       end
     end
 
@@ -180,7 +170,6 @@ describe DataSource do
         expect(my_extractor).to receive :extract
         expect(my_extractor2).to receive :extract
         expect(my_parser).to receive :parse
-        expect(dsl_data_source).to receive :enforce_types!
         dsl_data_source.df
       end
     end
@@ -304,11 +293,6 @@ describe DataSource do
           expect(data_source).to receive :parse
           data_source.df
         end
-
-        it 'enforces types' do
-          expect(data_source).to receive :enforce_types!
-          data_source.df
-        end
       end
 
       context 'a dataframe has already been defined' do
@@ -330,11 +314,6 @@ describe DataSource do
 
         it 'does not parse' do
           expect(data_source).not_to receive :parse
-          data_source.df
-        end
-
-        it 'does not enforce types' do
-          expect(data_source).not_to receive :extract!
           data_source.df
         end
       end

@@ -84,38 +84,32 @@ module Remi
     # enforcer will convert data in that field into a date, and will
     # throw an error if it is unable to parse any of the values.
     #
-    # @param dataframe [Remi::DataFrame] to enforce types (defaults to
-    #   the dataframe associated with this DataSubject).
-    # @return [true] if successful
-    def enforce_types!(dataframe = df)
-      return false unless @enforce_types
-
-      sttm = SourceToTargetMap.new(dataframe, source_metadata: fields)
+    # @param types [Array<Symbol>] a list of metadata types to use to enforce.  If none are given,
+    #   all types are enforced.
+    # @return [self]
+    def enforce_types(*types)
+      sttm = SourceToTargetMap.new(df, source_metadata: fields)
       fields.keys.each do |field|
-        next unless (@enforce_types.size == 0 || @enforce_types.include?(fields[field][:type])) && dataframe.vectors.include?(field)
+        next unless (types.size == 0 || types.include?(fields[field][:type])) && df.vectors.include?(field)
         sttm.source(field).target(field).transform(Remi::Transform::EnforceType.new).execute
       end
 
-      true
-    end
-
-    # Used by the DSL to indicate whether types are to be enforced after extracting.
-    #
-    # @param types [Array<Symbol>] a list of metadata types to use to enforce.  If none are given,
-    #   all types are enforced.
-    # @return [nil]
-    def enforce_types(*types)
-      @enforce_types = types
-      nil
+      self
     end
 
     # Defines the subject using the DSL in the block provided
     #
     # @return [self]
     def dsl_eval
-      Dsl.dsl_eval(self, @context, &@block)
+      dsl_eval! unless @dsl_evaluated
+      @dsl_evaluated = true
+      self
     end
 
+    def dsl_eval!
+      return self unless @block
+      Dsl.dsl_eval(self, @context, &@block)
+    end
   end
 
 
@@ -203,7 +197,6 @@ module Remi
     def parsed_as_dataframe
       dsl_eval if @block
       dataframe = parse
-      enforce_types!(dataframe)
       dataframe
     end
   end

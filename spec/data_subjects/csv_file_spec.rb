@@ -12,7 +12,7 @@ describe Parser::CsvFile do
     )
   end
 
-  it 'converts a CSV into a dataframe', wip: true do
+  it 'converts a CSV into a dataframe' do
     csv = Parser::CsvFile.new
     expect(csv.parse(basic_file).to_a).to eq basic_dataframe.to_a
   end

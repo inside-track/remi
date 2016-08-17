@@ -4,22 +4,25 @@
 require 'bundler/setup'
 require 'remi'
 
-module AllJobsShared
-  include Remi::Job
+class AllJobsShared < Remi::Job
 
-  define_param :sftp, {
-    host: 'example.com',
-    username: 'user',
-    password: '1234567890'
-  }
+  param :sftp do
+    {
+      host: 'example.com',
+      username: 'user',
+      password: '1234567890'
+    }
+  end
 
-  define_param :salesforce_credentials, {
-    host: 'login.salesforce.com',
-    username: 'user@example.com',
-    password: 'password',
-    security_token: '4342jn3j4n32n4',
-    client_id: 'dkfjsdkfjoasdjdf',
-    client_secret: '28357245723475',
-    instance_url: 'https://na1.salesforce.com'
-  }
+  param :salesforce_credentials do
+    {
+      host: 'login.salesforce.com',
+      username: 'user@example.com',
+      password: 'password',
+      security_token: '4342jn3j4n32n4',
+      client_id: 'dkfjsdkfjoasdjdf',
+      client_secret: '28357245723475',
+      instance_url: 'https://na1.salesforce.com'
+    }
+  end
 end

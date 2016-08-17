@@ -44,57 +44,65 @@ end
 ### Source file processing
 
 Given /^files with names matching the pattern \/(.*)\/$/ do |pattern|
-  expect(@brt.source.data_subject.extractor.pattern).to eq Regexp.new(pattern)
+  expect(@brt.source.data_subject.extractors.map(&:pattern)).to include Regexp.new(pattern)
 end
 
 Given /^download groups defined by the pattern \/(.*)\/$/ do |pattern|
-  expect(@brt.source.data_subject.extractor.group_by).to eq Regexp.new(pattern)
+  expect(@brt.source.data_subject.extractors.map(&:group_by)).to include Regexp.new(pattern)
 end
 
 Then /^the file with the latest date stamp will be downloaded for processing$/ do
-  expect(@brt.source.data_subject.extractor.most_recent_by).to eq :create_time
+  expect(@brt.source.data_subject.extractors.map(&:most_recent_by)).to include :create_time
 end
 
 Then /^all files matching the pattern will be downloaded for processing$/ do
-  expect(@brt.source.data_subject.extractor.most_recent_only).to eq false
+  expect(@brt.source.data_subject.extractors.map(&:most_recent_only)).not_to include eq true
 end
 
 Then /^the file that comes last in an alphanumeric sort by group will be downloaded for processing$/ do
-  expect(@brt.source.data_subject.extractor.most_recent_by).to eq :name
+  expect(@brt.source.data_subject.extractors.map(&:most_recent_by)).to include :name
 end
 
 Then /^the file is uploaded to the remote path "([^"]+)"$/ do |remote_path|
-  expect(@brt.target.get_attrib(:remote_path)).to eq Remi::Testing::BusinessRules::ParseFormula.parse(remote_path)
+  expected_path = Remi::Testing::BusinessRules::ParseFormula.parse(remote_path)
+  expect(@brt.target.data_subject.loaders.map(&:remote_path)).to include expected_path
 end
 
 ## CSV Options
 
 Given /^the (source|target) file is delimited with a (\w+)$/ do |st, delimiter|
-  expect(@brt.send(st.to_sym).csv_options[:col_sep]).to eq Remi::Testing::BusinessRules.csv_opt_map[delimiter]
+  csv_subject = @brt.send(st.to_sym).data_subject.send(st == 'source' ? :parser : :encoder)
+  expect(csv_subject.csv_options[:col_sep]).to eq Remi::Testing::BusinessRules.csv_opt_map[delimiter]
 end
 
 Given /^the (source|target) file is encoded using "([^"]+)" format$/ do |st, encoding|
-  expect(@brt.send(st.to_sym).csv_options[:encoding].split(':').first).to eq encoding
+  csv_subject = @brt.send(st.to_sym).data_subject.send(st == 'source' ? :parser : :encoder)
+  expect(csv_subject.csv_options[:encoding].split(':').first).to eq encoding
 end
 
 Given /^the (source|target) file uses a ([\w ]+) to quote embedded delimiters$/ do |st, quote_char|
-  expect(@brt.send(st.to_sym).csv_options[:quote_char]).to eq Remi::Testing::BusinessRules.csv_opt_map[quote_char]
+  csv_subject = @brt.send(st.to_sym).data_subject.send(st == 'source' ? :parser : :encoder)
+  expect(csv_subject.csv_options[:quote_char]).to eq Remi::Testing::BusinessRules.csv_opt_map[quote_char]
 end
 
 Given /^the (source|target) file uses a preceding ([\w ]+) to escape an embedded quoting character$/ do |st, escape_char|
-  expect(@brt.send(st.to_sym).csv_options[:quote_char]).to eq Remi::Testing::BusinessRules.csv_opt_map[escape_char]
+  csv_subject = @brt.send(st.to_sym).data_subject.send(st == 'source' ? :parser : :encoder)
+  expect(csv_subject.csv_options[:quote_char]).to eq Remi::Testing::BusinessRules.csv_opt_map[escape_char]
 end
 
 Given /^the (source|target) file uses ([\w ]+) line endings$/ do |st, line_endings|
-  expect(@brt.send(st.to_sym).csv_options[:row_sep]).to eq Remi::Testing::BusinessRules.csv_opt_map[line_endings]
+  csv_subject = @brt.send(st.to_sym).data_subject.send(st == 'source' ? :parser : :encoder)
+  expect(csv_subject.csv_options[:row_sep]).to eq Remi::Testing::BusinessRules.csv_opt_map[line_endings]
 end
 
 Given /^the (source|target) file uses "([^"]+)" as a record separator$/ do |st, line_endings|
-  expect(@brt.send(st.to_sym).csv_options[:row_sep]).to eq line_endings.gsub(/\\n/, "\n").gsub(/\\r/, "\r")
+  csv_subject = @brt.send(st.to_sym).data_subject.send(st == 'source' ? :parser : :encoder)
+  expect(csv_subject.csv_options[:row_sep]).to eq line_endings.gsub(/\\n/, "\n").gsub(/\\r/, "\r")
 end
 
 Given /^the (source|target) file (contains|does not contain) a header row$/ do |st, header|
-  expect(@brt.send(st.to_sym).csv_options[:headers]).to eq (header == 'contains')
+  csv_subject = @brt.send(st.to_sym).data_subject.send(st == 'source' ? :parser : :encoder)
+  expect(csv_subject.csv_options[:headers]).to eq (header == 'contains')
 end
 
 Given /^the (source|target) file contains at least the following headers in no particular order:$/ do |st, table|
@@ -301,6 +309,12 @@ Then /^the target '(.+)' should match the example '([[:alnum:]\-\s]+)'$/ do |tar
   target_hash = @brt.targets[target_name].column_hash
   example_hash = @brt.examples[example_name].column_hash
   common_keys = target_hash.keys & example_hash.keys
+  expect(common_keys).to match_array(example_hash.keys), <<-EOT
+    Fields in example not found in target
+    Example fields: #{example_hash.keys}
+    Target fields: #{target_hash.keys}
+    Missing fields: #{example_hash.keys - target_hash.keys}
+  EOT
 
   target_to_compare = target_hash.select { |k,v| common_keys.include? k }
   target_to_compare.each do |k, v|

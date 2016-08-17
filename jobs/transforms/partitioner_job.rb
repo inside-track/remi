@@ -1,28 +1,36 @@
 require_relative '../all_jobs_shared'
 
-class PartitionerJob
-  include AllJobsShared
+class PartitionerJob < Remi::Job
 
-  define_source :source_data, Remi::DataSource::DataFrame,
-    fields: {
-      :id      => {}
-    }
+  source :source_data do
+    fields(
+      {
+        :id      => {}
+      }
+    )
+  end
 
-  define_source :distribution, Remi::DataSource::DataFrame,
-    fields: {
-      :group  => {},
-      :weight => {}
-    }
+  source :distribution do
+    fields(
+      {
+        :group  => {},
+        :weight => {}
+      }
+    )
+  end
 
-  define_source :current_population, Remi::DataSource::DataFrame,
-    fields: {
-      :group => {},
-      :count => {}
-    }
+  source :current_population do
+    fields(
+      {
+        :group => {},
+        :count => {}
+      }
+    )
+  end
 
-  define_target :target_data, Remi::DataTarget::DataFrame
+  target :target_data
 
-  define_transform :main, sources: :source_data, targets: :target_data do
+  transform :main do
 
     distribution_hash = distribution.df.map(:row) { |row| [row[:group], row[:weight].to_f] }.to_h
     current_population_hash = current_population.df.map(:row) { |row| [row[:group], row[:count].to_i] }.to_h

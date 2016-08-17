@@ -71,7 +71,7 @@ describe Extractor::SftpFile do
   end
 
   context '#extract' do
-    it 'downloads files from the ftp', wip: true do
+    it 'downloads files from the ftp' do
       expect(sftp_session).to receive(:download!).exactly(remote_filenames.size).times
       sftp_file.extract
     end
@@ -84,7 +84,7 @@ describe Extractor::SftpFile do
 end
 
 
-describe Loader::SftpFile, wip: true do
+describe Loader::SftpFile do
   let(:loader) { Loader::SftpFile.new(credentials: {}, remote_path: 'some_path') }
   let(:data) { double('some_data') }
   let(:sftp_session) { instance_double('Net:SFTP::Session') }
