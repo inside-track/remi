@@ -331,6 +331,12 @@ Then /^the target should match the example '([[:alnum:]\-\s]+)'$/ do |example_na
   step "the target '#{target_name}' should match the example '#{example_name}'"
 end
 
+Then /^the target '(.+)' should match the example:/ do |target_name, example_table|
+  example_name = SecureRandom.uuid
+  @brt.add_example example_name, example_table
+  step "the target '#{target_name}' should match the example '#{example_name}'"
+end
+
 Then /^the target should match the example:/ do |example_table|
   example_name = SecureRandom.uuid
   @brt.add_example example_name, example_table

@@ -31,15 +31,15 @@ module Remi
     # @param arg [Symbol] sets the type of dataframe to use for this subject
     # @return [Symbol] the type of dataframe (defaults to `:daru` if not explicitly set)
     def df_type(arg = nil)
-      return @df_type unless arg
-      @df_type = arg
+      return get_df_type unless arg
+      set_df_type arg
     end
 
     # @param arg [Hash, Remi::Fields] set the field metadata for this data subject
     # @return [Remi::Fields] the field metadata for this data subject
     def fields(arg = nil)
-      return @fields unless arg
-      self.fields = arg
+      return get_fields unless arg
+      set_fields arg
     end
 
     # @param arg [Hash, Remi::Fields] set the field metadata for this data subject
@@ -109,6 +109,26 @@ module Remi
     def dsl_eval!
       return self unless @block
       Dsl.dsl_eval(self, @context, &@block)
+    end
+
+    private
+
+    def set_fields(arg)
+      self.fields = arg
+    end
+
+    def get_fields
+      dsl_eval
+      @fields
+    end
+
+    def set_df_type(arg)
+      @df_type = arg
+    end
+
+    def get_df_type
+      dsl_eval
+      @df_type
     end
   end
 
