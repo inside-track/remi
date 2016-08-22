@@ -70,7 +70,7 @@ describe Job do
         class MyJob
           sub_job(:my_sub_job) { 'something' }
         end
-        expect { job }.to raise_error ArgumentError
+        expect { job.my_sub_job.job }.to raise_error ArgumentError
       end
 
       it 'returns a Remi job' do
@@ -351,6 +351,46 @@ describe Job do
         expect(job).not_to receive(:execute_transforms)
         job.execute(:load_targets)
       end
+    end
+  end
+
+  context 'inheritance' do
+    before do
+      Object.send(:remove_const, :MyInheritedJob) if Object.constants.include?(:MyInheritedJob)
+      class MyJob
+        param(:my_param) { 'I am my_param' }
+        source :my_source
+        target :my_target
+        transform(:my_transform) { }
+        sub_job(:my_sub_job) { }
+      end
+
+      class MyInheritedJob < MyJob; end
+    end
+
+    it 'inherits a copy of the job parameters' do
+      expect(MyInheritedJob.params.to_h.keys).to eq [:my_param]
+      expect(MyInheritedJob.params.object_id).not_to eq MyJob.params.object_id
+    end
+
+    it 'inherits a copy of the sources' do
+      expect(MyInheritedJob.sources).to eq [:my_source]
+      expect(MyInheritedJob.sources.object_id).not_to eq MyJob.sources.object_id
+    end
+
+    it 'inherits a copy of the targets' do
+      expect(MyInheritedJob.targets).to eq [:my_target]
+      expect(MyInheritedJob.targets.object_id).not_to eq MyJob.targets.object_id
+    end
+
+    it 'inherits a copy of the transforms' do
+      expect(MyInheritedJob.transforms).to eq [:my_transform]
+      expect(MyInheritedJob.transforms.object_id).not_to eq MyJob.transforms.object_id
+    end
+
+    it 'inherits a copy of the sub_jobs' do
+      expect(MyInheritedJob.sub_jobs).to eq [:my_sub_job]
+      expect(MyInheritedJob.sub_jobs.object_id).not_to eq MyJob.sub_jobs.object_id
     end
   end
 

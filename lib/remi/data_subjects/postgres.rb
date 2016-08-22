@@ -48,6 +48,7 @@ module Remi
     # @option credentials [String] :user Postgres login username (default: `whoami`)
     # @option credentials [String] :password Postgres login password
     # @option credentials [String] :sslmode Postgres SSL mode (default: allow)
+    # @param query [String] Query to use to extract data
     def initialize(*args, **kargs, &block)
       super
       init_postgres_extractor(*args, **kargs, &block)

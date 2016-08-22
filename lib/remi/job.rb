@@ -56,6 +56,14 @@ module Remi
   class Job
     class << self
 
+      def inherited(base)
+        base.instance_variable_set(:@params, params.clone)
+        base.instance_variable_set(:@sources, sources.dup)
+        base.instance_variable_set(:@targets, targets.dup)
+        base.instance_variable_set(:@transforms, transforms.dup)
+        base.instance_variable_set(:@sub_jobs, sub_jobs.dup)
+      end
+
       # @return [Job::Parameters] all parameters defined at the class level
       def params
         @params ||= Parameters.new

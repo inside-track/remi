@@ -56,7 +56,7 @@ module Remi
       # @raise [ArgumentError] if the transform source is not defined
       def source(name, fields)
         raise NoMethodError, "Need to define a source mapping for #{name}" unless sources.include? name
-        raise ArgumentError, "Need to map fields to source #{name}" unless (fields - field_maps[:sources][name].field_from_to.values).empty?
+        raise ArgumentError, "Need to map fields to source #{name} (#{fields})" unless (fields - field_maps[:sources][name].field_from_to.values).empty?
       end
 
       # Validates that a data target used in the transform has been defined
@@ -65,7 +65,7 @@ module Remi
       # @raise [ArgumentError] if the transform target is not defined
       def target(name, fields)
         raise NoMethodError, "Need to define a target mapping for #{name}" unless targets.include? name
-        raise ArgumentError, "Need to map fields to target #{name}" unless (fields - field_maps[:targets][name].field_from_to.keys).empty?
+        raise ArgumentError, "Need to map fields to target #{name} (#{fields})" unless (fields - field_maps[:targets][name].field_from_to.keys).empty?
       end
 
       # Maps data sources and fields from the transform context to the local transform
