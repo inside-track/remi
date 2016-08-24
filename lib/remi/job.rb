@@ -262,6 +262,19 @@ module Remi
       self
     end
 
+    def to_s
+      inspect
+    end
+
+    def inspect
+      "#<#{Remi::Job}>: #{self.class}\n" +
+        "  parameters: #{params.to_h.keys}\n" +
+        "  sources: #{sources}\n" +
+        "  targets: #{targets}\n" +
+        "  transforms: #{transforms}"
+    end
+
+
     # Execute the specified components of the job.
     #
     # @param components [Array<symbol>] list of components to execute (e.g., `:transforms`, `:load_targets`)
