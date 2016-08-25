@@ -2,10 +2,7 @@
 require_relative 'all_jobs_shared'
 require 'remi/data_subjects/salesforce'
 
-class SampleJob < Remi::Job
-
-  param(:sftp) { AllJobsShared.params[:sftp] }
-  param(:salesforce_credentials) { AllJobsShared.params[:salesforce_credentials] }
+class SampleJob < AllJobsShared
 
   param :program_name_lookup do
     RegexSieve.new(
