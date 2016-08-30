@@ -34,9 +34,9 @@ Gem::Specification.new do |s|
 #  s.add_runtime_dependency 'salesforce_bulk_api', ['0.0.12']
 
   s.add_development_dependency 'iruby', ['0.2.7']
-  s.add_development_dependency 'yard'
-  s.add_development_dependency 'redcarpet'
-  s.add_development_dependency 'github-markup'
+  s.add_development_dependency 'yard', ['~> 0.9']
+  s.add_development_dependency 'redcarpet', ['~> 3.3']
+  s.add_development_dependency 'github-markup', ['~> 1.4']
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
