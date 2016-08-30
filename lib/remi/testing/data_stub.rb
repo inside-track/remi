@@ -2,13 +2,13 @@ module Remi
   module Testing
     module DataStub
       def stub_row_array
-        @fields.values.map do |attribs|
+        fields.values.map do |attribs|
           stub_values(attribs)
         end
       end
 
       def empty_stub_df
-        self.df = Daru::DataFrame.new([], order: @fields.keys)
+        self.df = Daru::DataFrame.new([], order: fields.keys)
       end
 
       def stub_df

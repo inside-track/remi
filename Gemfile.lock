@@ -1,11 +1,10 @@
 GIT
   remote: git@github.com:inside-track/daru.git
-  revision: 80b8024102bdb31ef402cb8d6c5cef86dd31cd41
-  branch: itk-master
+  revision: e38e98890c99dee03ceedaca3a5faf40859042ab
+  branch: 0.1.4.1-Remi
   specs:
-    daru (0.1.2)
-      reportbuilder (~> 1.4)
-      spreadsheet (~> 1.1.1)
+    daru (0.1.4.1)
+      backports
 
 GIT
   remote: git@github.com:inside-track/salesforce_bulk_api.git
@@ -19,7 +18,7 @@ GIT
 PATH
   remote: .
   specs:
-    remi (0.2.42)
+    remi (0.3.0)
       activesupport (~> 4.2)
       bond (~> 0.5)
       cucumber (~> 2.1)
@@ -46,9 +45,9 @@ GEM
       jmespath (~> 1.0)
     aws-sdk-resources (2.3.5)
       aws-sdk-core (= 2.3.5)
+    backports (3.6.8)
     bond (0.5.1)
     builder (3.2.2)
-    clbustos-rtf (0.4.2)
     cucumber (2.3.3)
       builder (>= 2.1.2)
       cucumber-core (~> 1.4.0)
@@ -69,6 +68,7 @@ GEM
     faraday_middleware (0.10.0)
       faraday (>= 0.7.4, < 0.10)
     gherkin (3.2.0)
+    github-markup (1.4.0)
     hashie (3.4.3)
     i18n (0.7.0)
     iruby (0.2.7)
@@ -89,23 +89,10 @@ GEM
       net-ssh (>= 2.6.5)
     net-ssh (3.1.1)
     pg (0.18.4)
-    prawn (0.8.4)
-      prawn-core (>= 0.8.4, < 0.9)
-      prawn-layout (>= 0.8.4, < 0.9)
-      prawn-security (>= 0.8.4, < 0.9)
-    prawn-core (0.8.4)
-    prawn-layout (0.8.4)
-    prawn-security (0.8.4)
-    prawn-svg (0.9.1.11)
-      prawn (>= 0.8.4)
     rbczmq (1.7.9)
+    redcarpet (3.3.4)
     regex_sieve (0.1.0)
     regexp-examples (1.2.0)
-    reportbuilder (1.4.2)
-      clbustos-rtf (~> 0.4.0)
-      prawn (~> 0.8.4)
-      prawn-svg (~> 0.9.1)
-      text-table (~> 1.2)
     restforce (2.2.0)
       faraday (~> 0.9.0)
       faraday_middleware (>= 0.8.8)
@@ -124,25 +111,25 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.4.0)
     rspec-support (3.4.1)
-    ruby-ole (1.2.12)
-    spreadsheet (1.1.2)
-      ruby-ole (>= 1.0)
-    text-table (1.2.4)
     thread_safe (0.3.5)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     xml-simple (1.1.5)
+    yard (0.9.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   aws-sdk (~> 2.3)
-  daru (= 0.1.2)!
+  daru (= 0.1.4.1)!
+  github-markup
   iruby (= 0.2.7)
+  redcarpet
   remi!
   restforce (~> 2.1)
   salesforce_bulk_api!
+  yard
 
 BUNDLED WITH
    1.11.2

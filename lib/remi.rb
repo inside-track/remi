@@ -36,7 +36,11 @@ require 'active_support/core_ext/time/calculations'
 require 'remi/version.rb'
 
 require 'remi/settings'
+require 'remi/dsl'
 require 'remi/job'
+require 'remi/job/parameters'
+require 'remi/job/sub_job'
+require 'remi/job/transform'
 require 'remi/source_to_target_map'
 require 'remi/source_to_target_map/map'
 require 'remi/source_to_target_map/row'
@@ -44,21 +48,31 @@ require 'remi/field_symbolizers'
 
 require 'remi/refinements/symbolizer'
 
-require 'remi/extractor/file_system'
-require 'remi/extractor/local_file'
-require 'remi/extractor/sftp_file'
-require 'remi/extractor/s3_file'
+require 'remi/extractor'
+require 'remi/parser'
+require 'remi/encoder'
+require 'remi/loader'
 
+require 'remi/data_subject'
+require 'remi/data_subjects/file_system'
+require 'remi/data_subjects/local_file'
+require 'remi/data_subjects/sftp_file'
+require 'remi/data_subjects/s3_file'
+require 'remi/data_subjects/csv_file'
+#require 'remi/data_subjects/salesforce' # intentionally not included by default
+require 'remi/data_subjects/postgres'
+require 'remi/data_subjects/data_frame'
+require 'remi/data_subjects/none'
+require 'remi/data_subjects/sub_job'
 
 require 'remi/fields'
 require 'remi/data_frame'
 require 'remi/data_frame/daru'
 
-require 'remi/data_subject'
-require 'remi/data_subject/csv_file'
-#require 'remi/data_subject/salesforce' # intentionally not included by default
-require 'remi/data_subject/postgres'
-require 'remi/data_subject/sftp_file'
-require 'remi/data_subject/data_frame'
-
 require 'remi/transform'
+
+require 'remi/monkeys/daru'
+
+# Remi is Ruby Extract Modify and Integrate, a framework for writing ETL job in Ruby.
+module Remi
+end

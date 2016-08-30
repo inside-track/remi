@@ -82,3 +82,19 @@ describe Extractor::SftpFile do
     end
   end
 end
+
+
+describe Loader::SftpFile do
+  let(:loader) { Loader::SftpFile.new(credentials: {}, remote_path: 'some_path') }
+  let(:data) { double('some_data') }
+  let(:sftp_session) { instance_double('Net:SFTP::Session') }
+
+  before do
+    allow(Net::SFTP).to receive(:start).and_yield sftp_session
+  end
+
+  it 'loads a csv to a target sftp filesystem' do
+    expect(sftp_session).to receive(:upload!).with(data, 'some_path')
+    loader.load data
+  end
+end

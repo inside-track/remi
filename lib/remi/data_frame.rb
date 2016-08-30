@@ -1,12 +1,12 @@
 module Remi
   module DataFrame
     class << self
-      def create(remi_df_type = :daru, *args, **kargs, &block)
-        dataframe = case remi_df_type
+      def create(df_type = :daru, *args, **kargs, &block)
+        dataframe = case df_type
           when :daru
             Remi::DataFrame::Daru.new(*args, **kargs, &block)
           else
-            raise TypeError, "Unknown frame type: #{remi_df_type}"
+            raise TypeError, "Unknown frame type: #{df_type}"
           end
       end
 
@@ -29,7 +29,7 @@ module Remi
     end
 
     # Public: Returns the type of DataFrame
-    def remi_df_type
+    def df_type
       raise NoMethodError, "#{__method__} not defined for #{self.class.name}"
     end
   end

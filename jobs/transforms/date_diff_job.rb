@@ -1,24 +1,28 @@
 require_relative '../all_jobs_shared'
 
-class DateDiffJob
-  include AllJobsShared
+class DateDiffJob < Remi::Job
 
-  define_param :measure, :days
-  define_source :source_data, Remi::DataSource::DataFrame,
-    fields: {
-      :date1 => { type: :date, format: '%Y-%m-%d' },
-      :date2 => { type: :date, format: '%Y-%m-%d' }
-    }
-  define_target :target_data, Remi::DataTarget::DataFrame
+  param(:measure) { :days }
 
-  define_transform :main, sources: :source_data, targets: :target_data do
+  source :source_data do
+    fields(
+      {
+        :date1 => { type: :date, format: '%Y-%m-%d' },
+        :date2 => { type: :date, format: '%Y-%m-%d' }
+      }
+    )
+  end
+
+  target :target_data
+
+  transform :main do
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(:date1, :date2) .target(:difference)
         .transform(->(row) {
           row[:date1] = Date.strptime(row[:date1])
           row[:date2] = Date.strptime(row[:date2])
         })
-        .transform(Remi::Transform::DateDiff.new(params[:measure]))
+        .transform(Remi::Transform::DateDiff.new(job.params[:measure]))
     end
   end
 end

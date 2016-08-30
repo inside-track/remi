@@ -12,6 +12,7 @@ module Remi
                                            gsub(/[^0-9a-zA-Z_.]+/, "").to_sym
         }
       }
+
     end
   end
 end

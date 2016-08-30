@@ -175,7 +175,7 @@ module Remi::Testing::BusinessRules
     end
 
     def run_transforms
-      @job.run_all_transforms
+      @job.execute(:transforms)
     end
   end
 
@@ -262,7 +262,6 @@ module Remi::Testing::BusinessRules
     end
 
     attr_reader :name
-    attr_reader :data_subject
 
     def add_field(field_name)
       @fields.add_field(self, field_name)
@@ -277,17 +276,17 @@ module Remi::Testing::BusinessRules
     end
 
     def size
-      @data_subject.df.size
+      data_subject.df.size
     end
 
-    def get_attrib(name)
-      @data_subject.send(name)
+    def data_subject
+      @data_subject.dsl_eval
     end
 
     # Public: Converts the data subject to a hash where the keys are the table
     # columns and the values are an array for the value of column for each row.
     def column_hash
-      @data_subject.df.to_h.reduce({}) do |h, (k,v)|
+      data_subject.df.to_h.reduce({}) do |h, (k,v)|
         h[k.symbolize] = v.to_a
         h
       end
@@ -297,7 +296,7 @@ module Remi::Testing::BusinessRules
     # Need more robust duping to make that feasible.
     # Don't use results for anything more than size.
     def where(field_name, operation)
-      @data_subject.df.where(@data_subject.df[field_name.symbolize(@data_subject.field_symbolizer)].recode { |v| operation.call(v) })
+      data_subject.df.where(data_subject.df[field_name.symbolize(data_subject.field_symbolizer)].recode { |v| operation.call(v) })
     end
 
     def where_is(field_name, value)
@@ -323,11 +322,11 @@ module Remi::Testing::BusinessRules
 
 
     def stub_data
-      @data_subject.stub_df if @data_subject.respond_to? :stub_df
+      data_subject.stub_df if data_subject.respond_to? :stub_df
     end
 
     def example_to_df(example)
-      df = example.to_df(@data_subject.df.row[0].to_h, field_symbolizer: @data_subject.field_symbolizer)
+      df = example.to_df(data_subject.df.row[0].to_h, field_symbolizer: data_subject.field_symbolizer)
       data_subject.fields.each do |vector, metadata|
         if metadata[:type] == :json
           df[vector].recode! { |v| JSON.parse(v) rescue v }
@@ -338,20 +337,20 @@ module Remi::Testing::BusinessRules
 
     def stub_data_with(example)
       stub_data
-      @data_subject.df = example_to_df(example)
+      data_subject.df = example_to_df(example)
     end
 
     def append_data_with(example)
-      @data_subject.df = @data_subject.df.concat example_to_df(example)
+      data_subject.df = data_subject.df.concat example_to_df(example)
     end
 
 
     def replicate_rows(n_rows)
-      replicated_df = Daru::DataFrame.new([], order: @data_subject.df.vectors.to_a)
-      @data_subject.df.each do |vector|
+      replicated_df = Daru::DataFrame.new([], order: data_subject.df.vectors.to_a)
+      data_subject.df.each do |vector|
         replicated_df[vector.name] = vector.to_a * n_rows
       end
-      @data_subject.df = replicated_df
+      data_subject.df = replicated_df
     end
 
     def cumulative_dist_from_freq_table(table, freq_field: 'frequency')
@@ -383,28 +382,23 @@ module Remi::Testing::BusinessRules
 
     def distribute_values(table)
       cumulative_dist = cumulative_dist_from_freq_table(table)
-      generated_data = generate_values_from_cumulative_dist(@data_subject.df.size, cumulative_dist)
+      generated_data = generate_values_from_cumulative_dist(data_subject.df.size, cumulative_dist)
 
       generated_data.each do |field_name, data_array|
         vector_name = fields[field_name].field_name
-        @data_subject.df[vector_name] = Daru::Vector.new(data_array, index: @data_subject.df.index)
+        data_subject.df[vector_name] = Daru::Vector.new(data_array, index: data_subject.df.index)
       end
     end
 
     def freq_by(*field_names)
-      @data_subject.df.group_by(field_names).size * 1.0 / @data_subject.df.size
+      data_subject.df.group_by(field_names).size * 1.0 / data_subject.df.size
     end
 
     def unique_integer_field(field_name)
       vector_name = fields[field_name].field_name
       i = 0
-      @data_subject.df[vector_name].recode! { |v| i += 1 }
+      data_subject.df[vector_name].recode! { |v| i += 1 }
     end
-
-    def csv_options
-      @data_subject.csv_options
-    end
-
   end
 
 

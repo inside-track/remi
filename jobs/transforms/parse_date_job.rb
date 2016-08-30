@@ -1,28 +1,31 @@
 require_relative '../all_jobs_shared'
 
-class ParseDateJob
-  include AllJobsShared
+class ParseDateJob < Remi::Job
 
-  define_param :format, '%Y-%m-%d'
-  define_param :if_blank, nil
-  define_source :source_data, Remi::DataSource::DataFrame,
-    fields: {
-      :date_string  => { type: :date, in_format: params[:format] },
-      :stubbed_date => { type: :date, in_format: params[:format] }
-    }
-  define_target :target_data, Remi::DataTarget::DataFrame
+  param(:format) { '%Y-%m-%d' }
+  param(:if_blank) { nil }
 
-  define_transform :main, sources: :source_data, targets: :target_data do
+  source :source_data do
+    fields(
+      {
+        :date_string  => { type: :date, in_format: params[:format] },
+        :stubbed_date => { type: :date, in_format: params[:format] }
+      }
+    )
+  end
 
+  target :target_data
+
+  transform :main do
     # Only needed for testing, would be nice to make it testable without this
-    params[:if_blank] = ['high', 'low'].include?(params[:if_blank]) ? params[:if_blank].to_sym : params[:if_blank]
+    job.params[:if_blank] = ['high', 'low'].include?(job.params[:if_blank]) ? job.params[:if_blank].to_sym : job.params[:if_blank]
 
     Remi::SourceToTargetMap.apply(source_data.df, target_data.df) do
       map source(:date_string) .target(:parsed_date)
-        .transform(Remi::Transform::ParseDate.new(in_format: params[:format], if_blank: params[:if_blank]))
+        .transform(Remi::Transform::ParseDate.new(in_format: job.params[:format], if_blank: job.params[:if_blank]))
 
       map source(:stubbed_date) .target(:parsed_stubbed_date)
-        .transform(Remi::Transform::ParseDate.new(in_format: source_data.fields[:stubbed_date][:in_format], if_blank: params[:if_blank]))
+        .transform(Remi::Transform::ParseDate.new(in_format: source_data.fields[:stubbed_date][:in_format], if_blank: job.params[:if_blank]))
     end
   end
 end
