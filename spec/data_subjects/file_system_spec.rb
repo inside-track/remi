@@ -5,15 +5,15 @@ describe Extractor::FileSystem do
     now = Time.new
 
     example_files = [
-      { pathname: "pdir/ApplicantsA-9.csv", create_time: now - 10.minutes },
-      { pathname: "pdir/ApplicantsA-3.csv", create_time: now - 5.minutes },
-      { pathname: "pdir/ApplicantsA-5.csv", create_time: now - 1.minutes },
-      { pathname: "pdir/ApplicantsB-7.csv", create_time: now - 10.minutes },
-      { pathname: "pdir/ApplicantsB-6.csv", create_time: now - 5.minutes },
-      { pathname: "pdir/ApplicantsB-2.csv", create_time: now - 1.minutes },
-      { pathname: "pdir/ApplicantsB-2.txt", create_time: now - 0.minutes },
-      { pathname: "pdir/Apples.csv",        createtime: now - 1.minutes },
-      { pathname: "otherdir/ApplicantsA-11.csv", createtime: now - 1.minutes },
+      { pathname: "pdir/ApplicantsA-9.csv",      create_time: now - 10.minutes },
+      { pathname: "pdir/ApplicantsA-3.csv",      create_time: now - 5.minutes  },
+      { pathname: "pdir/ApplicantsA-5.csv",      create_time: now - 1.minutes  },
+      { pathname: "pdir/ApplicantsB-7.csv",      create_time: now - 10.minutes },
+      { pathname: "pdir/ApplicantsB-6.csv",      create_time: now - 5.minutes  },
+      { pathname: "pdir/ApplicantsB-2.csv",      create_time: now - 1.minutes  },
+      { pathname: "pdir/ApplicantsB-2.txt",      create_time: now - 0.minutes  },
+      { pathname: "pdir/Apples.csv",             create_time: now - 1.minutes  },
+      { pathname: "otherdir/ApplicantsA-11.csv", create_time: now - 1.minutes  },
     ]
 
     remote_path = 'pdir'
@@ -88,6 +88,40 @@ describe Extractor::FileSystem do
     end
   end
 
+
+  context 'extracting the most recent file by create time' do
+    before do
+      @params.merge!({
+         most_recent_within_n: 1.hour,
+         most_recent_only: true
+      })
+    end
+
+    it 'extracts the files within n hours of creation' do
+      expect(file_system.entries.map(&:name)).to match_array([
+        "ApplicantsB-2.txt"
+      ])
+    end
+  end
+
+  context 'extracting all recent files by create time' do
+    before do
+      @params.merge!({
+         created_within: 0.02.hours,
+         most_recent_only: false
+      })
+    end
+
+    it 'extracts the files within n hours of creation' do
+      puts @params
+      expect(file_system.entries.map(&:name)).to match_array([
+        "Apples.csv",
+        "ApplicantsA-5.csv",
+        "ApplicantsB-2.csv",
+        "ApplicantsB-2.txt"
+      ])
+    end
+  end
 
   context 'extracting files matching a pattern with a by group' do
     before do

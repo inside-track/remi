@@ -50,6 +50,8 @@ module Remi
     attr_reader :most_recent_only
     attr_reader :group_by
     attr_reader :most_recent_by
+    attr_reader :created_within
+
 
     # Public: Called to extract files from the source filesystem.
     #
@@ -70,6 +72,8 @@ module Remi
         most_recent_matching_entry_in_group
       elsif @most_recent_only
         Array(most_recent_matching_entry)
+      elsif @created_within
+        get_created_within
       else
         matching_entries
       end
@@ -81,6 +85,29 @@ module Remi
 
     def most_recent_matching_entry
       matching_entries.sort_by { |e| e.send(@most_recent_by) }.reverse.first
+    end
+
+    def get_created_within
+
+      if @most_recent_only
+        first_entry = matching_entries.sort_by { |e| e.send(@most_recent_by)}.reverse.first
+        if ((Date.today.to_time - Time.at(first_entry.create_time)) / 1.hour) < @created_within
+          Array(first_entry)
+        else
+          raise "No file Found. All files are older than #{@created_within} hrs"
+        end
+      else
+        entries_with_group = matching_entries.map do |entry|
+          if ((Time.new.to_time - Time.at(entry.create_time) ) / 1.seconds) < @created_within
+            entry
+          end
+        end.compact
+        if entries_with_group.length > 0
+          Array(entries_with_group)
+        else
+          raise "No files Found. All files are older than #{@created_within} hrs"
+        end
+      end
     end
 
     def most_recent_matching_entry_in_group
@@ -103,13 +130,16 @@ module Remi
 
     private
 
-    def init_file_system(*args, remote_path:, pattern: /.*/, local_path: Settings.work_dir, most_recent_only: false, group_by: nil, most_recent_by: :create_time, **kargs, &block)
+    def init_file_system(*args, remote_path:, pattern: /.*/, local_path: Settings.work_dir, most_recent_only: false, group_by: nil, most_recent_by: :create_time, created_within: nil, **kargs, &block)
+
       @remote_path = Pathname.new(remote_path)
       @pattern = pattern
       @local_path = Pathname.new(local_path)
       @most_recent_only = most_recent_only
       @group_by = group_by
       @most_recent_by = most_recent_by
+      @created_within = created_within
+
     end
   end
 end
