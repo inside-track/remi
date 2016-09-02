@@ -521,19 +521,22 @@ module Remi::Testing::BusinessRules
       @table = table
     end
 
+    def parse_formula(value)
+      parsed_value = ParseFormula.parse(value)
+      case parsed_value
+      when '\nil'
+        nil
+      else
+        parsed_value
+      end
+    end
+
     def to_df(seed_hash, field_symbolizer:)
       table_headers = @table.headers.map { |h| h.symbolize(field_symbolizer) }
       df = Daru::DataFrame.new([], order: seed_hash.keys | table_headers)
       @table.hashes.each do |example_row|
         example_row_sym = example_row.reduce({}) do |h, (k,v)|
-          formula_value = ParseFormula.parse(v)
-          value = case formula_value
-            when '\nil'
-              nil
-            else
-              formula_value
-            end
-          h[k.symbolize(field_symbolizer)] = value
+          h[k.symbolize(field_symbolizer)] = parse_formula(v)
           h
         end
         df.add_row(seed_hash.merge(example_row_sym))
@@ -546,7 +549,7 @@ module Remi::Testing::BusinessRules
     def column_hash
       @table.hashes.reduce({}) do |h, row|
         row.each do |k,v|
-          (h[k.symbolize] ||= []) << v
+          (h[k.symbolize] ||= []) << parse_formula(v)
         end
         h
       end
