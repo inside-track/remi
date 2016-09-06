@@ -18,5 +18,11 @@ module Remi
       raise NoMethodError, "#{__method__} not defined for #{self.class.name}"
     end
 
+    # If autoload is set to true, then any loaders are called at the moment
+    # a dataframe is assigned to a target (e.g., `my_target.df = some_df` will
+    # call `#load` on any loaders associated with `my_target`).
+    def autoload
+      false
+    end
   end
 end

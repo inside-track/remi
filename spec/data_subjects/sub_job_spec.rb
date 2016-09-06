@@ -19,6 +19,12 @@ describe 'sub jobs' do
       allow(sub_job.job.sub_target).to receive(:df) { 'sub target df' }
       expect(extractor.extract).to eq 'sub target df'
     end
+
+    it 'executes the sub job when data is requested' do
+      expect(sub_job).to receive(:execute).once
+      extractor.extract
+    end
+
   end
 
   describe Loader::SubJob do
@@ -28,6 +34,10 @@ describe 'sub jobs' do
       some_data_frame = Daru::DataFrame.new({ a: [1,2,3] })
       loader.load(some_data_frame)
       expect(sub_job.job.sub_source.df).to eq some_data_frame
+    end
+
+    it 'autoloads the target' do
+      expect(loader.autoload).to be true
     end
   end
 end

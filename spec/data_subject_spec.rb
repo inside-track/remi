@@ -378,7 +378,6 @@ describe DataTarget do
       end
     end
 
-
     context '#field_symbolizer' do
       context 'field_symbolizer called before encoder' do
         let(:before_encoder) do
@@ -503,6 +502,23 @@ describe DataTarget do
         data_target.load!
         data_target.load!
       end
+    end
+  end
+
+  context '#df=' do
+    before do
+      data_target.encoder my_encoder
+      data_target.loader my_loader
+      data_target.loader my_loader2
+
+      allow(my_loader).to receive(:autoload) { false }
+      allow(my_loader2).to receive(:autoload) { true }
+    end
+
+    it 'loads any loaders set to autoload' do
+      expect(my_loader).not_to receive :load
+      expect(my_loader2).to receive :load
+      data_target.df = Remi::DataFrame::Daru.new([])
     end
   end
 end

@@ -73,14 +73,14 @@ class SubJobExampleJob < Remi::Job
   target :zombified_beers
 
   transform :zombification do
-    # Sub jobs must be executed before their sources are available
-    beers_job.execute
+    # Sub jobs are executed when data from a sub job is requested
+    # Here, the sub job beers_job is executed
     just_beers.df = beer_fridge.df
 
-    # Sub job targets must be loaded before they are available to subjobs
+    # Data is supplied to the sub job on assignment
     beers_to_zombify.df = just_beers.df
-    beers_to_zombify.load
-    zombify_job.execute
+
+    # Here, the sub job zombify_job is executed using the data supplied to it above
     zombified_beers.df = zombie_fridge.df
   end
 end

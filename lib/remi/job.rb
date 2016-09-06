@@ -271,7 +271,8 @@ module Remi
         "  parameters: #{params.to_h.keys}\n" +
         "  sources: #{sources}\n" +
         "  targets: #{targets}\n" +
-        "  transforms: #{transforms}"
+        "  transforms: #{transforms}\n" +
+        "  sub_jobs: #{sub_jobs}"
     end
 
 
@@ -282,6 +283,7 @@ module Remi
     # @return [self]
     def execute(*components)
       execute_transforms if components.empty? || components.include?(:transforms)
+      execute_sub_jobs if components.empty? || components.include?(:sub_jobs)
       execute_load_targets if components.empty? || components.include?(:load_targets)
       self
     end
@@ -331,6 +333,12 @@ module Remi
     # Loads all targets defined
     def execute_load_targets
       targets.each { |t| send(t).load }
+      self
+    end
+
+    # Executes all subjobs (not already executed)
+    def execute_sub_jobs
+      sub_jobs.each { |sj| send(sj).execute }
       self
     end
 

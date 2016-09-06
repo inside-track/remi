@@ -24,7 +24,13 @@ module Remi
       end
 
       def execute
-        job.execute
+        execute! unless @executed
+      end
+
+      def execute!
+        result = job.execute
+        @executed = true
+        result
       end
 
       def execute_transforms

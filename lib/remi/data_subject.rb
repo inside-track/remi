@@ -64,6 +64,7 @@ module Remi
 
     # @return [Remi::DataFrame] the dataframe associated with this DataSubject
     def df
+      dsl_eval
       @dataframe ||= Remi::DataFrame.create(df_type, [], order: fields.keys)
     end
 
@@ -71,6 +72,7 @@ module Remi
     # @param new_dataframe [Object] The new dataframe object to be associated.
     # @return [Remi::DataFrame] the associated dataframe
     def df=(new_dataframe)
+      dsl_eval
       if new_dataframe.respond_to? :df_type
         @dataframe = new_dataframe
       else
@@ -269,7 +271,7 @@ module Remi
     # @return [true] if successful
     def load
       return nil if @loaded || df.size == 0
-      dsl_eval if @block
+      dsl_eval
 
       load!
       @loaded = true
@@ -282,6 +284,12 @@ module Remi
     def load!
       loaders.each { |l| l.load encoded_dataframe }
       true
+    end
+
+    def df=(new_dataframe)
+      super
+      loaders.each { |l| l.load encoded_dataframe if l.autoload }
+      df
     end
 
     private
