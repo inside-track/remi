@@ -123,13 +123,13 @@ PLATFORMS
 DEPENDENCIES
   aws-sdk (~> 2.3)
   daru (= 0.1.4.1)!
-  github-markup
+  github-markup (~> 1.4)
   iruby (= 0.2.7)
-  redcarpet
+  redcarpet (~> 3.3)
   remi!
   restforce (~> 2.1)
   salesforce_bulk_api!
-  yard
+  yard (~> 0.9)
 
 BUNDLED WITH
    1.11.2

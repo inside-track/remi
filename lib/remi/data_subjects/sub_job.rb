@@ -11,6 +11,7 @@ module Remi
     attr_accessor :sub_job, :data_subject
 
     def extract
+      sub_job.execute
       sub_job.job.send(data_subject).df
     end
 
@@ -37,6 +38,10 @@ module Remi
     # @return [true] On success
     def load(data_frame)
       sub_job.job.send(data_subject).df = data_frame
+      true
+    end
+
+    def autoload
       true
     end
 

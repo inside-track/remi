@@ -292,25 +292,25 @@ describe Job do
     it 'does something awesome'
   end
 
-  context '#execute' do
+  context '#execute', wip: true do
     before do
       class MyJob
-        transform :transform_one do
-        end
-
-        transform :transform_two do
-        end
-
-        target :target_one do
-        end
-
-        target :target_two do
-        end
+        transform(:transform_one) {}
+        transform(:transform_two) {}
+        sub_job(:sub_job_one) { Remi::Job.new }
+        sub_job(:sub_job_two) { Remi::Job.new }
+        target(:target_one) {}
+        target(:target_two) {}
       end
     end
 
     it 'executes all transforms' do
       expect(job).to receive(:execute_transforms)
+      job.execute
+    end
+
+    it 'executes all subjobs' do
+      expect(job).to receive(:execute_sub_jobs)
       job.execute
     end
 
@@ -330,9 +330,36 @@ describe Job do
         job.execute(:transforms)
       end
 
+      it 'does not execute all sub jobs' do
+        expect(job).not_to receive(:execute_sub_jobs)
+        job.execute(:transforms)
+      end
+
       it 'does not load all targets' do
         expect(job).not_to receive(:execute_load_targets)
         job.execute(:transforms)
+      end
+    end
+
+    context '#execute(:sub_jobs)', wip2: true do
+      it 'executes all sub_jobs' do
+        [:sub_job_one, :sub_job_two].each do |sub_job_name|
+          sub_job = instance_double(Job::SubJob)
+          expect(sub_job).to receive(:execute)
+          expect(job).to receive(sub_job_name) .and_return(sub_job)
+        end
+
+        job.execute(:sub_jobs)
+      end
+
+      it 'does not execute all transforms' do
+        expect(job).not_to receive(:execute_transforms)
+        job.execute(:sub_jobs)
+      end
+
+      it 'does not load all targets' do
+        expect(job).not_to receive(:execute_load_targets)
+        job.execute(:sub_jobs)
       end
     end
 
@@ -349,6 +376,11 @@ describe Job do
 
       it 'does not execute all transforms' do
         expect(job).not_to receive(:execute_transforms)
+        job.execute(:load_targets)
+      end
+
+      it 'does not execute all sub jobs' do
+        expect(job).not_to receive(:execute_sub_jobs)
         job.execute(:load_targets)
       end
     end
@@ -492,6 +524,12 @@ describe Job do
     context '#execute' do
       it 'executes the sub job' do
         expect(sub_job).to receive(:execute)
+        job_sub_job.execute
+      end
+
+      it 'only executes the sub job once' do
+        expect(sub_job).to receive(:execute).once
+        job_sub_job.execute
         job_sub_job.execute
       end
     end
