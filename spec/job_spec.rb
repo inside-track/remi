@@ -70,11 +70,11 @@ describe Job do
         class MyJob
           sub_job(:my_sub_job) { 'something' }
         end
-        expect { job.my_sub_job.job }.to raise_error ArgumentError
+        expect { job.my_sub_job.sub_job }.to raise_error ArgumentError
       end
 
       it 'returns a Remi job' do
-        expect(job.my_sub_job.job).to be_a Remi::Job
+        expect(job.my_sub_job.sub_job).to be_a Remi::Job
       end
     end
 
@@ -501,9 +501,9 @@ describe Job do
       Job::SubJob.new { scoped_sub_job }
     end
 
-    context '#job' do
+    context '#sub_job' do
       it 'returns the job instance for the sub job' do
-        expect(job_sub_job.job).to eq sub_job
+        expect(job_sub_job.sub_job).to eq sub_job
       end
     end
 
