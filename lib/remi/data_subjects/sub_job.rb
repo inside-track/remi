@@ -12,7 +12,7 @@ module Remi
 
     def extract
       sub_job.execute
-      sub_job.job.send(data_subject).df
+      sub_job.sub_job.send(data_subject).df
     end
 
     private
@@ -37,7 +37,7 @@ module Remi
     # @param data_frame [Object] Data frame to load to target sub job data subject
     # @return [true] On success
     def load(data_frame)
-      sub_job.job.send(data_subject).df = data_frame
+      sub_job.sub_job.send(data_subject).df = data_frame
       true
     end
 

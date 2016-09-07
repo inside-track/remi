@@ -16,7 +16,7 @@ describe 'sub jobs' do
     let(:extractor) { Extractor::SubJob.new(sub_job: sub_job, data_subject: :sub_target) }
 
     it 'returns the data from the sub-job' do
-      allow(sub_job.job.sub_target).to receive(:df) { 'sub target df' }
+      allow(sub_job.sub_job.sub_target).to receive(:df) { 'sub target df' }
       expect(extractor.extract).to eq 'sub target df'
     end
 
@@ -33,7 +33,7 @@ describe 'sub jobs' do
     it 'populates the sub-job data frame' do
       some_data_frame = Daru::DataFrame.new({ a: [1,2,3] })
       loader.load(some_data_frame)
-      expect(sub_job.job.sub_source.df).to eq some_data_frame
+      expect(sub_job.sub_job.sub_source.df).to eq some_data_frame
     end
 
     it 'autoloads the target' do
