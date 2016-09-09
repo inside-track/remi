@@ -4,11 +4,12 @@ module Remi
   # define specific ways to load data.
   class Loader
 
-    def initialize(*args, logger: Remi::Settings.logger, **kargs, &block)
+    def initialize(*args, context: nil, logger: Remi::Settings.logger, **kargs, &block)
+      @context = context
       @logger = logger
     end
 
-    attr_accessor :logger
+    attr_accessor :logger, :context
 
     # Any child classes need to define a load method that loads data from
     # the given dataframe into the target system.
@@ -23,6 +24,11 @@ module Remi
     # call `#load` on any loaders associated with `my_target`).
     def autoload
       false
+    end
+
+    # @return [Remi::Fields] The fields defined in the context
+    def fields
+      context && context.respond_to?(:fields) ? context.fields : Remi::Fields.new({})
     end
   end
 end

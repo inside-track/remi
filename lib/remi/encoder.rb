@@ -38,7 +38,7 @@ module Remi
 
     # @return [Remi::Fields] The fields (uses the context fields if defined)
     def fields
-      return context.fields if context if context.respond_to? :fields
+      return context.fields if context && context.respond_to?(:fields)
       @fields
     end
   end

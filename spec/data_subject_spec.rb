@@ -339,7 +339,9 @@ describe DataTarget do
 
   before do
     allow(my_loader).to receive(:load)
+    allow(my_loader).to receive(:context=)
     allow(my_loader2).to receive(:load)
+    allow(my_loader2).to receive(:context=)
     allow(my_encoder).to receive(:encode) .and_return 'encoded data'
   end
 
@@ -447,15 +449,15 @@ describe DataTarget do
   end
 
   context '#loader' do
-    before { data_target.loader 'my_loader' }
+    before { data_target.loader my_loader }
 
     it 'adds a loader to the list of loaders' do
-      expect(data_target.loaders).to eq ['my_loader']
+      expect(data_target.loaders).to eq [my_loader]
     end
 
     it 'allows for multiple loaders to be defined' do
-      data_target.loader 'my_loader2'
-      expect(data_target.loaders).to eq ['my_loader', 'my_loader2']
+      data_target.loader my_loader2
+      expect(data_target.loaders).to eq [my_loader, my_loader2]
     end
   end
 
