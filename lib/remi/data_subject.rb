@@ -261,6 +261,7 @@ module Remi
     # @param obj [Object] adds a loader object to the list of loaders
     # @return [Array] the full list of loaders
     def loader(obj)
+      obj.context = self
       loaders << obj unless loaders.include? obj
     end
 
