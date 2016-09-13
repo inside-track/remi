@@ -5,6 +5,7 @@ describe 'sub jobs' do
     Object.send(:remove_const, :MySubJob) if Object.constants.include?(:MySubJob)
     class MySubJob < Job
       source :sub_source do
+        extractor Extractor::None.new
         fields({ a: { from_sub_job: true, to_overwrite: 'from_sub_job' } })
       end
       target(:sub_target) {}
@@ -15,18 +16,23 @@ describe 'sub jobs' do
 
 
   describe Extractor::SubJob do
-    let(:extractor) { Extractor::SubJob.new(sub_job: sub_job, data_subject: :sub_target) }
+    let(:target_extractor) { Extractor::SubJob.new(sub_job: sub_job, data_subject: :sub_target) }
+    let(:source_extractor) { Extractor::SubJob.new(sub_job: sub_job, data_subject: :sub_source) }
 
     it 'returns the data from the sub-job' do
       allow(sub_job.sub_job.sub_target).to receive(:df) { 'sub target df' }
-      expect(extractor.extract).to eq 'sub target df'
+      expect(target_extractor.extract).to eq 'sub target df'
     end
 
-    it 'executes the sub job when data is requested' do
+    it 'executes the sub job when target data is requested' do
       expect(sub_job).to receive(:execute).once
-      extractor.extract
+      target_extractor.extract
     end
 
+    it 'does not execute the sub job when source data is requested' do
+      expect(sub_job).not_to receive(:execute)
+      source_extractor.extract
+    end
   end
 
   describe Loader::SubJob do
