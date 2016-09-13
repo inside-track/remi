@@ -514,6 +514,11 @@ module Remi
         type == :string ? '' : nil
       end
 
+      def truthy(value)
+        @truthy ||= Truthy.new(allow_nils: false).to_proc
+        @truthy.call(value)
+      end
+
       def transform(value)
         if value.blank? && type != :json
           blank_handler(value)
@@ -537,6 +542,10 @@ module Remi
             else
               value.is_a?(Hash) || value.is_a?(Array) ? value : JSON.parse(value)
             end
+          when :boolean
+            # Ugh, there is a bug with Daru 0.1.4 that converts false values to nil when joining
+            # For now, we'll just standardize boolean values (#to_s)
+            truthy(value).to_s
           else
             raise ArgumentError, "Unknown type enforcement: #{type}"
           end
