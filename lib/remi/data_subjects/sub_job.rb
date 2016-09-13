@@ -11,7 +11,7 @@ module Remi
     attr_accessor :sub_job, :data_subject
 
     def extract
-      sub_job.execute
+      sub_job.execute unless sub_job.sub_job.send(data_subject).is_a? Remi::DataSource
       sub_job.sub_job.send(data_subject).df
     end
 
