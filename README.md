@@ -24,6 +24,11 @@ Remi will follow [semantic versioning](http://semver.org/) principles.
 Of course, while we're still on major version zero, little effort will
 be made to maintain backward compatibility.
 
+The data transformation layer is built on top of
+[Daru dataframe](https://github.com/v0dro/daru).  Familiarity with
+Daru dataframes is essential for writing complex transformations in
+Remi.
+
 ## Getting Started
 
 Add the gem to your Gemfile, `bundle install`, and then initialize your repository as
@@ -40,7 +45,247 @@ sure this works by running
 
 All of the test should pass.
 
+## Remi Jobs
+
+A Remi job describes the data sources that will be used to collect
+data, the transformations that will be performed on the data, and the
+data targets that will be populated when all transformations are
+complete.  With Remi, an ETL process is defined in a class that
+inherits from the `Remi::Job` class.
+
+### Hello World
+
+A very simple "Hello World" example of a Remi job would be
+
+````ruby
+class HelloWorldJob < Remi::Job
+  transform :say_hi do
+    puts "Hello World"
+  end
+end
+````
+
+This job doesn't make use of any data subjects (data sources or data
+targets), but it does define a single data transform called `:say_hi`.
+The full job can be executed by calling the `#execute` method on an
+instance of the `HelloWorldJob` class
+
+````ruby
+job = HelloWorldJob.new
+job.execute
+#=> "Hello World"
+````
+
+The transform called `say_hi` is just a method of the `HelloWorldJob`
+class representing a job transform object.  Multiple transforms can be
+defined in a Remi job.  To execute a specific transform we can call that transform by
+name using
+
+````ruby
+job = HelloWorldJob.new
+job.say_hi.execute
+#=> "Hello World"
+````
+
+### A more complete example
+
+Suppose we have a database containing data on beer sales.  It's a
+normalized database where we store data on individual beers sold in a
+`beer_sales_fact` table and information on the details of the beer in
+a `beers_dim` table.  We'd like to extract data from both of these
+sources, combine them into a single flattened table and save it as a
+CSV file. This operation could be performed with the following Remi
+job.  (Of course, if this were a real world problem, we'd do the join
+in the database before extracting; this is a contrived example to show
+how one can combine data from multiple arbitrary sources).
+
+
+````ruby
+class DenormalizeBeersJob < Remi::Job
+  source :beer_sales_fact do
+    extractor Remi::Extractor::Postgres.new(
+      credentials: {
+        dbname: 'my_local_db'
+      },
+      query: 'SELECT beer_id, sold_date, quantity FROM beer_sales_fact'
+    )
+    parser Remi::Parser::Postgres.new
+
+    fields(
+      {
+        :beer_id  => {},
+        :sold_at  => { type: :date, in_format: '%Y-%m-%d' },
+        :quantity => { type: :integer }
+      }
+    )
+  end
+
+  source :beers_dim do
+    extractor Remi::Extractor::Postgres.new(
+      credentials: {
+        dbname: 'my_local_db'
+      },
+      query: 'SELECT beer_id, name, price_per_unit FROM beers_dim'
+    )
+    parser Remi::Parser::Postgres.new
+
+    fields(
+      {
+        :beer_id        => {},
+        :name           => {},
+        :price_per_unit => { type: :decimal, scale: 2 }
+      }
+    )
+  end
+
+  target :flat_beer_file do
+    encoder Remi::Encoder::CsvFile.new
+    loader Remi::Loader::LocalFile.new(
+      path: 'flat_beers.csv'
+    )
+  end
+
+  transform :type_enforcement do
+    beer_sales_fact.enforce_types
+    beers_dim.enforce_types
+  end
+
+  transform :flatten do
+    flat_beer_file.df = beer_sales_fact.df.join(flat_beer_file.df, on: [:beer_id], how: :inner)
+
+    Remi::SourceToTargetMap.apply(flat_beer_file.df) do
+      map source(:quantity, :price_per_unit) .target(:total_price)
+        .transform(->(row) {
+          row[:quantity] * row[:price_per_unit]
+        })
+    end
+  end
+end
+````
+
+### Components of a Remi Job
+
+A Remi job is composed of one or more of the following elements, which are described
+in more detail below.  All of these elements are defined using class methods (part
+of `Remi::Job`).  Each of the elements is given a name and defined in a block.
+
+* Data Subjects - A data subject is either a data source or a data target.
+  * Data Sources - A data source describes where data is extracted from.
+  ````ruby
+  source :my_source do
+    # ... source definition
+  end
+  ````
+  * Data Targets - A data target describes where data is loaded to.
+  ````ruby
+  target :my_target do
+    # ... target definition
+  end
+  ````
+
+* Transforms - A transform is essentially arbitrary block of of Ruby
+  code, but is typically used to transform data sources into data targets.
+  ````ruby
+  transform :my_transform do
+    # ... lots of code
+  end
+  ````
+
+* Job Parameters - A job parameter is a memoized block of code
+  (similar to RSpecs' `let` method) that is used to configure a job and may
+  be overridden at runtime if needed.
+  ````ruby
+  param :my_param do
+    # ... the return value of this block is memoized
+  end
+  ````
+
+* Sub Transforms - Sub transforms are essentially transforms, but they are NOT
+  automatically executed when the job is executed.  Instead, they must be _imported_
+  in a transform.  They are meant to be reusable bits of transform code.
+  ````ruby
+  sub_transform :my_sub_transform do
+    #... sub_transform stuff
+  end
+  ````
+
+* Sub Jobs - Sub jobs are simply references to other Remi jobs that may be executed
+  within the current job.
+  ````ruby
+  sub_job :my_sub_job { MySubJob.new }
+  ````
+
+
+
+### Execution Plan
+
+The `DenormalizeBeersJob` example above can be executed using
+
+````ruby
+job = DenormalizeBeersJob.new
+job.execute
+````
+
+Calling `#execute` on an instance of a job does the following, in this order:
+1. All transforms defined in the job (via `transform :name do ... end`) are executed
+   in the order they were defined in the class definition.
+2. All data targets are loaded in the order they are defined in the job.
+
+Note that data sources are not extracted until the moment the data is
+needed in a transform.  If the source data is never referenced in a
+transform, it is never extracted.
+
+
+## Data Subjects
+
+A _data subject_ refers to either a data source or a data target.
+Either way, a data subject is associated with a data frame.  Currently
+the only data frames supported are
+[Daru data frames](https://github.com/v0dro/daru), but support for
+other data frames may be developed in the future.  The data frame associated
+with a data subject is accessed with the `#df` method and assigned with the `#df=`
+method.
+````ruby
+  my_data_subject.df #=> Daru::DataFrame
+  my_data_subject.df = Daru::DataFrame.new(...)
+````
+
+Additionally, all data subjects can be associated with a set of fields and field
+metadata.  Associating a data subject with feild data allows us to develop
+generic ETL routines that triggered by arbitrary metadata that may be associated
+with a field.
+
+### Sources
+
+### Targets
+
+### Field Metadata
+
+
+
+## Available Data Subjects
+
+* CSV Files
+* DataFrames
+* None
+* Local files
+* SFTP Files
+* S3 Files
+* Salesforce
+* Postgres
+
+## Transforms
+
+## Sub Jobs
+
+## Job Parameters
+
+## Sub Transforms
+
 ## Transforming Data
+
+When `#execute` is called on an instance of a `Remi::Job`, all transforms are executed in
+the order defined in the class
 
 TODO:
 
