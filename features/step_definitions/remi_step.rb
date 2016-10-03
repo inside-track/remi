@@ -61,6 +61,7 @@ end
 
 Then /^the file that comes last in an alphanumeric sort by group will be downloaded for processing$/ do
   expect(@brt.source.data_subject.extractors.map(&:most_recent_by)).to include :name
+  expect(@brt.source.data_subject.extractors.map(&:most_recent_only)).not_to include false
 end
 
 Then /^the file is uploaded to the remote path "([^"]+)"$/ do |remote_path|
