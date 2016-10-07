@@ -39,6 +39,7 @@ module Remi
     class Parameters
       def initialize(context=nil)
         @context = context
+        @params_methods = []
         @params = {}
       end
 
@@ -65,10 +66,13 @@ module Remi
       def []=(name, value)
         __define__(name) { value } unless respond_to? name
         @params[name] = value
+
+        value
       end
 
-      # @return [Hash] The parameters as a hash
+      # @return [Hash] The evaluated parameters as a hash
       def to_h
+        @params_methods.each { |p| self.send(p) }
         @params
       end
 
@@ -76,13 +80,14 @@ module Remi
       def clone
         the_clone = super
         the_clone.instance_variable_set(:@params, @params.dup)
+        the_clone.instance_variable_set(:@params_methods, @params_methods.dup)
         the_clone
       end
 
       def __define__(name, &block)
-        @params[name] = nil
+        @params_methods << name unless @params_methods.include? name
         define_singleton_method name do
-          @params[name] ||= Remi::Dsl.dsl_return(self, @context, &block)
+          @params.fetch(name) { |name| @params[name] = Remi::Dsl.dsl_return(self, @context, &block) }
         end
       end
     end
