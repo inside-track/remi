@@ -627,6 +627,21 @@ Then /^only the following fields should be present on the target:$/ do |table|
   expect(@brt.target.data_subject.df.vectors.to_a).to match_array @brt.target.fields.field_names
 end
 
+Then /^only the following fields should be present on the targets:$/ do |table|
+  table.rows.each do |row|
+    field = row[0]
+    targets = row[1].split(',')
+    targets.each { |target| step "the target field '#{target}: #{field}'" }
+  end
+
+  @brt.run_transforms
+  @brt.targets.keys.each do |target|
+    expect(@brt.targets[target].data_subject.df.vectors.to_a).to match_array @brt.targets[target].fields.field_names
+  end
+end
+
+
+
 ### Record-level expectations
 
 Then /^the record from source '(.+)' should be (?i)(Retained|Rejected)(?-i)(?: without error|)$/ do |source_name, action|
