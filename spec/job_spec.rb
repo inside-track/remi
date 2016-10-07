@@ -276,6 +276,11 @@ describe Job do
         expect(job.params[:my_param]).to eq 'instantiated'
       end
 
+      it 'works with booleans too' do
+        other_job = MyJob.new(my_param: false)
+        expect(other_job.params[:my_param]).to eq false
+      end
+
       it 'does not affect the values of other instances' do
         job
         other_job = MyJob.new
@@ -292,7 +297,7 @@ describe Job do
     it 'does something awesome'
   end
 
-  context '#execute', wip: true do
+  context '#execute' do
     before do
       class MyJob
         transform(:transform_one) {}
@@ -341,7 +346,7 @@ describe Job do
       end
     end
 
-    context '#execute(:sub_jobs)', wip2: true do
+    context '#execute(:sub_jobs)' do
       it 'executes all sub_jobs' do
         [:sub_job_one, :sub_job_two].each do |sub_job_name|
           sub_job = instance_double(Job::SubJob)
