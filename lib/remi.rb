@@ -4,6 +4,8 @@ File.expand_path(File.dirname(__FILE__)).tap {|pwd| $LOAD_PATH.unshift(pwd) unle
 require 'yaml'
 require 'json'
 require 'tmpdir'
+require 'fileutils'
+ 
 
 # Gems
 require 'daru'
@@ -56,6 +58,7 @@ require 'remi/loader'
 require 'remi/data_subject'
 require 'remi/data_subjects/file_system'
 require 'remi/data_subjects/local_file'
+require 'remi/data_subjects/gsheet_file'
 require 'remi/data_subjects/sftp_file'
 require 'remi/data_subjects/s3_file'
 require 'remi/data_subjects/csv_file'
