@@ -116,11 +116,15 @@ module Remi
       #     end
       #   end
       def import(sub_transform, **kargs, &block)
+        puts "i am importing something"
         sub_transform.context = context
         sub_transform.params.merge! kargs
         Dsl.dsl_eval(sub_transform, context, &block)
 
         sub_transform.map_inputs
+        IRuby.display context.all_applicants.df[:contact_id,:program_code,:program_level_name].to_html, mime: 'text/html'
+        IRuby.display sub_transform.st_source.df.to_html, mime: 'text/html'
+
         sub_transform.execute
         sub_transform.map_outputs
       end
@@ -130,18 +134,30 @@ module Remi
       protected
 
       def map_inputs
+        puts "map_inputs, sources: #{sources}"
         sources.each do |source_input|
           field_map = field_maps[:sources][source_input]
           job_ds = field_map.from_subject
           sub_trans_ds = field_map.to_subject
           fields_to_map = field_map.field_from_to.keys
 
+          puts "fields_to_map: #{fields_to_map}"
+          IRuby.display sub_trans_ds.df.to_html, mime: 'text/html'
+
+          puts "job_ds:"
+          IRuby.display job_ds.df[:contact_id,:program_code,:program_level_name].to_html, mime: 'text/html'
+
           fields_to_map.each do |job_field|
+            puts "job field: #{job_field}"
+            IRuby.display job_ds.df[job_field].to_html, mime: 'text/html'
+
             sub_trans_field = field_map.field_from_to[job_field]
             sub_trans_ds.fields[sub_trans_field] = job_ds.fields[job_field]
 
             sub_trans_ds.df[sub_trans_field] = job_ds.df[job_field]
           end
+          puts 'result of map_inputs:'
+          IRuby.display sub_trans_ds.df.to_html, mime: 'text/html'
         end
       end
 
