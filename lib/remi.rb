@@ -5,7 +5,7 @@ require 'yaml'
 require 'json'
 require 'tmpdir'
 require 'fileutils'
- 
+
 
 # Gems
 require 'daru'
@@ -58,11 +58,11 @@ require 'remi/loader'
 require 'remi/data_subject'
 require 'remi/data_subjects/file_system'
 require 'remi/data_subjects/local_file'
-require 'remi/data_subjects/gsheet_file'
+#require 'remi/data_subjects/gsheet' # intentionally not included by default (must be optionally added)
 require 'remi/data_subjects/sftp_file'
 require 'remi/data_subjects/s3_file'
 require 'remi/data_subjects/csv_file'
-#require 'remi/data_subjects/salesforce' # intentionally not included by default
+#require 'remi/data_subjects/salesforce' # intentionally not included by default (must be optionally added)
 require 'remi/data_subjects/postgres'
 require 'remi/data_subjects/data_frame'
 require 'remi/data_subjects/none'

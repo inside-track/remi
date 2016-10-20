@@ -1,11 +1,11 @@
+require 'google/apis/sheets_v4'
+require 'google/apis/drive_v3'
+require 'googleauth'
+require 'googleauth/stores/file_token_store'
+require 'googleauth/user_refresh'
 
 module Remi
 
-  require 'google/apis/sheets_v4'
-  require 'google/apis/drive_v3'
-  require 'googleauth'
-  require 'googleauth/stores/file_token_store'
-  require 'googleauth/user_refresh'
   # Contains methods shared between Salesforce Extractor/Parser/Encoder/Loader
   class Extractor::Gsheet < Extractor::FileSystem
 
@@ -85,8 +85,8 @@ module Remi
 
     private
 
-    def init_gsheet_extractor(*args, credentials:, **kargs)
-      @default_folder_id   = credentials.fetch(:folder_id)
+    def init_gsheet_extractor(*args, credentials:, folder_id:, **kargs)
+      @default_folder_id   = folder_id
       @oob_uri             = 'urn:ietf:wg:oauth:2.0:oob'
       @application_name    = credentials.fetch(:application_name)
 
@@ -104,7 +104,7 @@ module Remi
       @client_secret   = credentials.fetch(:client_secret)
       @project_id      = credentials.fetch(:project_id)
       @scope           = ["https://www.googleapis.com/auth/drive","https://www.googleapis.com/auth/spreadsheets"]
-      @expiration_time = credentials.fetch(:expiration_time)
+      @expiration_time = Integer(credentials.fetch(:expiration_time))
     end
   end
 
