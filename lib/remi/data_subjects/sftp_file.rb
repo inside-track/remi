@@ -61,6 +61,7 @@ module Remi
           logger.info "Downloading #{entry.name} to #{local_file}"
           retry_download { sftp.download!(File.join(@remote_path, entry.name), local_file) }
           local_file
+
         end
       end
     end
