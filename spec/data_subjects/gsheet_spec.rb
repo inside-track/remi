@@ -1,4 +1,5 @@
 require 'remi_spec'
+require 'remi/data_subjects/gsheet'
 
 describe Extractor::Gsheet do
 
@@ -9,18 +10,23 @@ describe Extractor::Gsheet do
       :access_token     => 'some_access_token',
       :refresh_token    => 'some_refresh_token',
       :client_secret    => 'some_client_secret',
-      :folder_id        => 'some_google_folder_id',
       :application_name => 'some_application_name',
       :project_id       => 'some_project_id',
-      :expiration_time  => 123456789
+      :expiration_time  => '123456789'
+    }
+  }
+
+
+  let(:params) {
+    {
+      credentials: credentials,
+      folder_id:   'some_google_folder_id',
+      remote_path: remote_path
     }
   }
 
   let(:gsheet_file) {
-    Extractor::Gsheet.new(
-      credentials: credentials,
-      remote_path: remote_path
-    )
+    Extractor::Gsheet.new(params)
   }
 
   let(:response) { double('response') }
@@ -57,8 +63,8 @@ describe Extractor::Gsheet do
     end
 
     it 'requires a folder id' do
-      credentials.delete(:folder_id)
-      expect { gsheet_file }.to raise_error KeyError
+      params.delete(:credentials)
+      expect { gsheet_file }.to raise_error ArgumentError
     end
 
     it 'requires an application name' do
