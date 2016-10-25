@@ -483,9 +483,10 @@ Then /^the target field '([^']+)' is populated from the source field '([^']+)' u
 
   source_name, source_field_name = @brt.sources.parse_full_field(source_field)
   target_names, target_field_name = @brt.targets.parse_full_field(target_field, multi: true)
+  inferred_type = target_format =~ /(%H|%M|%S)/ ? :datetime : :date
 
   source_format = @brt.sources[source_name].fields[source_field_name].metadata[:in_format]
-  source_reformatted = Remi::Transform::FormatDate.new(in_format: source_format, out_format: target_format).to_proc
+  source_reformatted = Remi::Transform::FormatDate.new(in_format: source_format, out_format: target_format, type: inferred_type).to_proc
     .call(@brt.sources[source_name].fields[source_field_name].value)
 
   @brt.run_transforms
