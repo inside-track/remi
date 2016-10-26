@@ -66,4 +66,16 @@ describe Parser::CsvFile do
     expect(csv.parse(two_files).to_a).to eq expected_df.to_a
   end
 
+  it 'returns empty vectors if the csv contains headers only' do
+    csv = Parser::CsvFile.new
+
+    expected_df = Remi::DataFrame::Daru.new(
+      {
+        column_a: [],
+        column_b: []
+      }
+    )
+
+    expect(csv.parse('spec/fixtures/empty.csv').to_h).to eq expected_df.to_h
+  end
 end

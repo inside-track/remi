@@ -78,6 +78,12 @@ module Remi
         processed_filename = preprocess(filename)
         csv_df = Daru::DataFrame.from_csv processed_filename, @csv_options
 
+        # Daru 0.1.4 doesn't add vectors if it's a headers-only file
+        if csv_df.vectors.size == 0
+          headers_df = Daru::DataFrame.from_csv processed_filename, @csv_options.merge(return_headers: true)
+          csv_df = Daru::DataFrame.new([], order: headers_df.vectors.to_a)
+        end
+
         csv_df[@filename_field] = Daru::Vector.new([filename] * csv_df.size, index: csv_df.index) if @filename_field
         if idx == 0
           result_df = csv_df
