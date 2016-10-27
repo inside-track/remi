@@ -109,7 +109,9 @@ describe Parser::Gsheet do
   let(:gs_extract) { double('gs_extract') }
   let(:example_data) do
     [{"headers" => ["header_1", "header_2", "header_3"],
-      "row 1"   => ["value 1", "value 2", "value 3"]
+      "row 1"   => ["value 11", "value 12", "value 13"],
+      "row 2"   => ["value 21", "value 22", "value 23"],
+      "row 3"   => ["value 31", "value 32", "value 33"],
     }]
   end
 
@@ -123,11 +125,21 @@ describe Parser::Gsheet do
 
   it 'converted data into the correct dataframe' do
     expected_df = Daru::DataFrame.new(
-      :header_1 => ['value 1'],
-      :header_2 => ['value 2'],
-      :header_3 => ['value 3'],
+      :header_1 => ['value 11', 'value 21', 'value 31'],
+      :header_2 => ['value 12', 'value 22', 'value 32'],
+      :header_3 => ['value 13', 'value 23', 'value 33']
     )
     expect(parser.parse(gs_extract).to_a).to eq expected_df.to_a
   end
 
+  it 'works when the last column contains blanks' do
+    # Google API only returns an array of dimensions up to the last non-blank column
+    example_data[0]['row 2'].pop
+    expected_df = Daru::DataFrame.new(
+      :header_1 => ['value 11', 'value 21', 'value 31'],
+      :header_2 => ['value 12', 'value 22', 'value 32'],
+      :header_3 => ['value 13', nil,        'value 33']
+    )
+    expect(parser.parse(gs_extract).to_a).to eq expected_df.to_a
+  end
 end
