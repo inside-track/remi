@@ -57,6 +57,7 @@ module Remi
       @data                                   = []
 
       entries.each do |file|
+        logger.info "Extracting Google Sheet data from #{file.pathname}"
         response = get_spreadsheet_vals(service, file.raw)
         data.push(response)
       end
@@ -111,25 +112,23 @@ module Remi
   class Parser::Gsheet < Parser
 
     def parse(gs_extract)
-      google_vals = gs_extract.data
       return_hash = nil
-      google_vals.each do |google_val|
+      gs_extract.data.each do |gs_data|
 
         if return_hash.nil?
           return_hash = Hash.new
-          google_val.values[0].each do |header|
+          gs_data.values[0].each do |header|
             return_hash[field_symbolizer.call(header)] = []
           end
         end
 
-        keys_temp = return_hash.keys
+        headers = return_hash.keys
+        header_idx = headers.each_with_index.to_h
 
-        google_val.values[1..-1].each do |rows|
-          col_num = 0
-
-          rows.each do |value|
-            return_hash[keys_temp[col_num]] << value
-            col_num +=1
+        gs_data.values[1..-1].each do |row|
+          headers.each do |header|
+            idx = header_idx[header]
+            return_hash[header] << (idx < row.size ? row[idx] : nil)
           end
         end
       end
