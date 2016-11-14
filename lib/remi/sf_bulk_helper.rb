@@ -81,6 +81,7 @@ module Remi
           next unless batch['response']
 
           batch['response'].each do |record|
+            @logger.error "Salesforce error: #{record}" if record['success'] && record['success'][0] == 'false'
             @result << record.inject({}) { |h, (k,v)| h[k] = v.first unless ['xsi:type','type'].include? k; h }
           end
 
