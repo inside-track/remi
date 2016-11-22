@@ -219,6 +219,20 @@ Given /^the source field is not a valid email address$/ do
   @brt.source.field.value = 'invalid!example.com'
 end
 
+Given /^the source field '([^']+)' is a valid email address$/ do |source_field|
+  step "the source field '#{source_field}'"
+
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  @brt.sources[source_name].fields[source_field_name].value = 'valid@example.com'
+end
+
+Given /^the source field '([^']+)' is not a valid email address$/ do |source_field|
+  step "the source field '#{source_field}'"
+
+  source_name, source_field_name = @brt.sources.parse_full_field(source_field)
+  @brt.sources[source_name].fields[source_field_name].value = 'invalid!example.com'
+end
+
 ### Target
 
 Given /^the target '([[:alnum:]\s\-_]+)'$/ do |arg|
