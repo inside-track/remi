@@ -21,7 +21,8 @@ describe Extractor::Gsheet do
     {
       credentials: credentials,
       folder_id:   'some_google_folder_id',
-      remote_path: remote_path
+      remote_path: remote_path,
+      sheet_name: 'some_google_sheet_name'
     }
   }
 

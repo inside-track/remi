@@ -46,8 +46,8 @@ module Remi
       service.list_files(q: "'#{folder_id}' in parents", page_size: 10, order_by: 'createdTime desc', fields: 'nextPageToken, files(id, name, createdTime, mimeType)')
     end
 
-    def get_spreadsheet_vals(service, spreadsheet_id)
-      service.get_spreadsheet_values(spreadsheet_id, 'Sheet1')
+    def get_spreadsheet_vals(service, spreadsheet_id, sheet_name = 'Sheet1')
+      service.get_spreadsheet_values(spreadsheet_id, sheet_name)
     end
 
     def extract
@@ -57,8 +57,8 @@ module Remi
       @data                                   = []
 
       entries.each do |file|
-        logger.info "Extracting Google Sheet data from #{file.pathname}"
-        response = get_spreadsheet_vals(service, file.raw)
+        logger.info "Extracting Google Sheet data from #{file.pathname}, with sheet name : #{@sheet_name}"
+        response = get_spreadsheet_vals(service, file.raw, @sheet_name)
         data.push(response)
       end
 
@@ -86,8 +86,9 @@ module Remi
 
     private
 
-    def init_gsheet_extractor(*args, credentials:, folder_id:, **kargs)
+    def init_gsheet_extractor(*args, credentials:, folder_id:, sheet_name: 'Sheet1', **kargs)
       @default_folder_id   = folder_id
+      @sheet_name          = sheet_name
       @oob_uri             = 'urn:ietf:wg:oauth:2.0:oob'
       @application_name    = credentials.fetch(:application_name)
 
