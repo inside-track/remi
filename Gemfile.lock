@@ -1,7 +1,7 @@
 GIT
   remote: git@github.com:inside-track/daru.git
-  revision: e38e98890c99dee03ceedaca3a5faf40859042ab
-  branch: 0.1.4.1-Remi
+  revision: c8d407ee55b8d5f3143b9a030fe36c38cf3537d1
+  branch: 0.1.4.1.2-Remi
   specs:
     daru (0.1.4.1)
       backports
