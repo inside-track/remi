@@ -74,8 +74,6 @@ require 'remi/data_frame/daru'
 
 require 'remi/transform'
 
-require 'remi/monkeys/daru'
-
 # Remi is Ruby Extract Modify and Integrate, a framework for writing ETL job in Ruby.
 module Remi
 end
