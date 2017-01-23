@@ -65,7 +65,6 @@ describe Parser::CsvFile do
 
     expect(csv.parse(two_files).to_a).to eq expected_df.to_a
   end
-
   it 'returns empty vectors if the csv contains headers only' do
     csv = Parser::CsvFile.new
 
@@ -79,3 +78,47 @@ describe Parser::CsvFile do
     expect(csv.parse('spec/fixtures/empty.csv').to_h).to eq expected_df.to_h
   end
 end
+
+describe Encoder::CsvFile do
+  let(:basic_dataframe) do
+    Remi::DataFrame::Daru.new(
+      {
+        column_a: ['value 1A', 'value 2A'],
+        column_b: ['value 1B', 'value 2B']
+      }
+    )
+  end
+  it 'creates a csv from a provided dataframe' do
+    encoder = Encoder::CsvFile.new
+    parser = Parser::CsvFile.new
+    provided_df = Remi::DataFrame::Daru.new(
+      {
+        column_a: ['value 1A', 'value 2A', 'value 1A', 'value 2A'],
+        column_b: ['value 1B', 'value 2B', nil, nil],
+        column_c: [nil, nil, 'value 1C', 'value 2C']
+      }
+    )
+    expected_contents = "column_a,column_b,column_c\nvalue 1A,value 1B,\nvalue 2A,value 2B,\nvalue 1A,,value 1C\nvalue 2A,,value 2C\n"
+    file_name = encoder.encode(provided_df)
+    expect(File.read(file_name)).to eq expected_contents
+  end
+  it 'uses label headers when provided' do
+    provided_df = Remi::DataFrame::Daru.new(
+      {
+        column_a: ['value 1A', 'value 2A', 'value 1A', 'value 2A'],
+        column_b: ['value 1B', 'value 2B', nil, nil],
+        column_c: [nil, nil, 'value 1C', 'value 2C']
+      }
+    )
+    expected_contents = "Column A,Column B,Column C\nvalue 1A,value 1B,\nvalue 2A,value 2B,\nvalue 1A,,value 1C\nvalue 2A,,value 2C\n"
+    column_fields = Remi::Fields.new({
+      :column_a => { label: 'Column A' },
+      :column_b => { label: 'Column B' },
+      :column_c => { label: 'Column C' }
+    })
+    encoder = Encoder::CsvFile.new(fields: column_fields)
+    file_name = encoder.encode(provided_df)
+    expect(File.read(file_name)).to eq expected_contents
+  end
+end
+
