@@ -124,7 +124,6 @@ Given /^the (source|target) file contains all of the following headers in this o
   expect(@brt.send(st.to_sym).data_subject.df.vectors.to_a).to eq @brt.send(st.to_sym).fields.field_names
 end
 
-
 ### Source
 
 Given /^the source '([[:alnum:]\s\-_]+)'$/ do |arg|
@@ -254,6 +253,13 @@ Then /^the target field '([^']+)' is copied from the source field '([^']+)'$/ do
   Array(target_names).each do |target_name|
     expect(@brt.targets[target_name].fields[target_field_name].value).to eq (@brt.sources[source_name].fields[source_field_name].value)
   end
+end
+
+Then /^the target field '([^']+)' has the label '([^']+)'$/ do |target_field, label|
+  step "the target field '#{target_field}'"
+  data_field  = @brt.targets.fields.next
+  expect(data_field.metadata[:label]).to eq label
+  expect(data_field.name).to eq target_field
 end
 
 Then /^the target field '([^']+)' is copied from the source field$/ do |target_field|
