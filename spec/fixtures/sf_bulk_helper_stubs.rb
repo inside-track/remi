@@ -17,6 +17,123 @@ module Remi::SfBulkHelperStubs
     EOT
   end
 
+  def delete_raw_result
+    {
+      "xmlns" => "http://www.force.com/2009/06/asyncapi/dataload",
+      "id" => [
+        "750g0000004iys2AAA"
+      ],
+      "operation" => [
+        "delete"
+      ],
+      "object" => [
+        "Contact"
+      ],
+      "createdById" => [
+        "005A0000000eJ57IAE"
+      ],
+      "createdDate" => [
+        "2017-01-25T20:06:30.000Z"
+      ],
+      "systemModstamp" => [
+        "2017-01-25T20:06:30.000Z"
+      ],
+      "state" => [
+        "Closed"
+      ],
+      "concurrencyMode" => [
+        "Parallel"
+      ],
+      "contentType" => [
+        "XML"
+      ],
+      "numberBatchesQueued" => [
+        "1"
+      ],
+      "numberBatchesInProgress" => [
+        "0"
+      ],
+      "numberBatchesCompleted" => [
+        "0"
+      ],
+      "numberBatchesFailed" => [
+        "0"
+      ],
+      "numberBatchesTotal" => [
+        "1"
+      ],
+      "numberRecordsProcessed" => [
+        "0"
+      ],
+      "numberRetries" => [
+        "0"
+      ],
+      "apiVersion" => [
+        "32.0"
+      ],
+      "numberRecordsFailed" => [
+        "0"
+      ],
+      "totalProcessingTime" => [
+        "0"
+      ],
+      "apiActiveProcessingTime" => [
+        "0"
+      ],
+      "apexProcessingTime" => [
+        "0"
+      ],
+      "batches" => [
+        {
+          "xmlns" => "http://www.force.com/2009/06/asyncapi/dataload",
+          "id" => [
+            "751g0000002ozU5AAI"
+          ],
+          "jobId" => [
+            "750g0000004iys2AAA"
+          ],
+          "state" => [
+            "Completed"
+          ],
+          "createdDate" => [
+            "2017-01-25T20:06:31.000Z"
+          ],
+          "systemModstamp" => [
+            "2017-01-25T20:07:19.000Z"
+          ],
+          "numberRecordsProcessed" => [
+            "1"
+          ],
+          "numberRecordsFailed" => [
+            "0"
+          ],
+          "totalProcessingTime" => [
+            "684"
+          ],
+          "apiActiveProcessingTime" => [
+            "459"
+          ],
+          "apexProcessingTime" => [
+            "74"
+          ],
+          "response" => [
+            {
+              "id" => [
+                "003g000001LVMx3AAH"
+              ],
+              "success" => [
+                "true"
+              ],
+              "created" => [
+                "false"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  end
+
   def contact_query_raw_result
     {
       "xmlns" => "http://www.force.com/2009/06/asyncapi/dataload",

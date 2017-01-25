@@ -168,7 +168,7 @@ module Remi
     # @option credentials [String] :password Salesforce password
     # @option credentials [String] :security_token Salesforce security token
     # @param object [Symbol] Salesforce object to extract
-    # @param operation [Symbol] Salesforce operation to perform (`:update`, `:create`, `:upsert`)
+    # @param operation [Symbol] Salesforce operation to perform (`:update`, `:create`, `:upsert`, `:delete`)
     # @param batch_size [Integer] Size of batch to use for updates (1-10000)
     # @param external_id [Symbol, String] Field to use as an external id for upsert operations
     # @param api [Symbol] Salesforce API to use (only option supported is `:bulk`)
@@ -188,6 +188,8 @@ module Remi
         Remi::SfBulkHelper::SfBulkCreate.create(restforce_client, @sfo, data, batch_size: @batch_size, logger: logger)
       elsif @operation == :upsert
         Remi::SfBulkHelper::SfBulkUpsert.upsert(restforce_client, @sfo, data, batch_size: @batch_size, external_id: @external_id, logger: logger)
+      elsif @operation == :delete
+        Remi::SfBulkHelper::SfBulkDelete.upsert(restforce_client, @sfo, data, batch_size: @batch_size, logger: logger)
       else
         raise ArgumentError, "Unknown operation: #{@operation}"
       end
