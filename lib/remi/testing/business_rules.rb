@@ -29,11 +29,12 @@ module Remi::Testing::BusinessRules
 
     def formulas
       @formulas ||= RegexSieve.new({
-        /\*now(|:[^*]+)\*/i => [:time_reference, :match_now],
-        /\*(today|yesterday|tomorrow)(|:[^*]+)\*/i => [:date_reference, :match_single_day],
-        /\*(this|last|previous|next) (day|month|year|week)(|:[^*]+)\*/i => [:date_reference, :match_single_unit],
-        /\*(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)(|:[^*]+)\*/i => [:date_reference, :match_multiple]
-      })
+                                     /\*now(|:[^*]+)\*/i => [:time_reference, :match_now],
+                                     /\*(\d+)\s(hour|hours|minutes|seconds) (ago|from now)(|:[^*]+)\*/i => [:time_reference, :match_time],
+                                     /\*(today|yesterday|tomorrow)(|:[^*]+)\*/i => [:date_reference, :match_single_day],
+                                     /\*(this|last|previous|next) (day|month|year|week)(|:[^*]+)\*/i => [:date_reference, :match_single_unit],
+                                     /\*(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)(|:[^*]+)\*/i => [:date_reference, :match_multiple]
+                                   })
     end
 
     def parse(form)
@@ -44,12 +45,12 @@ module Remi::Testing::BusinessRules
 
       to_replace = form.match(base_regex)[0]
       replace_with = if form_opt[:value][0] == :date_reference
-        date_reference(form_opt[:value][1], form_opt[:match])
-      elsif form_opt[:value][0] == :time_reference
-        time_reference(form_opt[:value][1], form_opt[:match])
-      else
-        to_replace
-      end
+                       date_reference(form_opt[:value][1], form_opt[:match])
+                     elsif form_opt[:value][0] == :time_reference
+                       time_reference(form_opt[:value][1], form_opt[:match])
+                     else
+                       to_replace
+                     end
 
       form.gsub(to_replace, replace_with)
     end
@@ -62,6 +63,7 @@ module Remi::Testing::BusinessRules
     def date_reference(formula, captured)
       parsed = self.send("date_reference_#{formula}", *captured)
       Date.current.send("#{parsed[:unit]}_#{parsed[:direction]}", parsed[:quantity]).strftime(parsed[:format])
+
     end
 
     def parse_colon_date_format(str)
@@ -77,6 +79,23 @@ module Remi::Testing::BusinessRules
         quantity: 0,
         unit: 'days',
         direction: 'ago',
+        format: parse_colon_time_format(format)
+      }
+    end
+    def time_reference_match_time(form, quantity, unit, direction, format=nil)
+      divisor = 1.0
+      if unit.downcase.pluralize =='hours'
+        divisor = 24.0
+      elsif unit.downcase.pluralize =='minutes'
+        divisor = 24.0/60.0
+      elsif unit.downcase.pluralize =='seconds'
+        divisor = 24.0/60.0/60.0
+      end
+
+      {
+        quantity: quantity.to_i/divisor,
+        unit: 'days',
+        direction: { 'ago' => 'ago', 'from now' => 'since' }[direction.downcase],
         format: parse_colon_time_format(format)
       }
     end
@@ -481,10 +500,10 @@ module Remi::Testing::BusinessRules
 
     def value=(arg)
       typed_arg = if metadata[:type] == :json
-        JSON.parse(arg)
-      else
-        arg
-      end
+                    JSON.parse(arg)
+                  else
+                    arg
+                  end
 
       vector.recode! { |_v| typed_arg }
     end
@@ -524,10 +543,10 @@ module Remi::Testing::BusinessRules
     def parse_formula(value)
       parsed_value = ParseFormula.parse(value)
       case parsed_value
-      when '\nil'
-        nil
-      else
-        parsed_value
+        when '\nil'
+          nil
+        else
+          parsed_value
       end
     end
 
