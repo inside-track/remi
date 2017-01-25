@@ -8,6 +8,28 @@ Feature: This tests the creation of example records.
     And the source 'Source Data'
     And the target 'Target Data'
 
+  Scenario: Handling date formulas in the example data with minute units.
+
+    Given the following example record for 'Source Data':
+      | 1MinuteAgo     | 15MinutesAgo     | OneMinuteAgo      | 1MinuteFromNow      |  15MinutesFromNow      |
+      | *1 minute ago* | *15 minutes ago* | *1 minute ago*    | *1 minute from now* | *15 minutes from now*  |
+    Then the target field '1MinuteAgo' is the time 1 minute ago
+    And the target field '2MinutesAgo' is the time 15 minutes from now
+    And the target field 'OneMinuteAgo' is the time 1 minute ago
+    And the target field '1MinuteFromNow' is the time 1 minute from now
+    And the target field '2MinutesFromNow' is the time 15 minutes from now
+
+  Scenario: Handling date formulas in the example data with hour units.
+
+    Given the following example record for 'Source Data':
+      | 1HourAgo     | 2HoursAgo     | OneHourAgo      | 1HourFromNow      |  2HoursFromNow      |
+      | *1 hour ago* | *2 hours ago* | *1 hour ago*    | *1 hour from now* | *2 hours from now*  |
+    Then the target field '1HourAgo' is the time 1 hour ago
+    And the target field '2HoursAgo' is the time 2 hours from now
+    And the target field 'OneHourAgo' is the time 1 hour ago
+    And the target field '1HourFromNow' is the time 1 hour from now
+    And the target field '2HoursFromNow' is the time 2 hours from now
+
   Scenario: Handling date formulas in the example data with day units.
 
     Given the following example record for 'Source Data':
