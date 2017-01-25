@@ -246,6 +246,24 @@ module Remi
       end
     end
 
+    # Public: Class used to execute SF Bulk Delete operations (see SfBulkOperation class for
+    # more details).
+    class SfBulkDelete < SfBulkOperation
+      def self.delete(*args, **kargs)
+        SfBulkDelete.new(*args, **kargs).tap { |sf| sf.send(:execute) }
+      end
+
+      def operation
+        :delete
+      end
+
+      private
+
+      def send_bulk_operation
+        sf_bulk.send(operation, @object, @data, true, @batch_size)
+      end
+    end
+
     # Public: Class used to execute SF Bulk Query operations (see SfBulkOperation class for
     # more details).
     class SfBulkQuery < SfBulkOperation

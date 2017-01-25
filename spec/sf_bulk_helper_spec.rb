@@ -114,4 +114,19 @@ describe Remi::SfBulkHelper do
       end
     end
   end
+
+  describe SfBulkHelper::SfBulkDelete do
+    let(:sf_delete) { SfBulkHelper::SfBulkDelete.new({}, 'Contact', [{ 'Id' => '1234' }]) }
+    let(:sf_bulk) { double('sf_bulk') }
+
+    before do
+      allow(sf_delete).to receive(:sf_bulk) { sf_bulk }
+      allow(sf_bulk).to receive(:delete) { SfBulkHelperStubs.delete_raw_result }
+    end
+
+    it 'sends a delete request to the salesforce bulk api' do
+      expect(sf_bulk).to receive(:delete) { SfBulkHelperStubs.delete_raw_result }
+      sf_delete.send(:execute)
+    end
+  end
 end
