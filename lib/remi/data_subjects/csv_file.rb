@@ -159,15 +159,24 @@ module Remi
     attr_reader :csv_options
 
     # Converts the dataframe to a CSV file stored in the local work directory.
+    # If labels are present write the CSV file with those headers but maintain
+    # the structure of the original dataframe
     #
     # @param dataframe [Remi::DataFrame] The dataframe to be encoded
     # @return [Object] The path to the file
     def encode(dataframe)
       logger.info "Writing CSV file to temporary location #{@working_file}"
+
+      label_columns = self.fields.reduce({}) { |h, (k, v)|
+        if v[:label]
+          h[k] = v[:label].to_sym
+        end
+        h
+      }
+      dataframe.rename_vectors label_columns
       dataframe.write_csv @working_file, @csv_options
       @working_file
     end
-
     private
     def init_csv_file_encoder(*args, work_path: Settings.work_dir, csv_options: {}, **kargs, &block)
       @working_file = File.join(work_path, SecureRandom.uuid)
