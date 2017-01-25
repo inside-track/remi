@@ -29,12 +29,12 @@ module Remi::Testing::BusinessRules
 
     def formulas
       @formulas ||= RegexSieve.new({
-                                     /\*now(|:[^*]+)\*/i => [:time_reference, :match_now],
-                                     /\*(\d+)\s(hour|hours|minutes|seconds) (ago|from now)(|:[^*]+)\*/i => [:time_reference, :match_time],
-                                     /\*(today|yesterday|tomorrow)(|:[^*]+)\*/i => [:date_reference, :match_single_day],
-                                     /\*(this|last|previous|next) (day|month|year|week)(|:[^*]+)\*/i => [:date_reference, :match_single_unit],
-                                     /\*(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)(|:[^*]+)\*/i => [:date_reference, :match_multiple]
-                                   })
+        /\*now(|:[^*]+)\*/i => [:time_reference, :match_now],
+        /\*(\d+)\s(hour|hours|minute|minutes) (ago|from now)(|:[^*]+)\*/i => [:time_reference, :match_time],
+        /\*(today|yesterday|tomorrow)(|:[^*]+)\*/i => [:date_reference, :match_single_day],
+        /\*(this|last|previous|next) (day|month|year|week)(|:[^*]+)\*/i => [:date_reference, :match_single_unit],
+        /\*(\d+)\s(day|days|month|months|year|years|week|weeks) (ago|from now)(|:[^*]+)\*/i => [:date_reference, :match_multiple]
+      })
     end
 
     def parse(form)
@@ -86,10 +86,8 @@ module Remi::Testing::BusinessRules
       divisor = 1.0
       if unit.downcase.pluralize =='hours'
         divisor = 24.0
-      elsif unit.downcase.pluralize =='minutes'
-        divisor = 24.0/60.0
-      elsif unit.downcase.pluralize =='seconds'
-        divisor = 24.0/60.0/60.0
+      elsif unit.downcase.pluralize == 'minutes'
+        divisor = 24.0*60.0
       end
 
       {
