@@ -189,7 +189,7 @@ module Remi
       elsif @operation == :upsert
         Remi::SfBulkHelper::SfBulkUpsert.upsert(restforce_client, @sfo, data, batch_size: @batch_size, external_id: @external_id, logger: logger)
       elsif @operation == :delete
-        Remi::SfBulkHelper::SfBulkDelete.upsert(restforce_client, @sfo, data, batch_size: @batch_size, logger: logger)
+        Remi::SfBulkHelper::SfBulkDelete.delete(restforce_client, @sfo, data, batch_size: @batch_size, logger: logger)
       else
         raise ArgumentError, "Unknown operation: #{@operation}"
       end

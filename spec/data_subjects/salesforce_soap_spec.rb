@@ -45,7 +45,7 @@ describe Loader::SalesforceSoap do
       { Id: '1234', Custom__c: 'something', Merge_Id: '5678' }
     ]
 
-    expect(soapforce_client).to receive(:merge) do
+    expect(soapforce_client).to receive(:merge!) do
       [
         :Contact,
         {
@@ -65,7 +65,25 @@ describe Loader::SalesforceSoap do
       { Id: '2', Custom__c: 'something', Merge_Id: '20' }
     ]
 
-    expect(soapforce_client).to receive(:merge).twice
+    expect(soapforce_client).to receive(:merge!).twice
+    loader.load(data)
+  end
+
+  it 'excludes blank data fields from the merge command' do
+    data = [
+      { Id: '1234', Custom__c: '', Merge_Id: '5678' }
+    ]
+
+    expect(soapforce_client).to receive(:merge!) do
+      [
+        :Contact,
+        {
+          Id: '1234'
+        },
+        ['5678']
+      ]
+    end
+
     loader.load(data)
   end
 
@@ -76,5 +94,4 @@ describe Loader::SalesforceSoap do
 
     expect { loader.load(data) }.to raise_error KeyError
   end
-
 end
