@@ -79,7 +79,8 @@ module Remi
           end
 
           merge_id = Array(row.delete(@merge_id_field))
-          soapforce_client.merge(@sfo, row, merge_id)
+          merge_row = row.select { |_, v| !v.blank? }
+          soapforce_client.merge!(@sfo, merge_row, merge_id)
         end
       else
         raise ArgumentError, "Unknown soap operation: #{@operation}"
