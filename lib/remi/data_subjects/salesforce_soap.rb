@@ -80,6 +80,7 @@ module Remi
 
           merge_id = Array(row.delete(@merge_id_field))
           merge_row = row.select { |_, v| !v.blank? }
+          logger.info "Merging Id #{merge_id} into #{merge_row}"
           soapforce_client.merge!(@sfo, merge_row, merge_id)
         end
       else
