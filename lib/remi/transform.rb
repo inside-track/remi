@@ -550,6 +550,9 @@ module Remi
             raise ArgumentError, "Unknown type enforcement: #{type}"
           end
         end
+
+      rescue StandardError => err
+        raise ArgumentError, "Unable to convert value '#{value}' to type '#{type}': #{err.message}"
       end
     end
 
