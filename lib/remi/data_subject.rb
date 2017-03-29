@@ -93,7 +93,11 @@ module Remi
       sttm = SourceToTargetMap.new(df, source_metadata: fields)
       fields.keys.each do |field|
         next unless (types.size == 0 || types.include?(fields[field][:type])) && df.vectors.include?(field)
-        sttm.source(field).target(field).transform(Remi::Transform::EnforceType.new).execute
+        begin
+          sttm.source(field).target(field).transform(Remi::Transform::EnforceType.new).execute
+        rescue StandardError => err
+          raise ArgumentError, "Field '#{field}': #{err.message}"
+        end
       end
 
       self
