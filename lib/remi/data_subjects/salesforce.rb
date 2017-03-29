@@ -185,7 +185,7 @@ module Remi
       if @operation == :update
         Remi::SfBulkHelper::SfBulkUpdate.update(restforce_client, @sfo, data, batch_size: @batch_size, logger: logger)
       elsif @operation == :create
-        Remi::SfBulkHelper::SfBulkCreate.create(restforce_client, @sfo, data, batch_size: @batch_size, logger: logger)
+        Remi::SfBulkHelper::SfBulkCreate.create(restforce_client, @sfo, data, batch_size: @batch_size, max_attempts: 1, logger: logger)
       elsif @operation == :upsert
         Remi::SfBulkHelper::SfBulkUpsert.upsert(restforce_client, @sfo, data, batch_size: @batch_size, external_id: @external_id, logger: logger)
       elsif @operation == :delete
