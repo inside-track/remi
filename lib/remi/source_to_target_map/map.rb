@@ -128,8 +128,9 @@ module Remi
 
       # Private: Converts the transformed data into vectors in the target dataframe.
       def map_to_target_df
+        index = @target_df.index.size > 0 ? @target_df.index : @source_df.index
         result_hash_of_arrays.each do |vector, values|
-          @target_df[vector] = Daru::Vector.new(values, index: @source_df.index)
+          @target_df[vector] = Daru::Vector.new(values, index: index)
         end
 
         @target_df

@@ -298,4 +298,34 @@ describe SourceToTargetMap do
       expect(sttm).to be_a(Remi::DataFrame::Daru)
     end
   end
+
+  describe 'source and target dataframes differ', wip: true do
+    it 'does not fail when the dataframe has been filtered' do
+      some_df = Daru::DataFrame.new(
+        {
+          :id => [1,2,3,4,5],
+          :something => ['x','','x','','x'],
+          :name => ['one', 'two', 'three', 'four', 'five']
+        }
+      )
+
+      filtered_df = some_df.where(some_df[:something].eq('x'))
+      target_df = Remi::DataFrame::Daru.new([])
+
+      Remi::SourceToTargetMap.apply(filtered_df, target_df) do
+        map source(:id) .target(:id)
+        map source(:name) .target(:name)
+      end
+
+      result = target_df[:id, :name].to_h.each_with_object({}) { |(k,v), h| h[k] = v.to_a }
+      expect(result).to eq({
+        :id => [1, 3, 5],
+        :name => ['one', 'three', 'five']
+      })
+    end
+
+
+  end
+
+
 end
