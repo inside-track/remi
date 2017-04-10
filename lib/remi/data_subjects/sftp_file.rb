@@ -7,7 +7,7 @@ module Remi
       tries ||= @retries
 
       block.call
-    rescue RuntimeError => err
+    rescue StandardError => err
       if (tries -= 1) > 0
         logger.error "Error: #{err.message}"
         logger.error "Will retry #{tries} more times"
