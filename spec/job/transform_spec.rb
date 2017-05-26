@@ -253,5 +253,89 @@ describe Job do
         my_transform.execute
       end
     end
+
+    describe '#import - edge cases' do
+      before do
+        class MyJob
+          source :job_source do
+            fields({ :id => {}, :name => {} })
+          end
+          target :job_target do
+            fields({ :id => {}, :name => {}, :funny_name => {} })
+          end
+        end
+
+        job.job_source.df = Remi::DataFrame::Daru.new({
+          id:   [1, 2, 3],
+          name: ['one', 'two', 'three']
+        })
+      end
+
+      it 'correctly maps back to a source if the sub transform sorts the data' do
+        sub_transform = Job::Transform.new('arbitrary') do
+          source :st_source, [:id, :name]
+          target :st_target, [:funny_name]
+
+          st_source.df.sort!([:id], ascending: [false])
+
+          Remi::SourceToTargetMap.apply(st_source.df, st_target.df) do
+            map source(:name) .target(:funny_name)
+              .transform(->(v) { "funny-#{v}" })
+          end
+        end
+
+        my_transform = Job::Transform.new(job) do
+          import sub_transform do
+            map_source_fields :job_source, :st_source, {
+              :id   => :id,
+              :name => :name
+            }
+            map_target_fields :st_target, :job_source, {
+              :funny_name => :funny_name
+            }
+          end
+
+          job.job_target.df = job.job_source.df.dup
+        end
+
+        my_transform.execute
+        expect(job.job_target.df[:funny_name].to_a).to eq(
+          job.job_target.df[:name].to_a.map { |v| "funny-#{v}" }
+        )
+      end
+
+      it 'raises an error if the subtransform fucks with index', wip: true do
+        sub_transform = Job::Transform.new('arbitrary') do
+          source :st_source, [:id, :name]
+          target :st_target, [:funny_name]
+
+          duplicated_df = Daru::DataFrame.new({ id: Array(st_source.df[:id][0]) * 3 })
+
+          st_source.df = st_source.df.join(duplicated_df, on: [:id], how: :left)
+
+          Remi::SourceToTargetMap.apply(st_source.df, st_target.df) do
+            map source(:name) .target(:funny_name)
+              .transform(->(v) { "funny-#{v}" })
+          end
+        end
+
+        my_transform = Job::Transform.new(job) do
+          import sub_transform do
+            map_source_fields :job_source, :st_source, {
+              :id   => :id,
+              :name => :name
+            }
+            map_target_fields :st_target, :job_source, {
+              :funny_name => :funny_name
+            }
+          end
+
+          job.job_target.df = job.job_source.df.dup
+        end
+
+        expect { my_transform.execute }.to raise_error Job::Transform::IncompatibleTargetIndexError
+      end
+    end
+
   end
 end
