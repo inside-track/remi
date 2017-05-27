@@ -15,6 +15,7 @@ module Remi
     #   end
     #   tform.execute
     class Transform
+      class IncompatibleTargetIndexError < StandardError; end
 
       FieldMap = Struct.new(:from_subject, :to_subject, :field_from_to)
 
@@ -151,6 +152,19 @@ module Remi
           job_ds = field_map.to_subject
           sub_trans_ds = field_map.from_subject
           fields_to_map = field_map.field_from_to.keys
+
+          job_idx = job_ds.df.index.to_a
+          sub_idx = sub_trans_ds.df.index.to_a
+          diff = ((job_idx | sub_idx) - (job_idx & sub_idx))
+          if job_idx.size > 0 && diff.size > 0 then
+            msg = <<-EOT
+              Incompatible target index!
+              Sub transform target #{sub_trans_ds.name} index is #{sub_trans_ds.df.index.inspect}
+              Job transform target #{job_ds.name} index is #{job_ds.df.index.inspect}
+            EOT
+            raise IncompatibleTargetIndexError.new msg
+          end
+
 
           fields_to_map.each do |sub_trans_field|
             job_field = field_map.field_from_to[sub_trans_field]
