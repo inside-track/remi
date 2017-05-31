@@ -124,6 +124,16 @@ Given /^the (source|target) file contains all of the following headers in this o
   expect(@brt.send(st.to_sym).data_subject.df.vectors.to_a).to eq @brt.send(st.to_sym).fields.field_names
 end
 
+Given /^the (source|target) file contains all of the following headers in no particular order:$/ do |st, table|
+  table.rows.each do |row|
+    field = row.first
+    step "the #{st} field '#{field}'"
+  end
+
+  @brt.run_transforms if st == 'target'
+  expect(@brt.send(st.to_sym).data_subject.df.vectors.to_a).to match_array @brt.send(st.to_sym).fields.field_names
+end
+
 ### Source
 
 Given /^the source '([[:alnum:]\s\-_]+)'$/ do |arg|
@@ -260,6 +270,7 @@ Then /^the target field '([^']+)' has the label '([^']+)'$/ do |target_field, la
   data_field  = @brt.targets.fields.next
   expect(data_field.metadata[:label]).to eq label
   expect(data_field.name).to eq target_field
+
 end
 
 Then /^the target field '([^']+)' is copied from the source field$/ do |target_field|
@@ -779,4 +790,11 @@ end
 Then /^the target '([[:alnum:]\s\-_]+)' has (\d+) record(?:s|) where '([[:alnum:]\s\-_]+)' is between (\d*\.?\d+) and (\d*\.?\d+)$/ do |target_name, nrecords, field_name, low_value, high_value|
   @brt.run_transforms
   expect(@brt.targets[target_name].where_between(field_name, low_value, high_value).size).to eq nrecords.to_i
+end
+
+Then /^the target field '([^']+)' (?:has|is set to) the multiline value$/ do |target_field, value|
+  step "the target field '#{target_field}'"
+  @brt.run_transforms
+  target_name, target_field_name = @brt.targets.parse_full_field(target_field)
+  expect(@brt.targets[target_name].fields[target_field_name].value).to eq Remi::Testing::BusinessRules::ParseFormula.parse(value)
 end
