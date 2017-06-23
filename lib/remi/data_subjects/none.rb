@@ -8,10 +8,10 @@ module Remi
   end
 
 
-  # The None Parser just returns what it is given.
+  # The None Parser just returns an empty dataframe if it's not given any data
   class Parser::None < Parser
-    def parse(data)
-      data
+    def parse(data=nil)
+      data || Remi::DataFrame::Daru.new([], order: fields.keys)
     end
   end
 
