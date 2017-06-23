@@ -14,7 +14,11 @@ describe Parser::None do
   let(:parser) { Parser::None.new }
 
   context '#parse' do
-    it 'returns what it is given' do
+    it 'returns an empty dataframe when given no data' do
+      expect(parser.parse.to_a).to eq Remi::DataFrame::Daru.new([]).to_a
+    end
+
+    it 'returns an what it was given' do
       expect(parser.parse('some data')).to eq 'some data'
     end
   end
