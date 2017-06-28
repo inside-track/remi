@@ -69,6 +69,14 @@ Then /^the file is uploaded to the remote path "([^"]+)"$/ do |remote_path|
   expect(@brt.target.data_subject.loaders.map(&:remote_path)).to include expected_path
 end
 
+Then /^the file is uploaded to the S3 bucket "([^"]+)"$/ do |bucket_name|
+  expected_bucket_name = Remi::Testing::BusinessRules::ParseFormula.parse(bucket_name)
+  bucket_names = @brt.target.data_subject.loaders.map do |loader|
+    loader.bucket_name if loader.respond_to? :bucket_name
+  end
+  expect(bucket_names).to include expected_bucket_name
+end
+
 ## CSV Options
 
 Given /^the (source|target) file is delimited with a (\w+)$/ do |st, delimiter|

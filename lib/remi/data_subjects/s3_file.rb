@@ -116,6 +116,8 @@ module Remi
     # Called to extract files from the source filesystem.
     # @return [Array<String>] An array of paths to a local copy of the files extacted
     def extract
+      init_kms(@kms_opt)
+
       entries.map do |entry|
         local_file = File.join(@local_path, entry.name)
         logger.info "Downloading #{entry.pathname} from S3 to #{local_file}"
@@ -146,8 +148,8 @@ module Remi
 
     def init_s3_file(*args, credentials: {}, bucket:, kms_opt: nil, **kargs)
       @region = credentials.fetch(:region, 'us-west-2')
+      @kms_opt = kms_opt
       init_aws_credentials(credentials)
-      init_kms(kms_opt)
 
       @bucket_name = bucket
     end
@@ -242,12 +244,15 @@ module Remi
     end
 
     attr_reader :remote_path
+    attr_reader :bucket_name
 
     # Copies data to S3
     # @param data [Object] The path to the file in the temporary work location
     # @return [true] On success
     def load(data)
-      @logger.info "Writing file #{data} to #{@bucket_name} as #{@remote_path}"
+      init_kms(@kms_opt)
+
+      @logger.info "Writing file #{data} to S3 #{@bucket_name} as #{@remote_path}"
       s3.bucket(@bucket_name).object(@remote_path).upload_file(data, encrypt_args)
       true
     end
@@ -256,8 +261,8 @@ module Remi
 
     def init_s3_loader(*args, credentials:{}, bucket:, remote_path:, kms_opt: nil, **kargs, &block)
       @region = credentials.fetch(:region, 'us-west-2')
+      @kms_opt = kms_opt
       init_aws_credentials(credentials)
-      init_kms(kms_opt)
 
       @bucket_name = bucket
       @remote_path = remote_path
