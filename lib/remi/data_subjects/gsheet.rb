@@ -8,13 +8,20 @@ module Remi
 
   # Contains methods shared between Salesforce Extractor/Parser/Encoder/Loader
   class Extractor::Gsheet < Extractor::FileSystem
-
+    # @param credentials [Hash] Used to authenticate with the google sheets server
+    # @option credentials [String] :client_id hash string given by google to authenticate user
+    # @option credentials [String] :client_secret hast string given as unique id
+    # @option credentials [String] :access_token token response when authentication is complete.
+    # @option credentials [String] :ref_token token used when re-authenticating with server
+    # @option credentials [String] :scope gsheet folders user is allowed to access
+    # @option credentials [DateTime] :expire_time time at which token expires (set to end of time)
     def initialize(*args, **kargs, &block)
       super
       init_gsheet_extractor(*args, **kargs)
     end
-
+    # @return [Object] Data extracted from Gsheets
     attr_reader :data
+
     attr_reader :client_id
     attr_reader :client_secret
     attr_reader :access_token
@@ -22,6 +29,7 @@ module Remi
     attr_reader :scope
     attr_reader :expire_time
 
+    # @return [Google::UserRefreshCredentials] a credential object for google auth
     def authorize
       credentials = Google::Auth::UserRefreshCredentials.new(
         client_id:     @client_id,
@@ -32,8 +40,8 @@ module Remi
         expires_at:    @expiration_time / 1000
       )
     end
-
-
+    # @param folder_id [Ruby:String] id given to a folder by google
+    # @return [Google::DriveService] A list of files in a given folder
     def get_file_list(folder_id)
       service                                 = Google::Apis::DriveV3::DriveService.new
       service.client_options.application_name = @application_name
@@ -41,11 +49,16 @@ module Remi
       response                                = service_list_files(service, folder_id)
       response.files
     end
-
+    # @param service [Google:Object] a reference to the current gsheets object
+    # @param folder_id [Ruby:String] id given to a folder by google
+    # @return [Google::FileList::Array] A list of files in a given folder filtered by the query q
     def service_list_files(service, folder_id)
       service.list_files(q: "'#{folder_id}' in parents", page_size: 10, order_by: 'createdTime desc', fields: 'nextPageToken, files(id, name, createdTime, mimeType)')
     end
-
+    # @param service [Google:Object] a reference to the current gsheets object
+    # @param spreadsheet_id [Ruby:String] id of the selected google sheet to pull
+    # @param sheet_name [Ruby:String] The name of a sheet in a google doc. Defaulted to the original name 'Sheet1'
+    # @return [Google::FileList::Array] A list of files in a given folder filtered by the query q
     def get_spreadsheet_vals(service, spreadsheet_id, sheet_name = 'Sheet1')
       service.get_spreadsheet_values(spreadsheet_id, sheet_name)
     end
@@ -109,7 +122,30 @@ module Remi
       @expiration_time = Integer(credentials.fetch(:expiration_time))
     end
   end
-
+  # Google Sheets extractor
+    #
+    # @example
+    #  class MyJob < Remi::Job
+    #    source :some_table do
+    #      extractor Remi::Extractor::Gsheet.new(
+    #        credentials: GsheetCreds,
+    #        folder_id: 'SomeId1234',
+    #        pattern: /^SomeFileNmae/,
+    #        sheet_name: 'SomeSheetName',
+    #        remote_path: '/Path/To/File',
+    #        most_recent_by: :create_time
+    #      )
+    #      parser Remi::Parser::Gsheet.new
+    #    end
+    #  end
+    #
+    #  job = MyJob.new
+    #  job.some_table.df[:id, :name]
+    #  # =>#<Daru::DataFrame:70153144824760 @name = 53c8e878-55e7-4859-bc34-ec29309c11fd @size = 3>
+    #  #                    id       name
+    #  #          0         24 albert
+    #  #          1         26 betsy
+    #  #          2         25 camu
   class Parser::Gsheet < Parser
 
     def parse(gs_extract)
