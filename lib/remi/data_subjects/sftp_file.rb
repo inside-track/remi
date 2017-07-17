@@ -11,7 +11,7 @@ module Remi
       if (tries -= 1) > 0
         logger.error "Error: #{err.message}"
         logger.error "Will retry #{tries} more times"
-        sleep(1)
+        sleep(@retry_interval)
         retry
       else
         raise err
@@ -129,13 +129,14 @@ module Remi
 
     private
 
-    def init_sftp_extractor(*args, credentials:, retries: 3, timeout: 30, **kargs)
-      @host     = credentials.fetch(:host)
-      @username = credentials.fetch(:username)
-      @password = credentials.fetch(:password, nil)
-      @port     = credentials.fetch(:port, '22')
-      @retries  = retries
-      @timeout  = timeout
+    def init_sftp_extractor(*args, credentials:, retries: 3, retry_interval: 60, timeout: 30, **kargs)
+      @host           = credentials.fetch(:host)
+      @username       = credentials.fetch(:username)
+      @password       = credentials.fetch(:password, nil)
+      @port           = credentials.fetch(:port, '22')
+      @retries        = retries
+      @retry_interval = retry_interval
+      @timeout        = timeout
     end
   end
 
@@ -199,14 +200,15 @@ module Remi
 
     private
 
-    def init_sftp_loader(*args, credentials:, remote_path:, retries: 3, timeout: 30, **kargs, &block)
-      @host        = credentials.fetch(:host)
-      @username    = credentials.fetch(:username)
-      @password    = credentials.fetch(:password, nil)
-      @port        = credentials.fetch(:port, '22')
-      @remote_path = remote_path
-      @retries     = retries
-      @timeout     = timeout
+    def init_sftp_loader(*args, credentials:, remote_path:, retries: 3, retry_interval: 60, timeout: 30, **kargs, &block)
+      @host           = credentials.fetch(:host)
+      @username       = credentials.fetch(:username)
+      @password       = credentials.fetch(:password, nil)
+      @port           = credentials.fetch(:port, '22')
+      @remote_path    = remote_path
+      @retries        = retries
+      @retry_interval = retry_interval
+      @timeout        = timeout
     end
   end
 end
