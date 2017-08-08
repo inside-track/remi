@@ -98,6 +98,9 @@ module Remi
       postgres_extract.data.clear
 
       df_fields = fields.keys | hash_array.keys
+      empty_fields = fields.keys - hash_array.keys
+      empty_fields.each { |k| hash_array[k] = []}
+
       Remi::DataFrame.create(:daru, hash_array, order: df_fields)
     end
   end
