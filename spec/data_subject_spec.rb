@@ -123,6 +123,17 @@ describe DataSubject do
       data_subject.enforce_types
       expect(dataframe.vectors.to_a).to eq [:my_date]
     end
+
+    it 'does not enforce types if a enforce_types? is false' do
+      data_subject.df[:my_date].recode { |v|
+        def v.enforce_types?
+          false
+        end
+      }
+
+      data_subject.enforce_types
+      expect(data_subject.df[:my_date].to_a).to eq ['10/21/2015']
+    end
   end
 end
 
