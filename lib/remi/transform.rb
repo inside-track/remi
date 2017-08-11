@@ -522,6 +522,8 @@ module Remi
       def transform(value)
         if value.blank? && type != :json
           blank_handler(value)
+        elsif value.respond_to?(:enforce_types?) && !value.enforce_types?
+          value
         else
           case type
           when :string
