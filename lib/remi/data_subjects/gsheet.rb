@@ -39,6 +39,7 @@ module Remi
         refresh_token: @refresh_token,
         expires_at:    @expiration_time / 1000
       )
+      credentials
     end
     # @param folder_id [Ruby:String] id given to a folder by google
     # @return [Google::DriveService] A list of files in a given folder
@@ -53,7 +54,13 @@ module Remi
     # @param folder_id [Ruby:String] id given to a folder by google
     # @return [Google::FileList::Array] A list of files in a given folder filtered by the query q
     def service_list_files(service, folder_id)
-      service.list_files(q: "'#{folder_id}' in parents", page_size: 10, order_by: 'createdTime desc', fields: 'nextPageToken, files(id, name, createdTime, mimeType)')
+      begin
+        service.list_files(q: "'#{folder_id}' in parents", page_size: 10, order_by: 'createdTime desc', fields: 'nextPageToken, files(id, name, createdTime, mimeType)')
+      rescue Google::Apis::ServerError => err
+        logger.error err
+        logger.error err.body
+        raise err
+      end
     end
     # @param service [Google:Object] a reference to the current gsheets object
     # @param spreadsheet_id [Ruby:String] id of the selected google sheet to pull
@@ -71,7 +78,13 @@ module Remi
 
       entries.each do |file|
         logger.info "Extracting Google Sheet data from #{file.pathname}, with sheet name : #{@sheet_name}"
-        response = get_spreadsheet_vals(service, file.raw, @sheet_name)
+        begin
+          response = get_spreadsheet_vals(service, file.raw, @sheet_name)
+        rescue Google::Apis::ServerError => err
+          logger.error err
+          logger.error err.body
+          raise err
+        end
         data.push(response)
       end
 
