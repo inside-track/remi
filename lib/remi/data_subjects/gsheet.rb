@@ -5,7 +5,47 @@ require 'googleauth/stores/file_token_store'
 require 'googleauth/user_refresh'
 
 module Remi
+  module DataSubject::Gsheet
 
+    attr_reader :service
+
+    def gsheet_retry(&block)
+      tries ||= @retries
+
+      block.call
+    rescue StandardError => err
+      if (tries -= 1) > 0
+        logger.error "Error: #{err.message}"
+        logger.error "Will retry #{tries} more times"
+        sleep(1)
+        retry
+      else
+        raise err
+      end
+    end
+
+    def begin_connection
+      gsheet_retry do
+        Timeout.timeout(@timeout) do
+          credentials = Google::Auth::UserRefreshCredentials.new(
+            client_id:     @client_id,
+            client_secret: @client_secret,
+            scope:         @scope,
+            access_token:  @access_token,
+            refresh_token: @refresh_token,
+            expires_at:    @expiration_time / 1000
+          )
+          service                                 = Google::Apis::DriveV3::DriveService.new
+          service.client_options.application_name = @application_name
+          service.authorization                   = credentials
+        end
+      end
+    end
+    # you dont really close gsheet connections
+    def end_connection
+      1
+    end
+  end
   # Contains methods shared between Salesforce Extractor/Parser/Encoder/Loader
   class Extractor::Gsheet < Extractor::FileSystem
     # @param credentials [Hash] Used to authenticate with the google sheets server
@@ -29,24 +69,10 @@ module Remi
     attr_reader :scope
     attr_reader :expire_time
 
-    # @return [Google::UserRefreshCredentials] a credential object for google auth
-    def authorize
-      credentials = Google::Auth::UserRefreshCredentials.new(
-        client_id:     @client_id,
-        client_secret: @client_secret,
-        scope:         @scope,
-        access_token:  @access_token,
-        refresh_token: @refresh_token,
-        expires_at:    @expiration_time / 1000
-      )
-    end
     # @param folder_id [Ruby:String] id given to a folder by google
     # @return [Google::DriveService] A list of files in a given folder
     def get_file_list(folder_id)
-      service                                 = Google::Apis::DriveV3::DriveService.new
-      service.client_options.application_name = @application_name
-      service.authorization                   = authorize()
-      response                                = service_list_files(service, folder_id)
+      response = service_list_files(service, folder_id)
       response.files
     end
     # @param service [Google:Object] a reference to the current gsheets object
@@ -64,10 +90,7 @@ module Remi
     end
 
     def extract
-      service                                 = Google::Apis::SheetsV4::SheetsService.new
-      service.client_options.application_name = @application_name
-      service.authorization                   = authorize()
-      @data                                   = []
+      @data = []
 
       entries.each do |file|
         logger.info "Extracting Google Sheet data from #{file.pathname}, with sheet name : #{@sheet_name}"
@@ -99,12 +122,13 @@ module Remi
 
     private
 
-    def init_gsheet_extractor(*args, credentials:, folder_id:, sheet_name: 'Sheet1', **kargs)
+    def init_gsheet_extractor(*args, credentials:, folder_id:, sheet_name: 'Sheet1', retries: 3, timeout: 30, **kargs)
       @default_folder_id   = folder_id
       @sheet_name          = sheet_name
       @oob_uri             = 'urn:ietf:wg:oauth:2.0:oob'
       @application_name    = credentials.fetch(:application_name)
-
+      @retries             = retries
+      @timeout             = timeout
       @client_secrets_path = File.join(
         Dir.home,
         '.credentials/client_secret.json'
