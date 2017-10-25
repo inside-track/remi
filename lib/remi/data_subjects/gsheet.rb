@@ -35,9 +35,9 @@ module Remi
             refresh_token: @refresh_token,
             expires_at:    @expiration_time / 1000
           )
-          service                                 = Google::Apis::DriveV3::DriveService.new
-          service.client_options.application_name = @application_name
-          service.authorization                   = credentials
+          @service                                 = Google::Apis::DriveV3::DriveService.new
+          @service.client_options.application_name = @application_name
+          @service.authorization                   = credentials
         end
       end
     end
@@ -72,21 +72,21 @@ module Remi
     # @param folder_id [Ruby:String] id given to a folder by google
     # @return [Google::DriveService] A list of files in a given folder
     def get_file_list(folder_id)
-      response = service_list_files(service, folder_id)
+      response = service_list_files(@service, folder_id)
       response.files
     end
     # @param service [Google:Object] a reference to the current gsheets object
     # @param folder_id [Ruby:String] id given to a folder by google
     # @return [Google::FileList::Array] A list of files in a given folder filtered by the query q
     def service_list_files(service, folder_id)
-      service.list_files(q: "'#{folder_id}' in parents", page_size: 10, order_by: 'createdTime desc', fields: 'nextPageToken, files(id, name, createdTime, mimeType)')
+      @service.list_files(q: "'#{folder_id}' in parents", page_size: 10, order_by: 'createdTime desc', fields: 'nextPageToken, files(id, name, createdTime, mimeType)')
     end
     # @param service [Google:Object] a reference to the current gsheets object
     # @param spreadsheet_id [Ruby:String] id of the selected google sheet to pull
     # @param sheet_name [Ruby:String] The name of a sheet in a google doc. Defaulted to the original name 'Sheet1'
     # @return [Google::FileList::Array] A list of files in a given folder filtered by the query q
     def get_spreadsheet_vals(service, spreadsheet_id, sheet_name = 'Sheet1')
-      service.get_spreadsheet_values(spreadsheet_id, sheet_name)
+      @service.get_spreadsheet_values(spreadsheet_id, sheet_name)
     end
 
     def extract
@@ -94,7 +94,7 @@ module Remi
 
       entries.each do |file|
         logger.info "Extracting Google Sheet data from #{file.pathname}, with sheet name : #{@sheet_name}"
-        response = get_spreadsheet_vals(service, file.raw, @sheet_name)
+        response = get_spreadsheet_vals(@service, file.raw, @sheet_name)
         data.push(response)
       end
 
