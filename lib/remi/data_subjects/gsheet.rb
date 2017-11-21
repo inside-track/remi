@@ -90,6 +90,7 @@ module Remi
     end
 
     def extract
+
       @data = []
 
       entries.each do |file|
@@ -123,6 +124,9 @@ module Remi
     private
 
     def init_gsheet_extractor(*args, credentials:, folder_id:, sheet_name: 'Sheet1', retries: 3, timeout: 30, **kargs)
+
+      begin_connection
+
       @default_folder_id   = folder_id
       @sheet_name          = sheet_name
       @oob_uri             = 'urn:ietf:wg:oauth:2.0:oob'
