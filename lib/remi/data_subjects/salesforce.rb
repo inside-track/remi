@@ -122,7 +122,8 @@ module Remi
         batch['response'] = nil
       end
 
-      Remi::DataFrame.create(:daru, hash_array, order: hash_array.keys)
+      df_fields = fields.keys | hash_array.keys
+      Remi::DataFrame.create(:daru, hash_array, order: df_fields)
     end
   end
 

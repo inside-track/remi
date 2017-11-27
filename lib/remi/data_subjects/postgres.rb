@@ -97,7 +97,8 @@ module Remi
       # After converting to DF, clear the PG results to save memory.
       postgres_extract.data.clear
 
-      Remi::DataFrame.create(:daru, hash_array, order: hash_array.keys)
+      df_fields = fields.keys | hash_array.keys
+      Remi::DataFrame.create(:daru, hash_array, order: df_fields)
     end
   end
 
