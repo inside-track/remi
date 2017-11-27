@@ -43,10 +43,11 @@ module Remi
     # @param folder_id [Ruby:String] id given to a folder by google
     # @return [Google::DriveService] A list of files in a given folder
     def get_file_list(folder_id)
-      service                                 = Google::Apis::DriveV3::DriveService.new
-      service.client_options.application_name = @application_name
-      service.authorization                   = authorize()
-      response                                = service_list_files(service, folder_id)
+      Google::Apis::RequestOptions.default.retries = @retries
+      service                                      = Google::Apis::DriveV3::DriveService.new
+      service.client_options.application_name      = @application_name
+      service.authorization                        = authorize()
+      response                                     = service_list_files(service, folder_id)
       response.files
     end
     # @param service [Google:Object] a reference to the current gsheets object
@@ -64,10 +65,11 @@ module Remi
     end
 
     def extract
-      service                                 = Google::Apis::SheetsV4::SheetsService.new
-      service.client_options.application_name = @application_name
-      service.authorization                   = authorize()
-      @data                                   = []
+      Google::Apis::RequestOptions.default.retries = @retries
+      service                                      = Google::Apis::SheetsV4::SheetsService.new
+      service.client_options.application_name      = @application_name
+      service.authorization                        = authorize()
+      @data                                        = []
 
       entries.each do |file|
         logger.info "Extracting Google Sheet data from #{file.pathname}, with sheet name : #{@sheet_name}"
@@ -99,12 +101,12 @@ module Remi
 
     private
 
-    def init_gsheet_extractor(*args, credentials:, folder_id:, sheet_name: 'Sheet1', **kargs)
+    def init_gsheet_extractor(*args, credentials:, folder_id:, sheet_name: 'Sheet1', retries: 3, **kargs)
       @default_folder_id   = folder_id
       @sheet_name          = sheet_name
       @oob_uri             = 'urn:ietf:wg:oauth:2.0:oob'
       @application_name    = credentials.fetch(:application_name)
-
+      @retries             = retries
       @client_secrets_path = File.join(
         Dir.home,
         '.credentials/client_secret.json'
